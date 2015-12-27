@@ -7,11 +7,11 @@ public class Player : SimpleCharacterCore
     public int Health;
 
     public CharacterStatus Status;
-    enum states { idle, running };
-    states CurrentState = states.idle;
-    bool isRunning = false;
+    //enum states { idle, running };
+    //states CurrentState = states.idle;
+    //bool isRunning = false;
 
-    moveState tempMoveState;
+    
 
     void Awake()
     {
@@ -60,16 +60,30 @@ public class Player : SimpleCharacterCore
         if (InputManager.RunInput)
         {
             if (InputManager.RunInputInst)
+            {
                 tempMoveState = currentMoveState;
-            currentMoveState = moveState.isRunning;
+                currentMoveState = moveState.isRunning;
+            }
         }
         else
         {
             if (InputManager.RunInputUpInst)
+            {
                 currentMoveState = tempMoveState;
+            }
         }
 
-            base.Update();
+        // set Sprite flip
+        if (previousFacingDirection != FacingDirection)
+        {
+            SetFacing();
+        }
+        previousFacingDirection = FacingDirection;
+
+        base.Update();
+
+        
+        prevMoveState = currentMoveState;
         /*
         //handle running
         if (InputManager.HorizontalInput == true)
@@ -82,14 +96,8 @@ public class Player : SimpleCharacterCore
             CurrentState = states.idle;
             Anim.SetBool("Running", false);
         }
-
-        // set Sprite flip
-        if (previousFacingDirection != FacingDirection)
-        {
-            SetFacing();
-        }
-        previousFacingDirection = FacingDirection;
         */
+
     }
 
     public override void FixedUpdate()

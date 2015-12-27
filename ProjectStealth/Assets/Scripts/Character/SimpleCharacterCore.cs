@@ -20,7 +20,7 @@ public class SimpleCharacterCore : MonoBehaviour
     private const float JUMP_HORIZONTAL_SPEED = 3.0f;
     private const float JUMP_CONTROL_TIME = 0.17f;
     private const float JUMP_DURATION_MIN = 0.08f;
-    private bool canJump;
+    public bool canJump;
     private bool isJumping;
     private float jumpInputTime;
 
@@ -31,6 +31,11 @@ public class SimpleCharacterCore : MonoBehaviour
     protected float RUN_SPEED = 4.0f;
     protected enum moveState { isWalking, isSneaking, isRunning };
     protected moveState currentMoveState = moveState.isWalking;
+    protected moveState tempMoveState;
+    protected moveState prevMoveState;
+    private float currentSpeed;
+    private float transitionTime;
+    protected float TRANSITION_TIMER = 1.0f;
 
     // Use this for initialization
     public virtual void Start()
@@ -47,16 +52,30 @@ public class SimpleCharacterCore : MonoBehaviour
 
     public virtual void Update()
     {
+        if (FacingDirection == -1 && InputManager.HorizontalAxis > 0)
+        {
+            FacingDirection = 1;
+            //Anim.SetBool("TurnAround", true);
+        }
+        else if (FacingDirection == 1 && InputManager.HorizontalAxis < 0)
+        {
+            FacingDirection = -1;
+            //Anim.SetBool("TurnAround", true);
+        }
+
         // If the character is touching the ground, allow jump
         if (OnTheGround)
         {
-            canJump = true;
+            if (!isJumping)
+                canJump = true;
 
             //movement stuff
             if (currentMoveState == moveState.isWalking)
                 Velocity.x = WALK_SPEED * InputManager.HorizontalAxis;
             else if (currentMoveState == moveState.isSneaking)
+            {
                 Velocity.x = SNEAK_SPEED * InputManager.HorizontalAxis;
+            }
             else if (currentMoveState == moveState.isRunning)
                 Velocity.x = RUN_SPEED * InputManager.HorizontalAxis;
         }
@@ -66,6 +85,7 @@ public class SimpleCharacterCore : MonoBehaviour
         {
             isJumping = true;
             canJump = false;
+            jumpInputTime = 0.0f;
         }
     }
 
@@ -101,7 +121,6 @@ public class SimpleCharacterCore : MonoBehaviour
             {
                 //print(jumpInputTime);
                 isJumping = false;
-                jumpInputTime = 0.0f;
             }
         }
     }
@@ -119,9 +138,7 @@ public class SimpleCharacterCore : MonoBehaviour
 
             if (Velocity.y < 0.0f && hitDist <= Mathf.Abs(Velocity.y))
             {
-                print(hitDist);
                 Velocity.y = -hitDist;
-                OnTheGround = true;
             }
 
             // Approximate! since floats are dumb
@@ -134,6 +151,5 @@ public class SimpleCharacterCore : MonoBehaviour
                 OnTheGround = false;
             }
         }
-        
     }
 }
