@@ -3,8 +3,6 @@ using System.Collections;
 
 public class Player : SimpleCharacterCore
 {
-    
-
     [HideInInspector]
     public int Health;
 
@@ -13,6 +11,7 @@ public class Player : SimpleCharacterCore
     states CurrentState = states.idle;
     bool isRunning = false;
 
+    moveState tempMoveState;
 
     void Awake()
     {
@@ -27,7 +26,13 @@ public class Player : SimpleCharacterCore
             this.Status.Clone(GameState.Instance.PlayerState);
             Debug.Log("Loading from the GameState instance");
         }
-    }
+
+        //walk and run vars
+        WALK_SPEED = 1.0f; //used for cutscenes with Alice
+        SNEAK_SPEED = 1.5f; //Alice's default speed
+        RUN_SPEED = 4.0f;
+        currentMoveState = moveState.isSneaking;
+}
 
     void OnDestroy()
     {
@@ -52,6 +57,19 @@ public class Player : SimpleCharacterCore
 
     public override void Update()
     {
+        if (InputManager.RunInput)
+        {
+            if (InputManager.RunInputInst)
+                tempMoveState = currentMoveState;
+            currentMoveState = moveState.isRunning;
+        }
+        else
+        {
+            if (InputManager.RunInputUpInst)
+                currentMoveState = tempMoveState;
+        }
+
+            base.Update();
         /*
         //handle running
         if (InputManager.HorizontalInput == true)
