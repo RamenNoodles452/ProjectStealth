@@ -20,12 +20,12 @@ public class SimpleCharacterCore : MonoBehaviour
     private const float JUMP_HORIZONTAL_SPEED = 3.0f;
     private const float JUMP_CONTROL_TIME = 0.17f;
     private const float JUMP_DURATION_MIN = 0.08f;
-    public bool canJump;
+    private bool canJump;
     private bool isJumping;
     private float jumpInputTime;
 
     //walk and run vars
-    private const float MAX_HORIZONTAL_SPEED = 10.0f;
+    private const float MAX_HORIZONTAL_SPEED = 4.0f;
     protected float WALK_SPEED = 1.0f; //used for cutscenes with Alice, guards will walk when not alerted
     protected float SNEAK_SPEED = 1.5f; //Alice's default speed, enemies that were walking will use this speed when on guard
     protected float RUN_SPEED = 4.0f;
@@ -33,9 +33,13 @@ public class SimpleCharacterCore : MonoBehaviour
     protected moveState currentMoveState = moveState.isWalking;
     protected moveState tempMoveState;
     protected moveState prevMoveState;
-    private float currentSpeed;
-    private float transitionTime;
-    protected float TRANSITION_TIMER = 1.0f;
+    private bool mustDecel; // when a character starts running, they slow down to a stop
+    private float horizontalAxis; // this is used as an intermediary bc when running, input is set to -1/0/1
+
+    protected float DRAG = 15.0f; // how quickly a character decelerates when running
+    protected float ACCELERATION = 6.0f; // acceleration used for velocity calcs when running
+    private float characterAccel = 0.0f;
+    private bool startRun; // this bool prevents wonky shit from happening if you turn around during a run
 
     // Use this for initialization
     public virtual void Start()
@@ -48,36 +52,18 @@ public class SimpleCharacterCore : MonoBehaviour
         canJump = false;
         isJumping = false;
         jumpInputTime = 0.0f;
+        mustDecel = false;
     }
 
     public virtual void Update()
     {
-        if (FacingDirection == -1 && InputManager.HorizontalAxis > 0)
-        {
-            FacingDirection = 1;
-            //Anim.SetBool("TurnAround", true);
-        }
-        else if (FacingDirection == 1 && InputManager.HorizontalAxis < 0)
-        {
-            FacingDirection = -1;
-            //Anim.SetBool("TurnAround", true);
-        }
+        RunInput();
 
         // If the character is touching the ground, allow jump
         if (OnTheGround)
         {
             if (!isJumping)
                 canJump = true;
-
-            //movement stuff
-            if (currentMoveState == moveState.isWalking)
-                Velocity.x = WALK_SPEED * InputManager.HorizontalAxis;
-            else if (currentMoveState == moveState.isSneaking)
-            {
-                Velocity.x = SNEAK_SPEED * InputManager.HorizontalAxis;
-            }
-            else if (currentMoveState == moveState.isRunning)
-                Velocity.x = RUN_SPEED * InputManager.HorizontalAxis;
         }
 
         // Jump logic. Keep the Y velocity constant while holding jump for the duration of JUMP_CONTROL_TIME
@@ -87,6 +73,17 @@ public class SimpleCharacterCore : MonoBehaviour
             canJump = false;
             jumpInputTime = 0.0f;
         }
+
+        CalculateDirection();
+        // set Sprite flip
+        if (previousFacingDirection != FacingDirection)
+        {
+            SetFacing();
+        }
+
+        // prev state assignments
+        prevMoveState = currentMoveState;
+        previousFacingDirection = FacingDirection;
     }
 
     public virtual void FixedUpdate()
@@ -102,7 +99,51 @@ public class SimpleCharacterCore : MonoBehaviour
 
     private void HorizontalVelocity()
     {
+        if(OnTheGround)
+        {
+            //movement stuff
+            if (currentMoveState == moveState.isWalking)
+                Velocity.x = WALK_SPEED * InputManager.HorizontalAxis;
+            else if (currentMoveState == moveState.isSneaking)
+            {
+                Velocity.x = SNEAK_SPEED * InputManager.HorizontalAxis;
+            }
+            else if (currentMoveState == moveState.isRunning)
+            {
+
+
+                if (characterAccel == 0.0f)
+                    Velocity.x = Mathf.SmoothDamp(Velocity.x, 0.0f, ref DRAG, 0.25f);
+                else
+                    Velocity.x = Velocity.x + characterAccel * Time.deltaTime * TimeScale.timeScale;
+                /*
+                if (horizontalAxis == 0)
+                {
+                    if (Velocity.x > 0.0f)
+                    {
+                        Velocity.x = Mathf.Clamp(Velocity.x - DECEL_SPEED * Time.deltaTime * TimeScale.timeScale, 0.0f, MAX_HORIZONTAL_SPEED);
+                    }
+                    else if (Velocity.x < 0.0f)
+                    {
+                        Velocity.x = Mathf.Clamp(Velocity.x + DECEL_SPEED * Time.deltaTime * TimeScale.timeScale, -MAX_HORIZONTAL_SPEED, 0.0f);
+                    }
+                    else
+                    {
+                        mustDecel = false;
+                    }
+                }
+                else
+                {
+                    Velocity.x = RUN_SPEED * horizontalAxis;
+                }
+                */
+            }
+        }
+
         Velocity.x = Mathf.Clamp(Velocity.x, -MAX_HORIZONTAL_SPEED, MAX_HORIZONTAL_SPEED);
+
+        if (Mathf.Approximately(Velocity.x - 1000000, -1000000))
+            Velocity.x = 0;
     }
 
     private void VerticalVelocity()
@@ -119,7 +160,6 @@ public class SimpleCharacterCore : MonoBehaviour
             }
             else
             {
-                //print(jumpInputTime);
                 isJumping = false;
             }
         }
@@ -137,19 +177,96 @@ public class SimpleCharacterCore : MonoBehaviour
             float hitDist = hit.distance - characterCollider.bounds.extents.y;
 
             if (Velocity.y < 0.0f && hitDist <= Mathf.Abs(Velocity.y))
-            {
                 Velocity.y = -hitDist;
-            }
 
             // Approximate! since floats are dumb
             if (Mathf.Approximately(hitDist - 1000000, -1000000))
-            {
                 OnTheGround = true;
-            }
             else
-            {
                 OnTheGround = false;
-            }
         }
     }
+
+    void CalculateDirection()
+    {
+        // character direction logic
+        if (FacingDirection == -1 && InputManager.HorizontalAxis > 0)
+        {
+            FacingDirection = 1;
+            //Anim.SetBool("TurnAround", true);
+        }
+        else if (FacingDirection == 1 && InputManager.HorizontalAxis < 0)
+        {
+            FacingDirection = -1;
+            //Anim.SetBool("TurnAround", true);
+        }
+    }
+
+    void SetFacing()
+    {
+        Vector3 theScale = transform.localScale;
+        theScale.x = FacingDirection;
+        transform.localScale = theScale;
+    }
+
+    void RunInput()
+    {
+        // running logic
+        if (InputManager.RunInput)
+        {
+            if (InputManager.RunInputInst)
+            {
+                tempMoveState = currentMoveState;
+                currentMoveState = moveState.isRunning;
+                startRun = true;
+            }
+
+            // running automatically starts at the sneaking speed and accelerates from there
+            if (startRun == true && InputManager.HorizontalAxis > 0 && Velocity.x < SNEAK_SPEED)
+            {
+                Velocity.x = SNEAK_SPEED;
+                startRun = false;
+            }
+            else if (startRun == true && InputManager.HorizontalAxis < 0 && Velocity.x > -SNEAK_SPEED)
+            {
+                Velocity.x = -SNEAK_SPEED;
+                startRun = false;
+            }
+            // if the character comes to a full stop, let them start the run again
+            if (Velocity.x == 0.0f)
+                startRun = true;
+
+            mustDecel = true;
+        }
+        else
+        {
+            if (InputManager.RunInputUpInst)
+            {
+                currentMoveState = tempMoveState;
+            }
+        }
+
+        if (InputManager.HorizontalAxis > 0)
+            characterAccel = ACCELERATION;
+        else if (InputManager.HorizontalAxis < 0)
+            characterAccel = -ACCELERATION;
+        else
+            characterAccel = 0.0f;
+
+        /*
+        //if we're running, lock the axis
+        if (mustDecel)
+        {
+            if (InputManager.HorizontalAxis > 0)
+                horizontalAxis = 1;
+            else if (InputManager.HorizontalAxis < 0)
+                horizontalAxis = -1;
+            else
+                horizontalAxis = 0;
+        }
+        else
+            horizontalAxis = InputManager.HorizontalAxis;
+        */
+    }
+
 }

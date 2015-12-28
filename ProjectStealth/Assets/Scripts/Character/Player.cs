@@ -57,33 +57,11 @@ public class Player : SimpleCharacterCore
 
     public override void Update()
     {
-        if (InputManager.RunInput)
-        {
-            if (InputManager.RunInputInst)
-            {
-                tempMoveState = currentMoveState;
-                currentMoveState = moveState.isRunning;
-            }
-        }
-        else
-        {
-            if (InputManager.RunInputUpInst)
-            {
-                currentMoveState = tempMoveState;
-            }
-        }
-
-        // set Sprite flip
-        if (previousFacingDirection != FacingDirection)
-        {
-            SetFacing();
-        }
-        previousFacingDirection = FacingDirection;
-
-        base.Update();
+        
 
         
-        prevMoveState = currentMoveState;
+
+        base.Update();
         /*
         //handle running
         if (InputManager.HorizontalInput == true)
@@ -105,12 +83,7 @@ public class Player : SimpleCharacterCore
         base.FixedUpdate();
     }
 
-    void SetFacing()
-    {
-        Vector3 theScale = transform.localScale;
-        theScale.x = FacingDirection;
-        transform.localScale = theScale;
-    }
+    
 
     public void Run(float horizontal, float Vertical)
     {
