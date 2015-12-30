@@ -59,8 +59,6 @@ public class Player : SimpleCharacterCore
     {
         
 
-        
-
         base.Update();
         /*
         //handle running

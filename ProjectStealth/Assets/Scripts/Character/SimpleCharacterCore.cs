@@ -29,16 +29,14 @@ public class SimpleCharacterCore : MonoBehaviour
     protected float WALK_SPEED = 1.0f; //used for cutscenes with Alice, guards will walk when not alerted
     protected float SNEAK_SPEED = 1.5f; //Alice's default speed, enemies that were walking will use this speed when on guard
     protected float RUN_SPEED = 4.0f;
+    protected float ACCELERATION = 6.0f; // acceleration used for velocity calcs when running
+    protected float DRAG = 15.0f; // how quickly a character decelerates when running
     protected enum moveState { isWalking, isSneaking, isRunning };
     protected moveState currentMoveState = moveState.isWalking;
     protected moveState tempMoveState;
     protected moveState prevMoveState;
-    private bool mustDecel; // when a character starts running, they slow down to a stop
-    private float horizontalAxis; // this is used as an intermediary bc when running, input is set to -1/0/1
-
-    protected float DRAG = 15.0f; // how quickly a character decelerates when running
-    protected float ACCELERATION = 6.0f; // acceleration used for velocity calcs when running
     private float characterAccel = 0.0f;
+    private bool mustDecel; // when a character starts running, they slow down to a stop
     private bool startRun; // this bool prevents wonky shit from happening if you turn around during a run
 
     // Use this for initialization
@@ -77,9 +75,7 @@ public class SimpleCharacterCore : MonoBehaviour
         CalculateDirection();
         // set Sprite flip
         if (previousFacingDirection != FacingDirection)
-        {
             SetFacing();
-        }
 
         // prev state assignments
         prevMoveState = currentMoveState;
@@ -109,41 +105,29 @@ public class SimpleCharacterCore : MonoBehaviour
                 Velocity.x = SNEAK_SPEED * InputManager.HorizontalAxis;
             }
             else if (currentMoveState == moveState.isRunning)
-            {
-
-
-                if (characterAccel == 0.0f)
-                    Velocity.x = Mathf.SmoothDamp(Velocity.x, 0.0f, ref DRAG, 0.25f);
+            {   
+                //smooth damp to 0 if there's no directional input for running or if you're trying to run the opposite direction
+                if (characterAccel == 0.0f || (characterAccel < 0.0f && Velocity.x > 0.0f) || (characterAccel > 0.0f && Velocity.x < 0.0f))
+                {
+                    if (Mathf.Abs(Velocity.x) > 0.0f)
+                    {
+                        //print("SKID BOIS");
+                        Velocity.x = Mathf.SmoothDamp(Velocity.x, 0.0f, ref DRAG, 0.25f);
+                    }
+                }
                 else
                     Velocity.x = Velocity.x + characterAccel * Time.deltaTime * TimeScale.timeScale;
-                /*
-                if (horizontalAxis == 0)
-                {
-                    if (Velocity.x > 0.0f)
-                    {
-                        Velocity.x = Mathf.Clamp(Velocity.x - DECEL_SPEED * Time.deltaTime * TimeScale.timeScale, 0.0f, MAX_HORIZONTAL_SPEED);
-                    }
-                    else if (Velocity.x < 0.0f)
-                    {
-                        Velocity.x = Mathf.Clamp(Velocity.x + DECEL_SPEED * Time.deltaTime * TimeScale.timeScale, -MAX_HORIZONTAL_SPEED, 0.0f);
-                    }
-                    else
-                    {
-                        mustDecel = false;
-                    }
-                }
-                else
-                {
-                    Velocity.x = RUN_SPEED * horizontalAxis;
-                }
-                */
+
+                Velocity.x = Mathf.Clamp(Velocity.x, -RUN_SPEED, RUN_SPEED);
             }
         }
 
         Velocity.x = Mathf.Clamp(Velocity.x, -MAX_HORIZONTAL_SPEED, MAX_HORIZONTAL_SPEED);
 
         if (Mathf.Approximately(Velocity.x - 1000000, -1000000))
+        {
             Velocity.x = 0;
+        }
     }
 
     private void VerticalVelocity()
@@ -169,7 +153,7 @@ public class SimpleCharacterCore : MonoBehaviour
     {
         //TODO: raycast from characterCollider.bounds.center you can use this for up down left right, no need for special point vars
 
-        //raycast to find the floor
+        // raycast to find the floor
         RaycastHit2D hit = Physics2D.Raycast(characterCollider.bounds.center, Vector2.down, Mathf.Infinity, CollisionMasks.AllCollisionMask);
 
         if (hit.collider != null)
@@ -214,35 +198,37 @@ public class SimpleCharacterCore : MonoBehaviour
         // running logic
         if (InputManager.RunInput)
         {
-            if (InputManager.RunInputInst)
+            if (InputManager.RunInputInst && currentMoveState != moveState.isRunning)
             {
                 tempMoveState = currentMoveState;
                 currentMoveState = moveState.isRunning;
                 startRun = true;
             }
+            // if the character comes to a full stop, let them start the run again
+            // This also works when turnning around
+            if (Velocity.x == 0.0f)
+                startRun = true;
 
             // running automatically starts at the sneaking speed and accelerates from there
-            if (startRun == true && InputManager.HorizontalAxis > 0 && Velocity.x < SNEAK_SPEED)
+            if (startRun == true && InputManager.HorizontalAxis > 0 &&  Mathf.Abs(Velocity.x) < SNEAK_SPEED)
             {
                 Velocity.x = SNEAK_SPEED;
                 startRun = false;
             }
-            else if (startRun == true && InputManager.HorizontalAxis < 0 && Velocity.x > -SNEAK_SPEED)
+            else if (startRun == true && InputManager.HorizontalAxis < 0 && Mathf.Abs(Velocity.x) < SNEAK_SPEED)
             {
                 Velocity.x = -SNEAK_SPEED;
                 startRun = false;
             }
-            // if the character comes to a full stop, let them start the run again
-            if (Velocity.x == 0.0f)
-                startRun = true;
 
             mustDecel = true;
         }
         else
         {
-            if (InputManager.RunInputUpInst)
+            if (mustDecel == true && Velocity.x == 0.0f)
             {
                 currentMoveState = tempMoveState;
+                mustDecel = false;
             }
         }
 
@@ -252,21 +238,6 @@ public class SimpleCharacterCore : MonoBehaviour
             characterAccel = -ACCELERATION;
         else
             characterAccel = 0.0f;
-
-        /*
-        //if we're running, lock the axis
-        if (mustDecel)
-        {
-            if (InputManager.HorizontalAxis > 0)
-                horizontalAxis = 1;
-            else if (InputManager.HorizontalAxis < 0)
-                horizontalAxis = -1;
-            else
-                horizontalAxis = 0;
-        }
-        else
-            horizontalAxis = InputManager.HorizontalAxis;
-        */
     }
 
 }
