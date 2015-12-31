@@ -109,10 +109,14 @@ public class SimpleCharacterCore : MonoBehaviour
                 //smooth damp to 0 if there's no directional input for running or if you're trying to run the opposite direction
                 if (characterAccel == 0.0f || (characterAccel < 0.0f && Velocity.x > 0.0f) || (characterAccel > 0.0f && Velocity.x < 0.0f))
                 {
-                    if (Mathf.Abs(Velocity.x) > 0.0f)
+                    if (Mathf.Abs(Velocity.x) > SNEAK_SPEED)
                     {
                         //print("SKID BOIS");
                         Velocity.x = Mathf.SmoothDamp(Velocity.x, 0.0f, ref DRAG, 0.25f);
+                    }
+                    else
+                    {
+                        Velocity.x = 0.0f;
                     }
                 }
                 else
@@ -195,43 +199,42 @@ public class SimpleCharacterCore : MonoBehaviour
 
     void RunInput()
     {
-        // running logic
-        if (InputManager.RunInput)
+        if (InputManager.RunInputInst && currentMoveState != moveState.isRunning)
         {
-            if (InputManager.RunInputInst && currentMoveState != moveState.isRunning)
-            {
-                tempMoveState = currentMoveState;
-                currentMoveState = moveState.isRunning;
-                startRun = true;
-            }
-            // if the character comes to a full stop, let them start the run again
-            // This also works when turnning around
-            if (Velocity.x == 0.0f)
-                startRun = true;
-
-            // running automatically starts at the sneaking speed and accelerates from there
-            if (startRun == true && InputManager.HorizontalAxis > 0 &&  Mathf.Abs(Velocity.x) < SNEAK_SPEED)
-            {
-                Velocity.x = SNEAK_SPEED;
-                startRun = false;
-            }
-            else if (startRun == true && InputManager.HorizontalAxis < 0 && Mathf.Abs(Velocity.x) < SNEAK_SPEED)
-            {
-                Velocity.x = -SNEAK_SPEED;
-                startRun = false;
-            }
-
+            tempMoveState = currentMoveState;
+            currentMoveState = moveState.isRunning;
+            startRun = true;
             mustDecel = true;
         }
-        else
+
+        if (mustDecel == true)
         {
-            if (mustDecel == true && Velocity.x == 0.0f)
+            if (InputManager.HorizontalAxis == 0.0f && Velocity.x == 0.0f)
             {
                 currentMoveState = tempMoveState;
                 mustDecel = false;
             }
-        }
+            else
+            {
+                // if the character comes to a full stop, let them start the run again
+                // This also works when turnning around
+                if (Velocity.x == 0.0f)
+                    startRun = true;
 
+                // running automatically starts at the sneaking speed and accelerates from there
+                if (startRun == true && InputManager.HorizontalAxis > 0 && Mathf.Abs(Velocity.x) < SNEAK_SPEED)
+                {
+                    Velocity.x = SNEAK_SPEED;
+                    startRun = false;
+                }
+                else if (startRun == true && InputManager.HorizontalAxis < 0 && Mathf.Abs(Velocity.x) < SNEAK_SPEED)
+                {
+                    Velocity.x = -SNEAK_SPEED;
+                    startRun = false;
+                }
+            }
+        }
+        
         if (InputManager.HorizontalAxis > 0)
             characterAccel = ACCELERATION;
         else if (InputManager.HorizontalAxis < 0)
