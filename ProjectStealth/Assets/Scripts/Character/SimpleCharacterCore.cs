@@ -19,13 +19,15 @@ public class SimpleCharacterCore : MonoBehaviour
     private const float JUMP_VERTICAL_SPEED = 8.0f;
     private const float JUMP_HORIZONTAL_SPEED = 2.0f;
     private const float JUMP_RUN_HORIZONTAL_SPEED = 3.5f;
-    private const float JUMP_CONTROL_TIME = 0.17f;
-    private const float JUMP_DURATION_MIN = 0.08f;
-    private bool canJump;
+    private const float JUMP_CONTROL_TIME = 0.17f; //maximum duration of a jump if you hold it
+    private const float JUMP_DURATION_MIN = 0.08f; //minimum duration of a jump if you tap it
+    private const float JUMP_GRACE_PERIOD_TIME = 0.10f; //how long a player has to jump if they slip off a platform
+    private bool jumpGracePeriod; //variable for jump tolerance if a player walks off a platform but wants to jump
+    private float jumpGracePeriodTime;
     private bool isJumping;
     private float jumpInputTime;
     private bool jumpTurned;
-
+    
     //walk and run vars
     private const float MAX_HORIZONTAL_SPEED = 4.0f;
     protected float WALK_SPEED = 1.0f; //used for cutscenes with Alice, guards will walk when not alerted
@@ -49,7 +51,7 @@ public class SimpleCharacterCore : MonoBehaviour
         InputManager = GetComponent<IInputManager>();
         
         Velocity = new Vector2(0.0f, 0.0f);
-        canJump = false;
+        jumpGracePeriod = false;
         isJumping = false;
         jumpInputTime = 0.0f;
         mustDecel = false;
@@ -59,18 +61,11 @@ public class SimpleCharacterCore : MonoBehaviour
     {
         RunInput();
 
-        // If the character is touching the ground, allow jump
-        if (OnTheGround)
-        {
-            if (!isJumping)
-                canJump = true;
-        }
-
         // Jump logic. Keep the Y velocity constant while holding jump for the duration of JUMP_CONTROL_TIME
-        if (canJump && InputManager.JumpInputInst)
+        if ((jumpGracePeriod || OnTheGround) && InputManager.JumpInputInst)
         {
             isJumping = true;
-            canJump = false;
+            jumpGracePeriod = false;
             jumpInputTime = 0.0f;
             jumpTurned = false;
         }
@@ -83,6 +78,13 @@ public class SimpleCharacterCore : MonoBehaviour
         // prev state assignments
         prevMoveState = currentMoveState;
         previousFacingDirection = FacingDirection;
+        if (jumpGracePeriod == true)
+        {
+            jumpGracePeriodTime = jumpGracePeriodTime + Time.deltaTime * TimeScale.timeScale;
+            if (jumpGracePeriodTime >= JUMP_GRACE_PERIOD_TIME)
+                jumpGracePeriod = false;
+        }
+            
     }
 
     public virtual void FixedUpdate()
@@ -131,13 +133,15 @@ public class SimpleCharacterCore : MonoBehaviour
         else
         {
             if (currentMoveState == moveState.isWalking || currentMoveState == moveState.isSneaking)
-                Velocity.x = JUMP_HORIZONTAL_SPEED * InputManager.HorizontalAxis;
+            {
+                HorizontalJumpVel(JUMP_HORIZONTAL_SPEED);
+            }
             else if (currentMoveState == moveState.isRunning)
             {
                 if (jumpTurned)
-                    Velocity.x = JUMP_HORIZONTAL_SPEED * InputManager.HorizontalAxis;
+                    HorizontalJumpVel(JUMP_HORIZONTAL_SPEED);
                 else
-                    Velocity.x = JUMP_RUN_HORIZONTAL_SPEED * InputManager.HorizontalAxis;
+                    HorizontalJumpVel(JUMP_RUN_HORIZONTAL_SPEED);
             }
         }
 
@@ -168,9 +172,16 @@ public class SimpleCharacterCore : MonoBehaviour
         }
     }
 
+    private void HorizontalJumpVel(float moveSpeed)
+    {
+        if (characterAccel > 0.0f)
+            Velocity.x = moveSpeed;
+        else if (characterAccel < 0.0f)
+            Velocity.x = -moveSpeed;
+    }
+
     private void Collisions()
     {
-        //TODO: raycast from characterCollider.bounds.center you can use this for up down left right, no need for special point vars
         //TODO: Make character collide from both corners to detect collisions
 
         // raycast to collide right
@@ -212,7 +223,15 @@ public class SimpleCharacterCore : MonoBehaviour
             if (Mathf.Approximately(hitDist - 1000000, -1000000))
                 OnTheGround = true;
             else
-                OnTheGround = false;
+            {
+                // this block is for jump tolerance
+                if (OnTheGround && isJumping == false)
+                {
+                    jumpGracePeriod = true;
+                    jumpGracePeriodTime = 0.0f;
+                }
+                OnTheGround = false;       
+            }
         }
     }
 
