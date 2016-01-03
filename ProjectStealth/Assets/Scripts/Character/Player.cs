@@ -57,8 +57,6 @@ public class Player : SimpleCharacterCore
 
     public override void Update()
     {
-        
-
         base.Update();
         /*
         //handle running

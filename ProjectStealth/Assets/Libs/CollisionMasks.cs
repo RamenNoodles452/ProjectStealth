@@ -13,6 +13,10 @@ public static class CollisionMasks
     private static int characterLayer = 10;
     public static int CharacterMask = 1 << characterLayer;
 
-    public static int AllCollisionMask = GeoMask | ObjectMask | CharacterMask;
+    private static int jumpthroughLayer = 11;
+    public static int JumpthroughMask = 1 << jumpthroughLayer;
+
+    public static int AllCollisionMask = GeoMask | ObjectMask | CharacterMask | JumpthroughMask;
+    public static int UpwardsCollisionMask = GeoMask | ObjectMask | CharacterMask;
 }
 
