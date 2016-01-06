@@ -79,8 +79,6 @@ public class Player : SimpleCharacterCore
         base.FixedUpdate();
     }
 
-    
-
     public void Run(float horizontal, float Vertical)
     {
         
@@ -94,17 +92,6 @@ public class Player : SimpleCharacterCore
             FacingDirection = 1;
             Anim.SetBool("TurnAround", true);
         }
-        
-        /*
-        if (horizontal < 0)
-        {
-            FacingDirection = 1;
-        }
-        else if (horizontal > 0)
-        {
-            FacingDirection = -1;
-        */
-        //Debug.Log("Move: " + horizontal + ", " + Vertical);
     }
 
     public void SetStopAnim(string stop)

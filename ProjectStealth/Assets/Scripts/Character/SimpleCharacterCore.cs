@@ -3,8 +3,11 @@ using System.Collections;
 
 public class SimpleCharacterCore : MonoBehaviour
 {
+    public BoxCollider tempshit;
+
     protected int previousFacingDirection = 1;
     public int FacingDirection = 1;
+    private SpriteRenderer SpriteRenderer;
     public Animator Anim;
     public IInputManager InputManager;
     public Vector2 Velocity;
@@ -17,8 +20,8 @@ public class SimpleCharacterCore : MonoBehaviour
 
     //jump vars
     private const float JUMP_VERTICAL_SPEED = 8.0f;
-    private const float JUMP_HORIZONTAL_SPEED = 2.0f;
-    private const float JUMP_RUN_HORIZONTAL_SPEED = 3.5f;
+    private const float JUMP_HORIZONTAL_SPEED = 3.0f;
+    private const float JUMP_RUN_HORIZONTAL_SPEED = 4.0f;
     private const float JUMP_CONTROL_TIME = 0.17f; //maximum duration of a jump if you hold it
     private const float JUMP_DURATION_MIN = 0.08f; //minimum duration of a jump if you tap it
     private const float JUMP_GRACE_PERIOD_TIME = 0.10f; //how long a player has to jump if they slip off a platform
@@ -29,7 +32,7 @@ public class SimpleCharacterCore : MonoBehaviour
     private bool jumpTurned;
     
     //walk and run vars
-    private const float MAX_HORIZONTAL_SPEED = 4.0f;
+    private const float MAX_HORIZONTAL_SPEED = 4.5f;
     protected float WALK_SPEED = 1.0f; //used for cutscenes with Alice, guards will walk when not alerted
     protected float SNEAK_SPEED = 1.5f; //Alice's default speed, enemies that were walking will use this speed when on guard
     protected float RUN_SPEED = 4.0f;
@@ -49,7 +52,8 @@ public class SimpleCharacterCore : MonoBehaviour
         characterCollider = GetComponent<BoxCollider2D>();
         Anim = GetComponent<Animator>();
         InputManager = GetComponent<IInputManager>();
-        
+        SpriteRenderer = GetComponent<SpriteRenderer>();
+
         Velocity = new Vector2(0.0f, 0.0f);
         jumpGracePeriod = false;
         isJumping = false;
@@ -182,50 +186,75 @@ public class SimpleCharacterCore : MonoBehaviour
 
     private void Collisions()
     {
-        //TODO: Make character collide from both corners to detect collisions
+        // box used to collide against horizontal objects. Extend the hitbox vertically while in the air to avoid corner clipping
+        Vector2 horizontalBoxSize;
+        if (OnTheGround)
+            horizontalBoxSize = new Vector2(characterCollider.bounds.extents.x - 0.01f, characterCollider.bounds.size.y - 0.01f);
+        else
+            horizontalBoxSize = new Vector2(characterCollider.bounds.extents.x - 0.01f, characterCollider.bounds.size.y + 20.0f);
 
-        Vector2 horizontalBoxSize = new Vector2(characterCollider.bounds.extents.x, characterCollider.bounds.size.y - 0.05f);
 
         // raycast to collide right
         Vector2 rightHitOrigin = characterCollider.bounds.center + new Vector3(characterCollider.bounds.extents.x / 2.0f, 0.0f);
         RaycastHit2D rightHit = Physics2D.BoxCast(rightHitOrigin, horizontalBoxSize, 0.0f, Vector2.right, Mathf.Infinity, CollisionMasks.AllCollisionMask);
         if (rightHit.collider != null)
         {
-            float hitDist = rightHit.distance;
+            float hitDist = rightHit.distance - 0.005f;
             if (Velocity.x > 0.0f && hitDist <= Mathf.Abs(Velocity.x))
                 Velocity.x = hitDist;
         }
+
         // raycast to collide left
         Vector2 leftHitOrigin = characterCollider.bounds.center + new Vector3(-characterCollider.bounds.extents.x / 2.0f, 0.0f);
         RaycastHit2D leftHit = Physics2D.BoxCast(leftHitOrigin, horizontalBoxSize, 0.0f, Vector2.left, Mathf.Infinity, CollisionMasks.AllCollisionMask);
         if (leftHit.collider != null)
         {
-            float hitDist = leftHit.distance;
+            float hitDist = leftHit.distance - 0.005f;
             if (Velocity.x < 0.0f && hitDist <= Mathf.Abs(Velocity.x))
                 Velocity.x = -hitDist;
         }
 
-
-        
-        Vector2 verticalBoxSize = new Vector2(characterCollider.bounds.size.x - 0.05f, characterCollider.bounds.extents.y);
+        Vector2 verticalBoxSize = new Vector2(characterCollider.bounds.size.x - 0.01f, characterCollider.bounds.extents.y - 0.01f);
+        /*
+        if (OnTheGround)
+            verticalBoxSize = new Vector2(characterCollider.bounds.size.x - 0.01f, characterCollider.bounds.extents.y - 0.01f);
+        else
+            verticalBoxSize = new Vector2(characterCollider.bounds.extents.x - 0.01f, characterCollider.bounds.extents.y - 0.01f);
+        */
 
         // raycast to hit the ceiling
-        Vector2 upHitOrigin = characterCollider.bounds.center + new Vector3(0.0f, characterCollider.bounds.extents.y / 2.0f);
+        Vector2 upHitOrigin = characterCollider.bounds.center + new Vector3(0.0f, characterCollider.bounds.extents.y / 2.0f, 0.0f);
+        /*
+        if (!OnTheGround && Mathf.Abs(Velocity.x) > 0.0f && FacingDirection == 1)
+            upHitOrigin = characterCollider.bounds.center + new Vector3(characterCollider.bounds.extents.x / 2.0f, characterCollider.bounds.extents.y / 2.0f, 0.0f);
+        else if (!OnTheGround && Mathf.Abs(Velocity.x) > 0.0f && FacingDirection == -1)
+            upHitOrigin = characterCollider.bounds.center + new Vector3(-characterCollider.bounds.extents.x / 2.0f, characterCollider.bounds.extents.y / 2.0f, 0.0f);
+        else
+            upHitOrigin = characterCollider.bounds.center + new Vector3(0.0f, characterCollider.bounds.extents.y / 2.0f, 0.0f);
+        */
+
         RaycastHit2D upHit = Physics2D.BoxCast(upHitOrigin, verticalBoxSize, 0.0f, Vector2.up, Mathf.Infinity, CollisionMasks.UpwardsCollisionMask);
         if (upHit.collider != null)
         {
-            float hitDist = upHit.distance;
-            //print(hitDist);
+            float hitDist = upHit.distance - 0.005f;
             if (Velocity.y > 0.0f && hitDist <= Mathf.Abs(Velocity.y))
                 Velocity.y = hitDist;
         }
 
         // raycast to find the floor
-        Vector2 downHitOrigin = characterCollider.bounds.center + new Vector3(0.0f, -characterCollider.bounds.extents.y / 2.0f);
+        Vector2 downHitOrigin = characterCollider.bounds.center + new Vector3(0.0f, -characterCollider.bounds.extents.y / 2.0f, 0.0f);
+        /*
+        if (!OnTheGround && Mathf.Abs(Velocity.x) > 0.0f && FacingDirection == 1)
+            downHitOrigin = characterCollider.bounds.center + new Vector3(characterCollider.bounds.extents.x / 2.0f, -characterCollider.bounds.extents.y / 2.0f, 0.0f);
+        else if (!OnTheGround && Mathf.Abs(Velocity.x) > 0.0f && FacingDirection == -1)
+            downHitOrigin = characterCollider.bounds.center + new Vector3(-characterCollider.bounds.extents.x / 2.0f, -characterCollider.bounds.extents.y / 2.0f, 0.0f);
+        else
+            downHitOrigin = characterCollider.bounds.center + new Vector3(0.0f, -characterCollider.bounds.extents.y / 2.0f, 0.0f);
+        */
         RaycastHit2D downHit = Physics2D.BoxCast(downHitOrigin, verticalBoxSize, 0.0f, Vector2.down, Mathf.Infinity, CollisionMasks.AllCollisionMask);
         if (downHit.collider != null)
         {
-            float hitDist = downHit.distance;
+            float hitDist = downHit.distance - 0.005f;
             if (Velocity.y < 0.0f && hitDist <= Mathf.Abs(Velocity.y))
                 Velocity.y = -hitDist;
 
@@ -243,6 +272,13 @@ public class SimpleCharacterCore : MonoBehaviour
                 OnTheGround = false;
             }
         }
+
+        // stop at the edge of a platform
+
+        //DEBUGGING STUFF
+        tempshit.size = horizontalBoxSize;
+        tempshit.transform.position = rightHitOrigin;
+
     }
 
     void CalculateDirection()
@@ -268,9 +304,10 @@ public class SimpleCharacterCore : MonoBehaviour
 
     void SetFacing()
     {
-        Vector3 theScale = transform.localScale;
-        theScale.x = FacingDirection;
-        transform.localScale = theScale;
+        if (FacingDirection == -1)
+            SpriteRenderer.flipX = true;
+        else
+            SpriteRenderer.flipX = false;
     }
 
     void RunInput()
