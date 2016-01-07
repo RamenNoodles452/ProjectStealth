@@ -197,17 +197,17 @@ public class SimpleCharacterCore : MonoBehaviour
         // box used to collide against horizontal objects. Extend the hitbox vertically while in the air to avoid corner clipping
         Vector2 horizontalBoxSize;
         if (OnTheGround)
-            horizontalBoxSize = new Vector2(characterCollider.bounds.extents.x - 0.01f, characterCollider.bounds.size.y - 0.01f);
+            horizontalBoxSize = new Vector2(characterCollider.bounds.size.x - 0.01f, characterCollider.bounds.size.y - 0.01f);
         else
-            horizontalBoxSize = new Vector2(characterCollider.bounds.extents.x - 0.01f, characterCollider.bounds.size.y + 15.0f);
+            horizontalBoxSize = new Vector2(characterCollider.bounds.size.x - 0.01f, characterCollider.bounds.size.y + 15.0f);
 
 
         // raycast to collide right
         Vector2 rightHitOrigin;
         if (OnTheGround)
-            rightHitOrigin = characterCollider.bounds.center + new Vector3(characterCollider.bounds.extents.x / 2.0f, 0.0f);
+            rightHitOrigin = characterCollider.bounds.center;
         else
-            rightHitOrigin = characterCollider.bounds.center + new Vector3(characterCollider.bounds.extents.x / 2.0f, -2.5f);
+            rightHitOrigin = characterCollider.bounds.center + new Vector3(0.0f, -2.5f);
         RaycastHit2D rightHit = Physics2D.BoxCast(rightHitOrigin, horizontalBoxSize, 0.0f, Vector2.right, Mathf.Infinity, CollisionMasks.AllCollisionMask);
         if (rightHit.collider != null)
         {
@@ -219,9 +219,9 @@ public class SimpleCharacterCore : MonoBehaviour
         // raycast to collide left
         Vector2 leftHitOrigin;
         if (OnTheGround)
-            leftHitOrigin = characterCollider.bounds.center + new Vector3(-characterCollider.bounds.extents.x / 2.0f, 0.0f);
+            leftHitOrigin = characterCollider.bounds.center;
         else
-            leftHitOrigin = characterCollider.bounds.center + new Vector3(-characterCollider.bounds.extents.x / 2.0f, -2.5f);
+            leftHitOrigin = characterCollider.bounds.center + new Vector3(0.0f, -2.5f);
         RaycastHit2D leftHit = Physics2D.BoxCast(leftHitOrigin, horizontalBoxSize, 0.0f, Vector2.left, Mathf.Infinity, CollisionMasks.AllCollisionMask);
         if (leftHit.collider != null)
         {
