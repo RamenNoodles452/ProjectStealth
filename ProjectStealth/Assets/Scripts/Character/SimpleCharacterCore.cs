@@ -38,13 +38,17 @@ public class SimpleCharacterCore : MonoBehaviour
     protected float RUN_SPEED = 4.0f;
     protected float ACCELERATION = 6.0f; // acceleration used for velocity calcs when running
     protected float DRAG = 15.0f; // how quickly a character decelerates when running
-    protected enum moveState { isWalking, isSneaking, isRunning }; // protected
-    protected moveState currentMoveState = moveState.isWalking;    // protected
+    protected enum moveState { isWalking, isSneaking, isRunning };
+    protected moveState currentMoveState = moveState.isWalking;
     protected moveState tempMoveState;
     protected moveState prevMoveState;
     private float characterAccel = 0.0f;
     private bool mustDecel; // when a character starts running, they slow down to a stop
     private bool startRun; // this bool prevents wonky shit from happening if you turn around during a run
+
+    // ledge logic
+    public bool lookingOverLedge; // TODO: private
+    public bool againstTheLedge; // TODO: private
 
     // Use this for initialization
     public virtual void Start()
@@ -63,16 +67,7 @@ public class SimpleCharacterCore : MonoBehaviour
 
     public virtual void Update()
     {
-        RunInput();
-
-        // Jump logic. Keep the Y velocity constant while holding jump for the duration of JUMP_CONTROL_TIME
-        if ((jumpGracePeriod || OnTheGround) && InputManager.JumpInputInst)
-        {
-            isJumping = true;
-            jumpGracePeriod = false;
-            jumpInputTime = 0.0f;
-            jumpTurned = false;
-        }
+        MovementInput();
 
         CalculateDirection();
         // set Sprite flip
@@ -201,7 +196,6 @@ public class SimpleCharacterCore : MonoBehaviour
         else
             horizontalBoxSize = new Vector2(characterCollider.bounds.size.x - 0.01f, characterCollider.bounds.size.y + 15.0f);
 
-
         // raycast to collide right
         Vector2 rightHitOrigin;
         if (OnTheGround)
@@ -249,21 +243,25 @@ public class SimpleCharacterCore : MonoBehaviour
         RaycastHit2D downHit = Physics2D.BoxCast(downHitOrigin, verticalBoxSize, 0.0f, Vector2.down, Mathf.Infinity, CollisionMasks.AllCollisionMask);
         if (downHit.collider != null)
         {
+            float downHitColliderRight = downHit.collider.bounds.center.x + downHit.collider.bounds.extents.x;
+            float characterLeft = characterCollider.bounds.center.x - characterCollider.bounds.extents.x;
+            float downHitColliderLeft = downHit.collider.bounds.center.x - downHit.collider.bounds.extents.x;
+            float characterRight = characterCollider.bounds.center.x + characterCollider.bounds.extents.x;
+            bool touchGround = true; // this is to prevent the game from thinking you touched the ground when you're gonna slide off the side
+
             float hitDist = downHit.distance - 0.005f;
             if (Velocity.y < 0.0f && hitDist <= Mathf.Abs(Velocity.y))
             {
                 // if the character is about to clip into the enviornment with the back of their hit box, move them so that they won't clip
                 if (Velocity.x > 0.0f && downHit.collider.bounds.center.x + downHit.collider.bounds.extents.x < characterCollider.bounds.center.x)
                 {
-                    float colliderRight = downHit.collider.bounds.center.x + downHit.collider.bounds.extents.x;
-                    float characterLeft = characterCollider.bounds.center.x - characterCollider.bounds.extents.x;
-                    transform.Translate(new Vector2(colliderRight - characterLeft, 0.0f));  
+                    transform.Translate(new Vector2(downHitColliderRight - characterLeft, 0.0f));
+                    touchGround = false;
                 }
                 else if (Velocity.x < 0.0f && downHit.collider.bounds.center.x - downHit.collider.bounds.extents.x > characterCollider.bounds.center.x)
                 {
-                    float colliderLeft = downHit.collider.bounds.center.x - downHit.collider.bounds.extents.x;
-                    float characterRight = characterCollider.bounds.center.x + characterCollider.bounds.extents.x;
-                    transform.Translate(new Vector2(-(characterRight - colliderLeft), 0.0f));
+                    transform.Translate(new Vector2(-(characterRight - downHitColliderLeft), 0.0f));
+                    touchGround = false;
                 }
                 else // otherwise, touch the ground
                 {
@@ -275,7 +273,8 @@ public class SimpleCharacterCore : MonoBehaviour
             // Approximate! since floats are dumb
             if (Mathf.Approximately(hitDist - 1000000, -1000000))
             {
-                OnTheGround = true;
+                if(touchGround)
+                    OnTheGround = true;
             }
             else
             {
@@ -286,14 +285,56 @@ public class SimpleCharacterCore : MonoBehaviour
                     jumpGracePeriodTime = 0.0f;
                 }
                 OnTheGround = false;
+                againstTheLedge = false;
+            }
+
+            // stop at the edge of a platform
+            if (OnTheGround && currentMoveState != moveState.isRunning)
+            {
+                float rightLedgeDist = downHitColliderRight - characterRight;
+                if (Velocity.x > 0.0f && rightLedgeDist <= Mathf.Abs(Velocity.x))
+                {
+                    if (characterRight < downHitColliderRight)
+                        Velocity.x = rightLedgeDist;
+                    else
+                        Velocity.x = 0.0f;
+                }
+
+                float leftLedgeDist = characterLeft - downHitColliderLeft;
+                if (Velocity.x < 0.0f && leftLedgeDist <= Mathf.Abs(Velocity.x))
+                {
+                    if (characterLeft > downHitColliderLeft)
+                        Velocity.x = -leftLedgeDist;
+                    else
+                        Velocity.x = 0.0f;
+                }
+
+                if ((rightLedgeDist < 1.0f && FacingDirection == 1) || (leftLedgeDist < 1.0f && FacingDirection == -1))
+                {
+                    againstTheLedge = true;
+                }
+                else
+                    againstTheLedge = false;
             }
         }
 
+        /*
         // stop at the edge of a platform
+        if (downHit.collider != null && OnTheGround)
+        {
+            float ledgeDist = downHit.collider.bounds.center.x + 
 
-        //DEBUGGING STUFF
-        //tempshit.size = verticalBoxSize;
-        //tempshit.transform.position = downHitOrigin;
+            if tiltingright && charRight.x >= colldierRight.x
+
+                    float hitDist = rightHit.distance - 0.005f;
+                    if (Velocity.x > 0.0f && hitDist <= Mathf.Abs(Velocity.x))
+                        Velocity.x = hitDist;
+        }
+        */
+
+            //DEBUGGING STUFF
+            //tempshit.size = verticalBoxSize;
+            //tempshit.transform.position = downHitOrigin;
 
     }
 
@@ -326,7 +367,7 @@ public class SimpleCharacterCore : MonoBehaviour
             SpriteRenderer.flipX = false;
     }
 
-    void RunInput()
+    void MovementInput()
     {
         if (InputManager.RunInputInst && currentMoveState != moveState.isRunning)
         {
@@ -373,6 +414,21 @@ public class SimpleCharacterCore : MonoBehaviour
             characterAccel = -ACCELERATION;
         else
             characterAccel = 0.0f;
+
+        // Jump logic. Keep the Y velocity constant while holding jump for the duration of JUMP_CONTROL_TIME
+        if ((jumpGracePeriod || OnTheGround) && InputManager.JumpInputInst)
+        {
+            isJumping = true;
+            jumpGracePeriod = false;
+            jumpInputTime = 0.0f;
+            jumpTurned = false;
+        }
+
+        // check if you're looking over the ledge
+        if (againstTheLedge && Mathf.Abs(InputManager.HorizontalAxis) > 0.0f)
+            lookingOverLedge = true;
+        else
+            lookingOverLedge = false;
     }
 
 }
