@@ -18,5 +18,6 @@ public static class CollisionMasks
 
     public static int AllCollisionMask = GeoMask | ObjectMask | CharacterMask | JumpthroughMask;
     public static int UpwardsCollisionMask = GeoMask | ObjectMask | CharacterMask;
+    public static int WallGrabMask = GeoMask;
 }
 

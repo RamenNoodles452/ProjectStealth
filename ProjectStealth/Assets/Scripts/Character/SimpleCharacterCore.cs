@@ -3,7 +3,7 @@ using System.Collections;
 
 public class SimpleCharacterCore : MonoBehaviour
 {
-    public BoxCollider tempshit;
+    public BoxCollider tempshit; // TODO: This is to be removed. It's being used to display the changing boxcasting
 
     protected int previousFacingDirection = 1;
     public int FacingDirection = 1;
@@ -11,7 +11,7 @@ public class SimpleCharacterCore : MonoBehaviour
     public Animator Anim;
     public IInputManager InputManager;
     public Vector2 Velocity;
-    private BoxCollider2D characterCollider;
+    protected BoxCollider2D characterCollider;
     
     //gravity vars
     public bool OnTheGround = false;
@@ -49,6 +49,8 @@ public class SimpleCharacterCore : MonoBehaviour
     // ledge logic
     public bool lookingOverLedge; // TODO: private
     public bool againstTheLedge; // TODO: private
+	public bool touchingGrabSurface; // TODO: private
+    protected Collider2D grabCollider;
 
     // Use this for initialization
     public virtual void Start()
@@ -187,8 +189,9 @@ public class SimpleCharacterCore : MonoBehaviour
             Velocity.x = -moveSpeed;
     }
 
-    private void Collisions()
+	private void Collisions()
     {
+        // Horizontal Collision Block
         // box used to collide against horizontal objects. Extend the hitbox vertically while in the air to avoid corner clipping
         Vector2 horizontalBoxSize;
         if (OnTheGround)
@@ -203,11 +206,12 @@ public class SimpleCharacterCore : MonoBehaviour
         else
             rightHitOrigin = characterCollider.bounds.center + new Vector3(0.0f, -2.5f);
         RaycastHit2D rightHit = Physics2D.BoxCast(rightHitOrigin, horizontalBoxSize, 0.0f, Vector2.right, Mathf.Infinity, CollisionMasks.AllCollisionMask);
+        float rightHitDist = Mathf.Infinity;
         if (rightHit.collider != null)
         {
-            float hitDist = rightHit.distance - 0.005f;
-            if (Velocity.x > 0.0f && hitDist <= Mathf.Abs(Velocity.x))
-                Velocity.x = hitDist;
+            rightHitDist = rightHit.distance - 0.005f;
+            if (Velocity.x > 0.0f && rightHitDist <= Mathf.Abs(Velocity.x))
+                Velocity.x = rightHitDist;
         }
 
         // raycast to collide left
@@ -217,13 +221,34 @@ public class SimpleCharacterCore : MonoBehaviour
         else
             leftHitOrigin = characterCollider.bounds.center + new Vector3(0.0f, -2.5f);
         RaycastHit2D leftHit = Physics2D.BoxCast(leftHitOrigin, horizontalBoxSize, 0.0f, Vector2.left, Mathf.Infinity, CollisionMasks.AllCollisionMask);
+        float leftHitDist = Mathf.Infinity;
         if (leftHit.collider != null)
         {
-            float hitDist = leftHit.distance - 0.005f;
-            if (Velocity.x < 0.0f && hitDist <= Mathf.Abs(Velocity.x))
-                Velocity.x = -hitDist;
+            leftHitDist = leftHit.distance - 0.005f;
+            if (Velocity.x < 0.0f && leftHitDist <= Mathf.Abs(Velocity.x))
+                Velocity.x = -leftHitDist;
         }
-        
+
+        // are we touching the wall?
+        RaycastHit2D centerRightHit = Physics2D.Raycast(characterCollider.bounds.center, Vector2.right, Mathf.Infinity, CollisionMasks.WallGrabMask);
+        RaycastHit2D centerLeftHit = Physics2D.Raycast(characterCollider.bounds.center, Vector2.left, Mathf.Infinity, CollisionMasks.WallGrabMask);
+        if (centerRightHit.collider != null && rightHit.collider != null && Mathf.Approximately(rightHitDist - 1000000, -1000000) && centerRightHit.collider.Equals(rightHit.collider))
+        {
+            touchingGrabSurface = true;
+            grabCollider = centerRightHit.collider;
+        }
+        else if (centerLeftHit.collider != null && leftHit.collider != null && Mathf.Approximately(leftHitDist - 1000000, -1000000) && centerLeftHit.collider.Equals(leftHit.collider))
+        {
+            touchingGrabSurface = true;
+            grabCollider = centerLeftHit.collider;
+        }
+        else
+        {
+            touchingGrabSurface = false;
+            grabCollider = null;
+        }
+
+        // Vertical Collision Block
         Vector2 verticalBoxSize = new Vector2(characterCollider.bounds.size.x - 0.01f, characterCollider.bounds.size.y - 0.01f);
 
         // raycast to hit the ceiling
@@ -255,12 +280,12 @@ public class SimpleCharacterCore : MonoBehaviour
                 // if the character is about to clip into the enviornment with the back of their hit box, move them so that they won't clip
                 if (Velocity.x > 0.0f && downHit.collider.bounds.center.x + downHit.collider.bounds.extents.x < characterCollider.bounds.center.x)
                 {
-                    transform.Translate(new Vector2(downHitColliderRight - characterLeft, 0.0f));
+                    transform.Translate(downHitColliderRight - characterLeft, 0.0f, 0.0f);
                     touchGround = false;
                 }
                 else if (Velocity.x < 0.0f && downHit.collider.bounds.center.x - downHit.collider.bounds.extents.x > characterCollider.bounds.center.x)
                 {
-                    transform.Translate(new Vector2(-(characterRight - downHitColliderLeft), 0.0f));
+                    transform.Translate(-(characterRight - downHitColliderLeft), 0.0f, 0.0f);
                     touchGround = false;
                 }
                 else // otherwise, touch the ground
@@ -317,25 +342,6 @@ public class SimpleCharacterCore : MonoBehaviour
                     againstTheLedge = false;
             }
         }
-
-        /*
-        // stop at the edge of a platform
-        if (downHit.collider != null && OnTheGround)
-        {
-            float ledgeDist = downHit.collider.bounds.center.x + 
-
-            if tiltingright && charRight.x >= colldierRight.x
-
-                    float hitDist = rightHit.distance - 0.005f;
-                    if (Velocity.x > 0.0f && hitDist <= Mathf.Abs(Velocity.x))
-                        Velocity.x = hitDist;
-        }
-        */
-
-            //DEBUGGING STUFF
-            //tempshit.size = verticalBoxSize;
-            //tempshit.transform.position = downHitOrigin;
-
     }
 
     void CalculateDirection()
