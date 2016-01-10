@@ -76,9 +76,6 @@ public class SimpleCharacterCore : MonoBehaviour
         if (previousFacingDirection != FacingDirection)
             SetFacing();
 
-        // prev state assignments
-        prevMoveState = currentMoveState;
-        previousFacingDirection = FacingDirection;
         if (jumpGracePeriod == true)
         {
             jumpGracePeriodTime = jumpGracePeriodTime + Time.deltaTime * TimeScale.timeScale;
@@ -86,6 +83,13 @@ public class SimpleCharacterCore : MonoBehaviour
                 jumpGracePeriod = false;
         }
             
+    }
+
+    public virtual void LateUpdate()
+    {
+        // prev state assignments
+        prevMoveState = currentMoveState;
+        previousFacingDirection = FacingDirection;
     }
 
     public virtual void FixedUpdate()
@@ -189,7 +193,7 @@ public class SimpleCharacterCore : MonoBehaviour
             Velocity.x = -moveSpeed;
     }
 
-	private void Collisions()
+	public virtual void Collisions()
     {
         // Horizontal Collision Block
         // box used to collide against horizontal objects. Extend the hitbox vertically while in the air to avoid corner clipping
@@ -268,22 +272,22 @@ public class SimpleCharacterCore : MonoBehaviour
         RaycastHit2D downHit = Physics2D.BoxCast(downHitOrigin, verticalBoxSize, 0.0f, Vector2.down, Mathf.Infinity, CollisionMasks.AllCollisionMask);
         if (downHit.collider != null)
         {
-            float downHitColliderRight = downHit.collider.bounds.center.x + downHit.collider.bounds.extents.x;
-            float characterLeft = characterCollider.bounds.center.x - characterCollider.bounds.extents.x;
-            float downHitColliderLeft = downHit.collider.bounds.center.x - downHit.collider.bounds.extents.x;
-            float characterRight = characterCollider.bounds.center.x + characterCollider.bounds.extents.x;
-            bool touchGround = true; // this is to prevent the game from thinking you touched the ground when you're gonna slide off the side
+            float downHitColliderLeft = downHit.collider.bounds.min.x;
+            float downHitColliderRight = downHit.collider.bounds.max.x;
+            float characterLeft = characterCollider.bounds.min.x;
+            float characterRight = characterCollider.bounds.max.x;
+            bool touchGround = true; // this is to prevent the game from thinking you touched the ground when you're gonna slip off the side when falling
 
             float hitDist = downHit.distance - 0.005f;
             if (Velocity.y < 0.0f && hitDist <= Mathf.Abs(Velocity.y))
             {
                 // if the character is about to clip into the enviornment with the back of their hit box, move them so that they won't clip
-                if (Velocity.x > 0.0f && downHit.collider.bounds.center.x + downHit.collider.bounds.extents.x < characterCollider.bounds.center.x)
+                if (Velocity.x > 0.0f && downHitColliderRight < characterCollider.bounds.center.x)
                 {
                     transform.Translate(downHitColliderRight - characterLeft, 0.0f, 0.0f);
                     touchGround = false;
                 }
-                else if (Velocity.x < 0.0f && downHit.collider.bounds.center.x - downHit.collider.bounds.extents.x > characterCollider.bounds.center.x)
+                else if (Velocity.x < 0.0f && downHitColliderLeft> characterCollider.bounds.center.x)
                 {
                     transform.Translate(-(characterRight - downHitColliderLeft), 0.0f, 0.0f);
                     touchGround = false;
@@ -294,7 +298,6 @@ public class SimpleCharacterCore : MonoBehaviour
                 }
             }
                 
-
             // Approximate! since floats are dumb
             if (Mathf.Approximately(hitDist - 1000000, -1000000))
             {
@@ -334,10 +337,9 @@ public class SimpleCharacterCore : MonoBehaviour
                         Velocity.x = 0.0f;
                 }
 
+                // set if character is against the ledge
                 if ((rightLedgeDist < 1.0f && FacingDirection == 1) || (leftLedgeDist < 1.0f && FacingDirection == -1))
-                {
                     againstTheLedge = true;
-                }
                 else
                     againstTheLedge = false;
             }
@@ -373,7 +375,7 @@ public class SimpleCharacterCore : MonoBehaviour
             SpriteRenderer.flipX = false;
     }
 
-    void MovementInput()
+    protected void MovementInput()
     {
         if (InputManager.RunInputInst && currentMoveState != moveState.isRunning)
         {
