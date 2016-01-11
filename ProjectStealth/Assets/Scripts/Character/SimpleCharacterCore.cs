@@ -20,7 +20,7 @@ public class SimpleCharacterCore : MonoBehaviour
 
     //jump vars
     private const float JUMP_VERTICAL_SPEED = 8.0f;
-    private const float JUMP_HORIZONTAL_SPEED = 3.0f;
+    protected const float JUMP_HORIZONTAL_SPEED = 3.0f;
     private const float JUMP_RUN_HORIZONTAL_SPEED = 4.0f;
     private const float JUMP_CONTROL_TIME = 0.17f; //maximum duration of a jump if you hold it
     private const float JUMP_DURATION_MIN = 0.08f; //minimum duration of a jump if you tap it
@@ -28,8 +28,8 @@ public class SimpleCharacterCore : MonoBehaviour
     private bool jumpGracePeriod; //variable for jump tolerance if a player walks off a platform but wants to jump
     private float jumpGracePeriodTime;
     public bool isJumping;
-    private float jumpInputTime;
-    private bool jumpTurned;
+	protected float jumpInputTime;
+	protected bool jumpTurned;
     
     //walk and run vars
     private const float MAX_HORIZONTAL_SPEED = 4.5f;
@@ -42,7 +42,7 @@ public class SimpleCharacterCore : MonoBehaviour
     protected moveState currentMoveState = moveState.isWalking;
     protected moveState tempMoveState;
     protected moveState prevMoveState;
-    private float characterAccel = 0.0f;
+    protected float characterAccel = 0.0f;
     private bool mustDecel; // when a character starts running, they slow down to a stop
     private bool startRun; // this bool prevents wonky shit from happening if you turn around during a run
 
@@ -185,7 +185,7 @@ public class SimpleCharacterCore : MonoBehaviour
 
     }
 
-    private void HorizontalJumpVel(float moveSpeed)
+    protected void HorizontalJumpVel(float moveSpeed)
     {
         if (characterAccel > 0.0f)
             Velocity.x = moveSpeed;
@@ -367,7 +367,7 @@ public class SimpleCharacterCore : MonoBehaviour
         }
     }
 
-    void SetFacing()
+    protected void SetFacing()
     {
         if (FacingDirection == -1)
             SpriteRenderer.flipX = true;

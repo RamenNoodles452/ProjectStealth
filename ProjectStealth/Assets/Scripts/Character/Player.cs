@@ -124,16 +124,22 @@ public class Player : SimpleCharacterCore
 
     void ClimbMovementInput()
     {
-        /*
         // Jump logic. Keep the Y velocity constant while holding jump for the duration of JUMP_CONTROL_TIME
-        if ((jumpGracePeriod || OnTheGround) && InputManager.JumpInputInst)
+		if (!lookingOverLedge && InputManager.JumpInputInst)
         {
+			grabbingWall = false;
             isJumping = true;
-            jumpGracePeriod = false;
             jumpInputTime = 0.0f;
-            jumpTurned = false;
+            FacingDirection = -FacingDirection;
+            if (FacingDirection == 1)
+                characterAccel = ACCELERATION;
+            else
+                characterAccel = -ACCELERATION;
+            HorizontalJumpVel(JUMP_HORIZONTAL_SPEED);
+            SetFacing();
+
+            base.FixedUpdate();
         }
-        */
         /*
         // check if you're looking over the ledge
         if (againstTheLedge && Mathf.Abs(InputManager.HorizontalAxis) > 0.0f)
