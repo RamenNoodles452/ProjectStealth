@@ -25,6 +25,7 @@ public abstract class IInputManager : MonoBehaviour {
     public UnityEvent TogglePause;
 
     #endregion Events
+    public bool InputOverride;
 
     public float HorizontalAxis;
     public float VerticalAxis;

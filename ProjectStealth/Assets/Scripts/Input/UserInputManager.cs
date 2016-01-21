@@ -3,7 +3,6 @@ using System.Collections;
 
 public class UserInputManager : IInputManager
 {
-    public bool InputOverride;
 
     void Start()
     {

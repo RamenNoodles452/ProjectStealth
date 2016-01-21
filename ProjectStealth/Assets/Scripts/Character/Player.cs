@@ -10,6 +10,7 @@ public class Player : SimpleCharacterCore
 	private CharacterStatus Status;
 
 	public bool grabbingWall; // TODO: private
+	public bool ledgeClimb; // TODO: private
 
 	void Awake ()
 	{
@@ -92,6 +93,7 @@ public class Player : SimpleCharacterCore
 
                         if (grabCollider.bounds.max.y >= characterCollider.bounds.max.y)
                         {
+                            isJumping = false;
                             grabbingWall = true;
                             currentMoveState = moveState.isSneaking;
                         }
@@ -108,45 +110,85 @@ public class Player : SimpleCharacterCore
 
 	public override void FixedUpdate ()
 	{
-		if (!grabbingWall)
-			base.FixedUpdate ();
-		else 
+        if (ledgeClimb) 
+        {
+            transform.position = BezierCurveMovement(bzrDistance, bzrStartPosition, bzrEndPosition, bzrCurvePosition);
+
+            if (bzrDistance < 1.0f)
+                bzrDistance = bzrDistance + Time.deltaTime * TimeScale.timeScale * 5;
+            else
+            {
+                ledgeClimb = false;
+                grabbingWall = false;
+                InputManager.InputOverride = false;
+            }
+		}
+		else if (grabbingWall) 
 		{
-            ClimbHorizontalVelocity();
-            ClimbVerticalVelocity();
-			Collisions();
-            ClimbVerticalEdgeDetect();
+			ClimbHorizontalVelocity ();
+			ClimbVerticalVelocity ();
+			Collisions ();
+			ClimbVerticalEdgeDetect ();
 
 			//move the character after all calculations have been done
-			transform.Translate(Velocity);
+			transform.Translate (Velocity);
 		}
+		else
+			base.FixedUpdate ();
 	}
 
     void ClimbMovementInput()
     {
-        // Jump logic. Keep the Y velocity constant while holding jump for the duration of JUMP_CONTROL_TIME
-		if (!lookingOverLedge && InputManager.JumpInputInst)
-        {
-			grabbingWall = false;
-            isJumping = true;
-            jumpInputTime = 0.0f;
-            FacingDirection = -FacingDirection;
-            if (FacingDirection == 1)
-                characterAccel = ACCELERATION;
-            else
-                characterAccel = -ACCELERATION;
-            HorizontalJumpVel(JUMP_HORIZONTAL_SPEED);
-            SetFacing();
+		LookingOverLedge (InputManager.VerticalAxis);
 
-            base.FixedUpdate();
-        }
-        /*
-        // check if you're looking over the ledge
-        if (againstTheLedge && Mathf.Abs(InputManager.HorizontalAxis) > 0.0f)
-            lookingOverLedge = true;
-        else
-            lookingOverLedge = false;
-        */
+        // Jump logic. Keep the Y velocity constant while holding jump for the duration of JUMP_CONTROL_TIME
+		if (!lookingOverLedge && InputManager.JumpInputInst) {
+			grabbingWall = false;
+			isJumping = true;
+			jumpInputTime = 0.0f;
+			FacingDirection = -FacingDirection;
+			if (FacingDirection == 1)
+				characterAccel = ACCELERATION;
+			else
+				characterAccel = -ACCELERATION;
+			HorizontalJumpVel (JUMP_HORIZONTAL_SPEED);
+			SetFacing ();
+
+            // gotta do a second call of fixed update to make sure we move off the wall
+			base.FixedUpdate ();
+		} 
+        else if (lookingOverLedge && InputManager.JumpInputInst) 
+        {
+            // if we're looking below
+            if (grabCollider.bounds.min.y == characterCollider.bounds.min.y)
+            {
+                grabbingWall = false;
+            }
+            // if we're looking above
+            else if (grabCollider.bounds.max.y == characterCollider.bounds.max.y)
+            {
+                InputManager.JumpInputInst = false;
+                InputManager.InputOverride = true;
+                // translate body to on the ledge
+				bzrDistance = 0.0f;
+				bzrStartPosition = characterCollider.bounds.center;
+
+                if (FacingDirection == 1)
+                {
+                    bzrEndPosition = characterCollider.bounds.center + characterCollider.bounds.size;
+                    bzrCurvePosition = new Vector2(characterCollider.bounds.center.x - characterCollider.bounds.extents.x, characterCollider.bounds.center.y + characterCollider.bounds.size.y * 2);
+                }
+                else
+                {
+                    bzrEndPosition = new Vector2(characterCollider.bounds.center.x - characterCollider.bounds.size.x, characterCollider.bounds.center.y + characterCollider.bounds.size.y);
+                    bzrCurvePosition = new Vector2(characterCollider.bounds.center.x + characterCollider.bounds.extents.x, characterCollider.bounds.center.y + characterCollider.bounds.size.y * 2);
+                }
+                ledgeClimb = true;
+			}
+            else
+                Debug.LogError("This should never happen");
+		}
+        
     }
 
     void ClimbHorizontalVelocity()

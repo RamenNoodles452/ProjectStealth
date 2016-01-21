@@ -52,6 +52,12 @@ public class SimpleCharacterCore : MonoBehaviour
 	public bool touchingGrabSurface; // TODO: private
     protected Collider2D grabCollider;
 
+	// bezier curve vars for getting up ledges and jumping over cover
+	protected Vector2 bzrStartPosition;
+	protected Vector2 bzrEndPosition;
+	protected Vector2 bzrCurvePosition;
+	protected float bzrDistance;
+
     // Use this for initialization
     public virtual void Start()
     {
@@ -287,7 +293,7 @@ public class SimpleCharacterCore : MonoBehaviour
                     transform.Translate(downHitColliderRight - characterLeft, 0.0f, 0.0f);
                     touchGround = false;
                 }
-                else if (Velocity.x < 0.0f && downHitColliderLeft> characterCollider.bounds.center.x)
+                else if (Velocity.x < 0.0f && downHitColliderLeft > characterCollider.bounds.center.x)
                 {
                     transform.Translate(-(characterRight - downHitColliderLeft), 0.0f, 0.0f);
                     touchGround = false;
@@ -301,7 +307,7 @@ public class SimpleCharacterCore : MonoBehaviour
             // Approximate! since floats are dumb
             if (Mathf.Approximately(hitDist - 1000000, -1000000))
             {
-                if(touchGround)
+                if (touchGround)
                     OnTheGround = true;
             }
             else
@@ -344,6 +350,9 @@ public class SimpleCharacterCore : MonoBehaviour
                     againstTheLedge = false;
             }
         }
+        // if there is no floor, just fall
+        else
+            OnTheGround = false;
     }
 
     void CalculateDirection()
@@ -377,6 +386,9 @@ public class SimpleCharacterCore : MonoBehaviour
 
     protected void MovementInput()
     {
+		
+		LookingOverLedge(InputManager.HorizontalAxis);
+
         if (InputManager.RunInputInst && currentMoveState != moveState.isRunning)
         {
             tempMoveState = currentMoveState;
@@ -432,11 +444,22 @@ public class SimpleCharacterCore : MonoBehaviour
             jumpTurned = false;
         }
 
-        // check if you're looking over the ledge
-        if (againstTheLedge && Mathf.Abs(InputManager.HorizontalAxis) > 0.0f)
-            lookingOverLedge = true;
-        else
-            lookingOverLedge = false;
     }
+
+	protected void LookingOverLedge(float inputAxis)
+	{
+		// check if you're looking over the ledge
+		if (againstTheLedge && Mathf.Abs(inputAxis) > 0.0f)
+			lookingOverLedge = true;
+		else
+			lookingOverLedge = false;
+	}
+
+	protected Vector2 BezierCurveMovement(float distance, Vector2 start, Vector2 end, Vector2 curvePoint)
+	{
+		Vector2 ab = Vector2.Lerp(start, curvePoint, distance);
+		Vector2 bc = Vector2.Lerp(curvePoint, end, distance);
+		return Vector2.Lerp(ab, bc, distance);
+	}
 
 }
