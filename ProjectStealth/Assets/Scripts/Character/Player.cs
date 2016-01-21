@@ -82,7 +82,7 @@ public class Player : SimpleCharacterCore
                             RaycastHit2D predictionCast;
                             float offsetDistance = characterCollider.bounds.max.y - grabCollider.bounds.max.y;
                             Vector2 predictionCastOrigin = new Vector2(characterCollider.bounds.center.x, characterCollider.bounds.min.y - offsetDistance);
-                            if (FacingDirection == -1)
+                            if (grabCollider.bounds.center.x < characterCollider.bounds.center.x)
                                 predictionCast = Physics2D.Raycast(predictionCastOrigin, Vector2.left, Mathf.Infinity, CollisionMasks.AllCollisionMask);
                             else
                                 predictionCast = Physics2D.Raycast(predictionCastOrigin, Vector2.right, Mathf.Infinity, CollisionMasks.AllCollisionMask);
@@ -90,12 +90,23 @@ public class Player : SimpleCharacterCore
                             if (predictionCast.collider == grabCollider)
                                 transform.Translate(0.0f, -(characterCollider.bounds.max.y - grabCollider.bounds.max.y), 0.0f);
                         }
-
+                        // if we're good to grab, get everything in order
                         if (grabCollider.bounds.max.y >= characterCollider.bounds.max.y)
                         {
+                            jumpTurned = false;
                             isJumping = false;
                             grabbingWall = true;
                             currentMoveState = moveState.isSneaking;
+
+                            // variable sets to prevent weird turning when grabbing onto a wall
+                            // if the wall is to our left
+                            if (grabCollider.bounds.center.x < characterCollider.bounds.center.x)
+                                FacingDirection = -1;
+                            // if the wall is to our right
+                            else
+                                FacingDirection = 1;
+                            SetFacing();
+                            Velocity.x = 0.0f;
                         }
                     }
                 }
@@ -110,7 +121,7 @@ public class Player : SimpleCharacterCore
 
 	public override void FixedUpdate ()
 	{
-        if (ledgeClimb) 
+        if (ledgeClimb ) 
         {
             transform.position = BezierCurveMovement(bzrDistance, bzrStartPosition, bzrEndPosition, bzrCurvePosition);
 

@@ -20,22 +20,23 @@ public class SimpleCharacterCore : MonoBehaviour
 
     //jump vars
     private const float JUMP_VERTICAL_SPEED = 8.0f;
-    protected const float JUMP_HORIZONTAL_SPEED = 3.0f;
-    private const float JUMP_RUN_HORIZONTAL_SPEED = 4.0f;
+    protected const float JUMP_HORIZONTAL_SPEED = 4.0f;
+    private const float JUMP_RUN_HORIZONTAL_SPEED = 6.0f;
+    private const float JUMP_TURN_HORIZONTAL_SPEED = 3.0f;
     private const float JUMP_CONTROL_TIME = 0.17f; //maximum duration of a jump if you hold it
     private const float JUMP_DURATION_MIN = 0.08f; //minimum duration of a jump if you tap it
     private const float JUMP_GRACE_PERIOD_TIME = 0.10f; //how long a player has to jump if they slip off a platform
     private bool jumpGracePeriod; //variable for jump tolerance if a player walks off a platform but wants to jump
     private float jumpGracePeriodTime;
-    public bool isJumping;
+    public bool isJumping; //TODO: protected
 	protected float jumpInputTime;
-	protected bool jumpTurned;
-    
+	public bool jumpTurned; //TODO: protected
+
     //walk and run vars
     private const float MAX_HORIZONTAL_SPEED = 4.5f;
-    protected float WALK_SPEED = 1.0f; //used for cutscenes with Alice, guards will walk when not alerted
-    protected float SNEAK_SPEED = 1.5f; //Alice's default speed, enemies that were walking will use this speed when on guard
-    protected float RUN_SPEED = 4.0f;
+    protected float WALK_SPEED = 1.5f; //used for cutscenes with Alice, guards will walk when not alerted
+    protected float SNEAK_SPEED = 3.0f; //Alice's default speed, enemies that were walking will use this speed when on guard
+    protected float RUN_SPEED = 6.0f;
     protected float ACCELERATION = 6.0f; // acceleration used for velocity calcs when running
     protected float DRAG = 15.0f; // how quickly a character decelerates when running
     protected enum moveState { isWalking, isSneaking, isRunning };
@@ -143,16 +144,18 @@ public class SimpleCharacterCore : MonoBehaviour
         }
         else
         {
-            if (currentMoveState == moveState.isWalking || currentMoveState == moveState.isSneaking)
+            if (jumpTurned)
+                HorizontalJumpVel(JUMP_TURN_HORIZONTAL_SPEED);
+            else
             {
-                HorizontalJumpVel(JUMP_HORIZONTAL_SPEED);
-            }
-            else if (currentMoveState == moveState.isRunning)
-            {
-                if (jumpTurned)
+                if (currentMoveState == moveState.isWalking || currentMoveState == moveState.isSneaking)
+                {
                     HorizontalJumpVel(JUMP_HORIZONTAL_SPEED);
-                else
+                }
+                else if (currentMoveState == moveState.isRunning)
+                {
                     HorizontalJumpVel(JUMP_RUN_HORIZONTAL_SPEED);
+                }
             }
         }
 
@@ -178,6 +181,18 @@ public class SimpleCharacterCore : MonoBehaviour
             }
             else
             {
+
+                // TODO THIS NEEDS TO GET ADDRESSED. WHEN YOU TURN AROUND, VERTICAL VELOCITY SHOULD STOP
+                // BUT I'M NOT SURE HOW TO DO THAT IN A SMOOTH MANNER WITHOUT MAKING IT SUPER JERKY
+                // ALSO HAS A WEIRD INTERACTION WHERE YOU DON'T JUMP OFF THE WALL AT A CONSISTENT VERTIAL VELOCITY ANYMORE. CHECK THAT OUT TOO
+                Velocity.y = 0.0f;
+                isJumping = false;
+            }
+
+            // if you turned while jumping, stop all vertical movement
+            if (jumpTurned)
+            {
+                Velocity.y = 0.0f;
                 isJumping = false;
             }
         }
