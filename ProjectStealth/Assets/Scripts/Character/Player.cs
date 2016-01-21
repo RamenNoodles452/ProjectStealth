@@ -121,7 +121,7 @@ public class Player : SimpleCharacterCore
 
 	public override void FixedUpdate ()
 	{
-        if (ledgeClimb ) 
+        if (ledgeClimb)
         {
             transform.position = BezierCurveMovement(bzrDistance, bzrStartPosition, bzrEndPosition, bzrCurvePosition);
 
