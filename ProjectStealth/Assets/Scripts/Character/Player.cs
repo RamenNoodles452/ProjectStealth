@@ -162,8 +162,8 @@ public class Player : SimpleCharacterCore
 				characterAccel = ACCELERATION;
 			else
 				characterAccel = -ACCELERATION;
-            horizontalAxisInstance = true;
-			HorizontalJumpVel (JUMP_HORIZONTAL_SPEED);
+
+            HorizontalJumpVel (JUMP_HORIZONTAL_SPEED);
 			SetFacing ();
 
             // gotta do a second call of fixed update to make sure we move off the wall

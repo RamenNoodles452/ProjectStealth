@@ -29,6 +29,8 @@ public abstract class IInputManager : MonoBehaviour {
 
     public float HorizontalAxis;
     public float VerticalAxis;
+
+    //this instance var isn't used but it might come in handy one day
     public bool HorizontalAxisInstance;
     protected bool horizontalInstanceCheck;
 
