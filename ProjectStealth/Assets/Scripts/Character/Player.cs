@@ -152,7 +152,7 @@ public class Player : SimpleCharacterCore
     {
 		LookingOverLedge (InputManager.VerticalAxis);
 
-        // Jump logic. Keep the Y velocity constant while holding jump for the duration of JUMP_CONTROL_TIME
+        // Jump logic.
 		if (!lookingOverLedge && InputManager.JumpInputInst) {
 			grabbingWall = false;
 			isJumping = true;
@@ -162,6 +162,7 @@ public class Player : SimpleCharacterCore
 				characterAccel = ACCELERATION;
 			else
 				characterAccel = -ACCELERATION;
+            horizontalAxisInstance = true;
 			HorizontalJumpVel (JUMP_HORIZONTAL_SPEED);
 			SetFacing ();
 

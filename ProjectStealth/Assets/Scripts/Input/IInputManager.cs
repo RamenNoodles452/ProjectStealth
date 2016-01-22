@@ -29,8 +29,11 @@ public abstract class IInputManager : MonoBehaviour {
 
     public float HorizontalAxis;
     public float VerticalAxis;
-    public bool HorizontalInput;
-    public bool VerticalInput;
+    public bool HorizontalAxisInstance;
+    protected bool horizontalInstanceCheck;
+
+    //public bool HorizontalInput;
+    //public bool VerticalInput;
 
     public bool JumpInput;
     public bool JumpInputInst;

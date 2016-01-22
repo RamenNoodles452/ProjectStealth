@@ -12,6 +12,9 @@ public class SimpleCharacterCore : MonoBehaviour
     public IInputManager InputManager;
     public Vector2 Velocity;
     protected BoxCollider2D characterCollider;
+
+    //general movement vars
+    protected bool horizontalAxisInstance;
     
     //gravity vars
     public bool OnTheGround = false;
@@ -22,9 +25,9 @@ public class SimpleCharacterCore : MonoBehaviour
     private const float JUMP_VERTICAL_SPEED = 8.0f;
     protected const float JUMP_HORIZONTAL_SPEED = 4.0f;
     private const float JUMP_RUN_HORIZONTAL_SPEED = 6.0f;
-    private const float JUMP_TURN_HORIZONTAL_SPEED = 3.0f;
-    private const float JUMP_CONTROL_TIME = 0.17f; //maximum duration of a jump if you hold it
-    private const float JUMP_DURATION_MIN = 0.08f; //minimum duration of a jump if you tap it
+    private const float JUMP_TURN_HORIZONTAL_SPEED = 2.5f;
+    private const float JUMP_CONTROL_TIME = 0.20f; //maximum duration of a jump if you hold it
+    private const float JUMP_DURATION_MIN = 0.10f; //minimum duration of a jump if you tap it
     private const float JUMP_GRACE_PERIOD_TIME = 0.10f; //how long a player has to jump if they slip off a platform
     private bool jumpGracePeriod; //variable for jump tolerance if a player walks off a platform but wants to jump
     private float jumpGracePeriodTime;
@@ -185,16 +188,16 @@ public class SimpleCharacterCore : MonoBehaviour
                 // TODO THIS NEEDS TO GET ADDRESSED. WHEN YOU TURN AROUND, VERTICAL VELOCITY SHOULD STOP
                 // BUT I'M NOT SURE HOW TO DO THAT IN A SMOOTH MANNER WITHOUT MAKING IT SUPER JERKY
                 // ALSO HAS A WEIRD INTERACTION WHERE YOU DON'T JUMP OFF THE WALL AT A CONSISTENT VERTIAL VELOCITY ANYMORE. CHECK THAT OUT TOO
-                Velocity.y = 0.0f;
+                Velocity.y = JUMP_VERTICAL_SPEED / 2;
                 isJumping = false;
             }
+        }
 
-            // if you turned while jumping, stop all vertical movement
-            if (jumpTurned)
-            {
-                Velocity.y = 0.0f;
-                isJumping = false;
-            }
+        // if you turned while jumping, stop all vertical movement
+        if (jumpTurned && Velocity.y > 0.0f)
+        {
+            Velocity.y = 0.0f;
+            isJumping = false;
         }
 
         Velocity.y = Mathf.Clamp(Velocity.y, -MAX_VERTICAL_SPEED, MAX_VERTICAL_SPEED);
@@ -208,10 +211,13 @@ public class SimpleCharacterCore : MonoBehaviour
 
     protected void HorizontalJumpVel(float moveSpeed)
     {
-        if (characterAccel > 0.0f)
-            Velocity.x = moveSpeed;
-        else if (characterAccel < 0.0f)
-            Velocity.x = -moveSpeed;
+        if (horizontalAxisInstance)
+        {
+            if (characterAccel > 0.0f)
+                Velocity.x = moveSpeed;
+            else if (characterAccel < 0.0f)
+                Velocity.x = -moveSpeed;
+        }
     }
 
 	public virtual void Collisions()
@@ -323,7 +329,10 @@ public class SimpleCharacterCore : MonoBehaviour
             if (Mathf.Approximately(hitDist - 1000000, -1000000))
             {
                 if (touchGround)
+                {
                     OnTheGround = true;
+                    jumpTurned = false;
+                }
             }
             else
             {
@@ -375,19 +384,33 @@ public class SimpleCharacterCore : MonoBehaviour
         // character direction logic
         if (FacingDirection == -1 && InputManager.HorizontalAxis > 0)
         {
-            FacingDirection = 1;
+            if (OnTheGround)
+                FacingDirection = 1;
             //Anim.SetBool("TurnAround", true);
 
             if (!OnTheGround)
-                jumpTurned = true;
+            {
+                if (horizontalAxisInstance)
+                {
+                    jumpTurned = true;
+                    FacingDirection = 1;
+                }
+            }
         }
         else if (FacingDirection == 1 && InputManager.HorizontalAxis < 0)
         {
-            FacingDirection = -1;
+            if (OnTheGround)
+                FacingDirection = -1;
             //Anim.SetBool("TurnAround", true);
 
             if (!OnTheGround)
-                jumpTurned = true;
+            {
+                if (horizontalAxisInstance)
+                {
+                    jumpTurned = true;
+                    FacingDirection = -1;
+                }
+            }
         }
     }
 
@@ -450,13 +473,17 @@ public class SimpleCharacterCore : MonoBehaviour
         else
             characterAccel = 0.0f;
 
+        horizontalAxisInstance = InputManager.HorizontalAxisInstance;
+        if (horizontalAxisInstance)
+            print("ASDASDASD");
+
         // Jump logic. Keep the Y velocity constant while holding jump for the duration of JUMP_CONTROL_TIME
         if ((jumpGracePeriod || OnTheGround) && InputManager.JumpInputInst)
         {
+            horizontalAxisInstance = true;
             isJumping = true;
             jumpGracePeriod = false;
             jumpInputTime = 0.0f;
-            jumpTurned = false;
         }
 
     }
