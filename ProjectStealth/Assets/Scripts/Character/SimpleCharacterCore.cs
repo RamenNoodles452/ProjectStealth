@@ -19,23 +19,24 @@ public class SimpleCharacterCore : MonoBehaviour
     private const float GRAVITATIONAL_FORCE = -30.0f;
 
     //jump vars
-    private const float JUMP_VERTICAL_SPEED = 8.0f;
+    private const float JUMP_VERTICAL_SPEED = 6.0f;
     protected const float JUMP_HORIZONTAL_SPEED = 3.0f;
-    private const float JUMP_RUN_HORIZONTAL_SPEED = 4.0f;
-    private const float JUMP_CONTROL_TIME = 0.17f; //maximum duration of a jump if you hold it
-    private const float JUMP_DURATION_MIN = 0.08f; //minimum duration of a jump if you tap it
+    private const float JUMP_RUN_HORIZONTAL_SPEED = 5.0f;
+    private const float JUMP_TURN_HORIZONTAL_SPEED = 2.0f;
+    private const float JUMP_CONTROL_TIME = 0.20f; //maximum duration of a jump if you hold it
+    private const float JUMP_DURATION_MIN = 0.10f; //minimum duration of a jump if you tap it
     private const float JUMP_GRACE_PERIOD_TIME = 0.10f; //how long a player has to jump if they slip off a platform
     private bool jumpGracePeriod; //variable for jump tolerance if a player walks off a platform but wants to jump
     private float jumpGracePeriodTime;
-    public bool isJumping;
+    public bool isJumping; //TODO: protected
 	protected float jumpInputTime;
-	protected bool jumpTurned;
-    
+	public bool jumpTurned; //TODO: protected
+
     //walk and run vars
     private const float MAX_HORIZONTAL_SPEED = 4.5f;
-    protected float WALK_SPEED = 1.0f; //used for cutscenes with Alice, guards will walk when not alerted
-    protected float SNEAK_SPEED = 1.5f; //Alice's default speed, enemies that were walking will use this speed when on guard
-    protected float RUN_SPEED = 4.0f;
+    protected float WALK_SPEED = 1.5f; //used for cutscenes with Alice, guards will walk when not alerted
+    protected float SNEAK_SPEED = 3.0f; //Alice's default speed, enemies that were walking will use this speed when on guard
+    protected float RUN_SPEED = 6.0f;
     protected float ACCELERATION = 6.0f; // acceleration used for velocity calcs when running
     protected float DRAG = 15.0f; // how quickly a character decelerates when running
     protected enum moveState { isWalking, isSneaking, isRunning };
@@ -143,16 +144,18 @@ public class SimpleCharacterCore : MonoBehaviour
         }
         else
         {
-            if (currentMoveState == moveState.isWalking || currentMoveState == moveState.isSneaking)
+            if (jumpTurned)
+                HorizontalJumpVel(JUMP_TURN_HORIZONTAL_SPEED);
+            else
             {
-                HorizontalJumpVel(JUMP_HORIZONTAL_SPEED);
-            }
-            else if (currentMoveState == moveState.isRunning)
-            {
-                if (jumpTurned)
+                if (currentMoveState == moveState.isWalking || currentMoveState == moveState.isSneaking)
+                {
                     HorizontalJumpVel(JUMP_HORIZONTAL_SPEED);
-                else
+                }
+                else if (currentMoveState == moveState.isRunning)
+                {
                     HorizontalJumpVel(JUMP_RUN_HORIZONTAL_SPEED);
+                }
             }
         }
 
@@ -182,6 +185,12 @@ public class SimpleCharacterCore : MonoBehaviour
             }
         }
 
+        // if you turned while jumping, turn off the jump var
+        if (jumpTurned && Velocity.y > 0.0f)
+        {
+            isJumping = false;
+        }
+
         Velocity.y = Mathf.Clamp(Velocity.y, -MAX_VERTICAL_SPEED, MAX_VERTICAL_SPEED);
 
         if (OnTheGround && Mathf.Approximately(Velocity.y - 1000000, -1000000))
@@ -204,17 +213,13 @@ public class SimpleCharacterCore : MonoBehaviour
         // Horizontal Collision Block
         // box used to collide against horizontal objects. Extend the hitbox vertically while in the air to avoid corner clipping
         Vector2 horizontalBoxSize;
-        if (OnTheGround)
-            horizontalBoxSize = new Vector2(characterCollider.bounds.size.x - 0.01f, characterCollider.bounds.size.y - 0.01f);
-        else
-            horizontalBoxSize = new Vector2(characterCollider.bounds.size.x - 0.01f, characterCollider.bounds.size.y + 15.0f);
+		if (OnTheGround)
+			horizontalBoxSize = new Vector2 (0.01f, characterCollider.bounds.size.y - 0.01f);
+		else
+			horizontalBoxSize = new Vector2 (0.01f, characterCollider.bounds.size.y + 25.0f);//15.0f);
 
         // raycast to collide right
-        Vector2 rightHitOrigin;
-        if (OnTheGround)
-            rightHitOrigin = characterCollider.bounds.center;
-        else
-            rightHitOrigin = characterCollider.bounds.center + new Vector3(0.0f, -2.5f);
+        Vector2 rightHitOrigin = new Vector2(characterCollider.bounds.center.x + characterCollider.bounds.extents.x - 0.01f, characterCollider.bounds.center.y);
         RaycastHit2D rightHit = Physics2D.BoxCast(rightHitOrigin, horizontalBoxSize, 0.0f, Vector2.right, Mathf.Infinity, CollisionMasks.AllCollisionMask);
         float rightHitDist = Mathf.Infinity;
         if (rightHit.collider != null)
@@ -225,11 +230,7 @@ public class SimpleCharacterCore : MonoBehaviour
         }
 
         // raycast to collide left
-        Vector2 leftHitOrigin;
-        if (OnTheGround)
-            leftHitOrigin = characterCollider.bounds.center;
-        else
-            leftHitOrigin = characterCollider.bounds.center + new Vector3(0.0f, -2.5f);
+        Vector2 leftHitOrigin = new Vector2(characterCollider.bounds.center.x - characterCollider.bounds.extents.x + 0.01f, characterCollider.bounds.center.y);
         RaycastHit2D leftHit = Physics2D.BoxCast(leftHitOrigin, horizontalBoxSize, 0.0f, Vector2.left, Mathf.Infinity, CollisionMasks.AllCollisionMask);
         float leftHitDist = Mathf.Infinity;
         if (leftHit.collider != null)
@@ -258,12 +259,11 @@ public class SimpleCharacterCore : MonoBehaviour
             grabCollider = null;
         }
 
-        // Vertical Collision Block
-        Vector2 verticalBoxSize = new Vector2(characterCollider.bounds.size.x - 0.01f, characterCollider.bounds.size.y - 0.01f);
+		// Vertical Collision Block
+        Vector2 verticalBoxSize = new Vector2(characterCollider.bounds.size.x - 0.01f, 0.01f);
 
         // raycast to hit the ceiling
-        Vector2 upHitOrigin = characterCollider.bounds.center;
-
+        Vector2 upHitOrigin = new Vector2(characterCollider.bounds.center.x, characterCollider.bounds.center.y + characterCollider.bounds.extents.y - 0.01f);
         RaycastHit2D upHit = Physics2D.BoxCast(upHitOrigin, verticalBoxSize, 0.0f, Vector2.up, Mathf.Infinity, CollisionMasks.UpwardsCollisionMask);
         if (upHit.collider != null)
         {
@@ -273,8 +273,7 @@ public class SimpleCharacterCore : MonoBehaviour
         }
 
         // raycast to find the floor
-        Vector2 downHitOrigin = characterCollider.bounds.center;
-
+        Vector2 downHitOrigin = new Vector2(characterCollider.bounds.center.x, characterCollider.bounds.center.y - characterCollider.bounds.extents.y + 0.01f);
         RaycastHit2D downHit = Physics2D.BoxCast(downHitOrigin, verticalBoxSize, 0.0f, Vector2.down, Mathf.Infinity, CollisionMasks.AllCollisionMask);
         if (downHit.collider != null)
         {
@@ -303,12 +302,14 @@ public class SimpleCharacterCore : MonoBehaviour
                     Velocity.y = -hitDist;
                 }
             }
-                
             // Approximate! since floats are dumb
             if (Mathf.Approximately(hitDist - 1000000, -1000000))
             {
                 if (touchGround)
+                {
                     OnTheGround = true;
+                    jumpTurned = false;
+                }
             }
             else
             {
@@ -364,7 +365,9 @@ public class SimpleCharacterCore : MonoBehaviour
             //Anim.SetBool("TurnAround", true);
 
             if (!OnTheGround)
+            {
                 jumpTurned = true;
+            }
         }
         else if (FacingDirection == 1 && InputManager.HorizontalAxis < 0)
         {
@@ -372,7 +375,9 @@ public class SimpleCharacterCore : MonoBehaviour
             //Anim.SetBool("TurnAround", true);
 
             if (!OnTheGround)
+            {
                 jumpTurned = true;
+            }
         }
     }
 
@@ -441,7 +446,6 @@ public class SimpleCharacterCore : MonoBehaviour
             isJumping = true;
             jumpGracePeriod = false;
             jumpInputTime = 0.0f;
-            jumpTurned = false;
         }
 
     }

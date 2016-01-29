@@ -17,14 +17,24 @@ public class UserInputManager : IInputManager
             HorizontalAxis = Input.GetAxisRaw("Horizontal");
             VerticalAxis = Input.GetAxisRaw("Vertical");
 
-            // Dead zone puts floats to zero until input threshold is hit (makes this comparison okay)
-            /*
-            if (HorizontalAxis != 0.0 || VerticalAxis != 0.0)
+            if (HorizontalAxis != 0)
             {
-                //Debug.Log("Move: " + horizontalAxis + ", " + verticalAxis);
-                this.Move.Invoke(HorizontalAxis, VerticalAxis);
+                if (HorizontalAxisInstance)
+                {
+                    HorizontalAxisInstance = false;
+                }
+                if (horizontalInstanceCheck)
+                {
+                    HorizontalAxisInstance = true;
+                    horizontalInstanceCheck = false;
+                }
             }
-            */
+            else if (HorizontalAxis == 0) //|| instantAxisInversion
+            {
+                HorizontalAxisInstance = false;
+                horizontalInstanceCheck = true;
+            }
+
             /*
             if (Input.GetButton("Horizontal"))
             {

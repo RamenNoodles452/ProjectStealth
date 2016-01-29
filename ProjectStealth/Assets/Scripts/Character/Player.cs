@@ -11,6 +11,8 @@ public class Player : SimpleCharacterCore
 
 	public bool grabbingWall; // TODO: private
 	public bool ledgeClimb; // TODO: private
+	private const float WALL_GRAB_DELAY = 0.15f;
+	private float wallGrabDelayTimer = 0.15f;
 
 	void Awake ()
 	{
@@ -59,6 +61,12 @@ public class Player : SimpleCharacterCore
 
 	public override void Update ()
 	{
+		//wall grab delay timer
+        if (wallGrabDelayTimer < WALL_GRAB_DELAY)
+            wallGrabDelayTimer = wallGrabDelayTimer + Time.deltaTime * TimeScale.timeScale;
+        else
+            wallGrabDelayTimer = WALL_GRAB_DELAY;
+
         if (grabbingWall)
         {
             ClimbMovementInput();
@@ -70,7 +78,7 @@ public class Player : SimpleCharacterCore
             // check for wall grab!
             if (AquiredMagGrip)
             {
-                if (touchingGrabSurface && !OnTheGround && !grabbingWall)
+                if (touchingGrabSurface && !OnTheGround && !grabbingWall && wallGrabDelayTimer == WALL_GRAB_DELAY)
                 {
                     // only grab the wall if we aren't popping out under it or over it
                     if (grabCollider.bounds.min.y <= characterCollider.bounds.min.y)
@@ -107,7 +115,6 @@ public class Player : SimpleCharacterCore
                                 FacingDirection = 1;
                             SetFacing();
                             Velocity.x = 0.0f;
-
                         }
                     }
                 }
@@ -153,17 +160,25 @@ public class Player : SimpleCharacterCore
     {
 		LookingOverLedge (InputManager.VerticalAxis);
 
-        // Jump logic. Keep the Y velocity constant while holding jump for the duration of JUMP_CONTROL_TIME
+        //special look over ledge specifically when climbing
+        if (lookingOverLedge == false && againstTheLedge && 
+            ((InputManager.HorizontalAxis > 0.0f && characterCollider.bounds.center.x < grabCollider.bounds.center.x) ||
+             (InputManager.HorizontalAxis < 0.0f && characterCollider.bounds.center.x > grabCollider.bounds.center.x)))
+            lookingOverLedge = true;
+
+        // Jump logic.
 		if (!lookingOverLedge && InputManager.JumpInputInst) {
 			grabbingWall = false;
 			isJumping = true;
 			jumpInputTime = 0.0f;
+			wallGrabDelayTimer = 0.0f;
 			FacingDirection = -FacingDirection;
 			if (FacingDirection == 1)
 				characterAccel = ACCELERATION;
 			else
 				characterAccel = -ACCELERATION;
-			HorizontalJumpVel (JUMP_HORIZONTAL_SPEED);
+
+            HorizontalJumpVel (JUMP_HORIZONTAL_SPEED);
 			SetFacing ();
 
             // gotta do a second call of fixed update to make sure we move off the wall
@@ -200,7 +215,6 @@ public class Player : SimpleCharacterCore
             else
                 Debug.LogError("This should never happen");
 		}
-        
     }
 
     void ClimbHorizontalVelocity()
