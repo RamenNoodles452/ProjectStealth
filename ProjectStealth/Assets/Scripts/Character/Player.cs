@@ -160,6 +160,12 @@ public class Player : SimpleCharacterCore
     {
 		LookingOverLedge (InputManager.VerticalAxis);
 
+        //special look over ledge specifically when climbing
+        if (lookingOverLedge == false && againstTheLedge && 
+            ((InputManager.HorizontalAxis > 0.0f && characterCollider.bounds.center.x < grabCollider.bounds.center.x) ||
+             (InputManager.HorizontalAxis < 0.0f && characterCollider.bounds.center.x > grabCollider.bounds.center.x)))
+            lookingOverLedge = true;
+
         // Jump logic.
 		if (!lookingOverLedge && InputManager.JumpInputInst) {
 			grabbingWall = false;
@@ -209,7 +215,6 @@ public class Player : SimpleCharacterCore
             else
                 Debug.LogError("This should never happen");
 		}
-        
     }
 
     void ClimbHorizontalVelocity()

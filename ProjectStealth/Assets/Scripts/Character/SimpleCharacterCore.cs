@@ -181,10 +181,6 @@ public class SimpleCharacterCore : MonoBehaviour
             }
             else
             {
-
-                // TODO THIS NEEDS TO GET ADDRESSED. WHEN YOU TURN AROUND, VERTICAL VELOCITY SHOULD STOP
-                // BUT I'M NOT SURE HOW TO DO THAT IN A SMOOTH MANNER WITHOUT MAKING IT SUPER JERKY
-                // ALSO HAS A WEIRD INTERACTION WHERE YOU DON'T JUMP OFF THE WALL AT A CONSISTENT VERTIAL VELOCITY ANYMORE. CHECK THAT OUT TOO
                 isJumping = false;
             }
         }
@@ -218,12 +214,13 @@ public class SimpleCharacterCore : MonoBehaviour
         // box used to collide against horizontal objects. Extend the hitbox vertically while in the air to avoid corner clipping
         Vector2 horizontalBoxSize;
 		if (OnTheGround)
-			horizontalBoxSize = new Vector2 (characterCollider.bounds.size.x - 0.01f, characterCollider.bounds.size.y - 0.01f);
+			horizontalBoxSize = new Vector2 (0.01f, characterCollider.bounds.size.y - 0.01f);
 		else
-			horizontalBoxSize = new Vector2 (characterCollider.bounds.size.x - 0.01f, characterCollider.bounds.size.y + 25.0f);//15.0f);
+			horizontalBoxSize = new Vector2 (0.01f, characterCollider.bounds.size.y + 25.0f);//15.0f);
 
         // raycast to collide right
-		RaycastHit2D rightHit = Physics2D.BoxCast(characterCollider.bounds.center, horizontalBoxSize, 0.0f, Vector2.right, Mathf.Infinity, CollisionMasks.AllCollisionMask);
+        Vector2 rightHitOrigin = new Vector2(characterCollider.bounds.center.x + characterCollider.bounds.extents.x - 0.01f, characterCollider.bounds.center.y);
+        RaycastHit2D rightHit = Physics2D.BoxCast(rightHitOrigin, horizontalBoxSize, 0.0f, Vector2.right, Mathf.Infinity, CollisionMasks.AllCollisionMask);
         float rightHitDist = Mathf.Infinity;
         if (rightHit.collider != null)
         {
@@ -233,7 +230,8 @@ public class SimpleCharacterCore : MonoBehaviour
         }
 
         // raycast to collide left
-		RaycastHit2D leftHit = Physics2D.BoxCast(characterCollider.bounds.center, horizontalBoxSize, 0.0f, Vector2.left, Mathf.Infinity, CollisionMasks.AllCollisionMask);
+        Vector2 leftHitOrigin = new Vector2(characterCollider.bounds.center.x - characterCollider.bounds.extents.x + 0.01f, characterCollider.bounds.center.y);
+        RaycastHit2D leftHit = Physics2D.BoxCast(leftHitOrigin, horizontalBoxSize, 0.0f, Vector2.left, Mathf.Infinity, CollisionMasks.AllCollisionMask);
         float leftHitDist = Mathf.Infinity;
         if (leftHit.collider != null)
         {
@@ -262,10 +260,11 @@ public class SimpleCharacterCore : MonoBehaviour
         }
 
 		// Vertical Collision Block
-        Vector2 verticalBoxSize = new Vector2(characterCollider.bounds.size.x - 0.01f, characterCollider.bounds.size.y - 0.01f);
+        Vector2 verticalBoxSize = new Vector2(characterCollider.bounds.size.x - 0.01f, 0.01f);
 
         // raycast to hit the ceiling
-		RaycastHit2D upHit = Physics2D.BoxCast(characterCollider.bounds.center, verticalBoxSize, 0.0f, Vector2.up, Mathf.Infinity, CollisionMasks.UpwardsCollisionMask);
+        Vector2 upHitOrigin = new Vector2(characterCollider.bounds.center.x, characterCollider.bounds.center.y + characterCollider.bounds.extents.y - 0.01f);
+        RaycastHit2D upHit = Physics2D.BoxCast(upHitOrigin, verticalBoxSize, 0.0f, Vector2.up, Mathf.Infinity, CollisionMasks.UpwardsCollisionMask);
         if (upHit.collider != null)
         {
             float hitDist = upHit.distance - 0.005f;
@@ -274,7 +273,8 @@ public class SimpleCharacterCore : MonoBehaviour
         }
 
         // raycast to find the floor
-		RaycastHit2D downHit = Physics2D.BoxCast(characterCollider.bounds.center, verticalBoxSize, 0.0f, Vector2.down, Mathf.Infinity, CollisionMasks.AllCollisionMask);
+        Vector2 downHitOrigin = new Vector2(characterCollider.bounds.center.x, characterCollider.bounds.center.y - characterCollider.bounds.extents.y + 0.01f);
+        RaycastHit2D downHit = Physics2D.BoxCast(downHitOrigin, verticalBoxSize, 0.0f, Vector2.down, Mathf.Infinity, CollisionMasks.AllCollisionMask);
         if (downHit.collider != null)
         {
             float downHitColliderLeft = downHit.collider.bounds.min.x;
@@ -302,7 +302,6 @@ public class SimpleCharacterCore : MonoBehaviour
                     Velocity.y = -hitDist;
                 }
             }
-                
             // Approximate! since floats are dumb
             if (Mathf.Approximately(hitDist - 1000000, -1000000))
             {
