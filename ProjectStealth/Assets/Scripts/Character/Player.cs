@@ -11,6 +11,8 @@ public class Player : SimpleCharacterCore
 
 	public bool grabbingWall; // TODO: private
 	public bool ledgeClimb; // TODO: private
+	private const float WALL_GRAB_DELAY = 0.15f;
+	private float wallGrabDelayTimer = 0.15f;
 
 	void Awake ()
 	{
@@ -59,6 +61,12 @@ public class Player : SimpleCharacterCore
 
 	public override void Update ()
 	{
+		//wall grab delay timer
+        if (wallGrabDelayTimer < WALL_GRAB_DELAY)
+            wallGrabDelayTimer = wallGrabDelayTimer + Time.deltaTime * TimeScale.timeScale;
+        else
+            wallGrabDelayTimer = WALL_GRAB_DELAY;
+
         if (grabbingWall)
         {
             ClimbMovementInput();
@@ -70,7 +78,7 @@ public class Player : SimpleCharacterCore
             // check for wall grab!
             if (AquiredMagGrip)
             {
-                if (touchingGrabSurface && !OnTheGround && !grabbingWall)
+                if (touchingGrabSurface && !OnTheGround && !grabbingWall && wallGrabDelayTimer == WALL_GRAB_DELAY)
                 {
                     // only grab the wall if we aren't popping out under it or over it
                     if (grabCollider.bounds.min.y <= characterCollider.bounds.min.y)
@@ -157,6 +165,7 @@ public class Player : SimpleCharacterCore
 			grabbingWall = false;
 			isJumping = true;
 			jumpInputTime = 0.0f;
+			wallGrabDelayTimer = 0.0f;
 			FacingDirection = -FacingDirection;
 			if (FacingDirection == 1)
 				characterAccel = ACCELERATION;

@@ -19,10 +19,10 @@ public class SimpleCharacterCore : MonoBehaviour
     private const float GRAVITATIONAL_FORCE = -30.0f;
 
     //jump vars
-    private const float JUMP_VERTICAL_SPEED = 8.0f;
-    protected const float JUMP_HORIZONTAL_SPEED = 4.0f;
-    private const float JUMP_RUN_HORIZONTAL_SPEED = 6.0f;
-    private const float JUMP_TURN_HORIZONTAL_SPEED = 2.5f;
+    private const float JUMP_VERTICAL_SPEED = 6.0f;
+    protected const float JUMP_HORIZONTAL_SPEED = 3.0f;
+    private const float JUMP_RUN_HORIZONTAL_SPEED = 5.0f;
+    private const float JUMP_TURN_HORIZONTAL_SPEED = 2.0f;
     private const float JUMP_CONTROL_TIME = 0.20f; //maximum duration of a jump if you hold it
     private const float JUMP_DURATION_MIN = 0.10f; //minimum duration of a jump if you tap it
     private const float JUMP_GRACE_PERIOD_TIME = 0.10f; //how long a player has to jump if they slip off a platform
@@ -189,10 +189,9 @@ public class SimpleCharacterCore : MonoBehaviour
             }
         }
 
-        // if you turned while jumping, stop all vertical movement
+        // if you turned while jumping, turn off the jump var
         if (jumpTurned && Velocity.y > 0.0f)
         {
-            Velocity.y = 0.0f;
             isJumping = false;
         }
 
