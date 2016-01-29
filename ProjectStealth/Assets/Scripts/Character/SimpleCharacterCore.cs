@@ -20,9 +20,10 @@ public class SimpleCharacterCore : MonoBehaviour
 
     //jump vars
     private const float JUMP_VERTICAL_SPEED = 6.0f;
-    protected const float JUMP_HORIZONTAL_SPEED = 3.0f;
-    private const float JUMP_RUN_HORIZONTAL_SPEED = 5.0f;
-    private const float JUMP_TURN_HORIZONTAL_SPEED = 2.0f;
+    protected const float JUMP_HORIZONTAL_SPEED_MIN = 2.5f;
+    protected const float JUMP_HORIZONTAL_SPEED_MAX = 4.0f;
+    protected const float JUMP_ACCEL = 4.0f;
+
     private const float JUMP_CONTROL_TIME = 0.20f; //maximum duration of a jump if you hold it
     private const float JUMP_DURATION_MIN = 0.10f; //minimum duration of a jump if you tap it
     private const float JUMP_GRACE_PERIOD_TIME = 0.10f; //how long a player has to jump if they slip off a platform
@@ -33,10 +34,10 @@ public class SimpleCharacterCore : MonoBehaviour
 	public bool jumpTurned; //TODO: protected
 
     //walk and run vars
-    private const float MAX_HORIZONTAL_SPEED = 4.5f;
-    protected float WALK_SPEED = 1.5f; //used for cutscenes with Alice, guards will walk when not alerted
-    protected float SNEAK_SPEED = 3.0f; //Alice's default speed, enemies that were walking will use this speed when on guard
-    protected float RUN_SPEED = 6.0f;
+    private const float MAX_HORIZONTAL_SPEED = 10.0f;
+    protected float WALK_SPEED = 1.0f; //used for cutscenes with Alice, guards will walk when not alerted
+    protected float SNEAK_SPEED = 2.0f; //Alice's default speed, enemies that were walking will use this speed when on guard
+    protected float RUN_SPEED = 4.5f;
     protected float ACCELERATION = 6.0f; // acceleration used for velocity calcs when running
     protected float DRAG = 15.0f; // how quickly a character decelerates when running
     protected enum moveState { isWalking, isSneaking, isRunning };
@@ -118,9 +119,7 @@ public class SimpleCharacterCore : MonoBehaviour
             if (currentMoveState == moveState.isWalking)
                 Velocity.x = WALK_SPEED * InputManager.HorizontalAxis;
             else if (currentMoveState == moveState.isSneaking)
-            {
                 Velocity.x = SNEAK_SPEED * InputManager.HorizontalAxis;
-            }
             else if (currentMoveState == moveState.isRunning)
             {   
                 //smooth damp to 0 if there's no directional input for running or if you're trying to run the opposite direction
@@ -145,17 +144,18 @@ public class SimpleCharacterCore : MonoBehaviour
         else
         {
             if (jumpTurned)
-                HorizontalJumpVel(JUMP_TURN_HORIZONTAL_SPEED);
+                HorizontalJumpVelNoAccel(SNEAK_SPEED);
             else
             {
                 if (currentMoveState == moveState.isWalking || currentMoveState == moveState.isSneaking)
                 {
-                    HorizontalJumpVel(JUMP_HORIZONTAL_SPEED);
+                    HorizontalJumpVelAccel();
                 }
                 else if (currentMoveState == moveState.isRunning)
                 {
-                    HorizontalJumpVel(JUMP_RUN_HORIZONTAL_SPEED);
+                    HorizontalJumpVelAccel();
                 }
+
             }
         }
 
@@ -165,6 +165,32 @@ public class SimpleCharacterCore : MonoBehaviour
         {
             Velocity.x = 0;
         }
+    }
+
+    protected void HorizontalJumpVelNoAccel(float speed)
+    {
+        if (characterAccel > 0.0f)
+            Velocity.x = speed;
+        else if (characterAccel < 0.0f)
+            Velocity.x = -speed;
+    }
+
+    protected void HorizontalJumpVelAccel()
+    {
+        if (characterAccel < 0.0f && Velocity.x >= 0.0f)
+        {
+            Velocity.x = -SNEAK_SPEED;
+        }
+        else if (characterAccel > 0.0f && Velocity.x <= 0.0f)
+        {
+            Velocity.x = SNEAK_SPEED;
+        }
+        else
+        {
+            Velocity.x = Velocity.x + characterAccel * Time.deltaTime * TimeScale.timeScale;
+            Velocity.x = Mathf.Clamp(Velocity.x, -JUMP_HORIZONTAL_SPEED_MAX, JUMP_HORIZONTAL_SPEED_MAX);
+        }
+
     }
 
     private void VerticalVelocity()
@@ -188,6 +214,7 @@ public class SimpleCharacterCore : MonoBehaviour
         // if you turned while jumping, turn off the jump var
         if (jumpTurned && Velocity.y > 0.0f)
         {
+            Velocity.y = Velocity.y / 1.5f;
             isJumping = false;
         }
 
@@ -198,14 +225,6 @@ public class SimpleCharacterCore : MonoBehaviour
             Velocity.y = 0;
         }
 
-    }
-
-    protected void HorizontalJumpVel(float moveSpeed)
-    {
-        if (characterAccel > 0.0f)
-            Velocity.x = moveSpeed;
-        else if (characterAccel < 0.0f)
-            Velocity.x = -moveSpeed;
     }
 
 	public virtual void Collisions()
@@ -446,6 +465,7 @@ public class SimpleCharacterCore : MonoBehaviour
             isJumping = true;
             jumpGracePeriod = false;
             jumpInputTime = 0.0f;
+
         }
 
     }
