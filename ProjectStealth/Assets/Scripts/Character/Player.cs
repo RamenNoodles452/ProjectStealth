@@ -13,6 +13,8 @@ public class Player : SimpleCharacterCore
 	public bool ledgeClimb; // TODO: private
 	private const float WALL_GRAB_DELAY = 0.15f;
 	private float wallGrabDelayTimer = 0.15f;
+    private const float WALL_CLIMB_SPEED = 2.0f;
+    private const float WALL_SLIDE_SPEED = 3.0f;
 
 	void Awake ()
 	{
@@ -29,8 +31,8 @@ public class Player : SimpleCharacterCore
 
 		//walk and run vars
 		WALK_SPEED = 1.0f; //used for cutscenes with Alice
-		SNEAK_SPEED = 1.5f; //Alice's default speed
-		RUN_SPEED = 4.0f;
+		SNEAK_SPEED = 2.0f; //Alice's default speed
+		RUN_SPEED = 4.5f;
 		currentMoveState = moveState.isSneaking;
 
 		// MagGrip vars
@@ -160,61 +162,64 @@ public class Player : SimpleCharacterCore
     {
 		LookingOverLedge (InputManager.VerticalAxis);
 
-        //special look over ledge specifically when climbing
-        if (lookingOverLedge == false && againstTheLedge && 
-            ((InputManager.HorizontalAxis > 0.0f && characterCollider.bounds.center.x < grabCollider.bounds.center.x) ||
-             (InputManager.HorizontalAxis < 0.0f && characterCollider.bounds.center.x > grabCollider.bounds.center.x)))
-            lookingOverLedge = true;
-
-        // Jump logic.
-		if (!lookingOverLedge && InputManager.JumpInputInst) {
-			grabbingWall = false;
-			isJumping = true;
-			jumpInputTime = 0.0f;
-			wallGrabDelayTimer = 0.0f;
-			FacingDirection = -FacingDirection;
-			if (FacingDirection == 1)
-				characterAccel = ACCELERATION;
-			else
-				characterAccel = -ACCELERATION;
-
-            HorizontalJumpVel (JUMP_HORIZONTAL_SPEED);
-			SetFacing ();
-
-            // gotta do a second call of fixed update to make sure we move off the wall
-			base.FixedUpdate ();
-		} 
-        else if (lookingOverLedge && InputManager.JumpInputInst) 
+        if (grabCollider)
         {
-            // if we're looking below
-            if (grabCollider.bounds.min.y == characterCollider.bounds.min.y)
-            {
-                grabbingWall = false;
-            }
-            // if we're looking above
-            else if (grabCollider.bounds.max.y == characterCollider.bounds.max.y)
-            {
-                InputManager.JumpInputInst = false;
-                InputManager.InputOverride = true;
-                // translate body to on the ledge
-				bzrDistance = 0.0f;
-				bzrStartPosition = characterCollider.bounds.center;
+            //special look over ledge specifically when climbing
+            if (lookingOverLedge == false && againstTheLedge && 
+                ((InputManager.HorizontalAxis > 0.0f && characterCollider.bounds.center.x < grabCollider.bounds.center.x) ||
+                    (InputManager.HorizontalAxis < 0.0f && characterCollider.bounds.center.x > grabCollider.bounds.center.x)))
+                lookingOverLedge = true;
 
+            // Jump logic.
+            if (!lookingOverLedge && InputManager.JumpInputInst) {
+                grabbingWall = false;
+                isJumping = true;
+                jumpInputTime = 0.0f;
+                wallGrabDelayTimer = 0.0f;
+                FacingDirection = -FacingDirection;
                 if (FacingDirection == 1)
+                    characterAccel = JUMP_ACCEL;
+                else
+                    characterAccel = -JUMP_ACCEL;
+
+                HorizontalJumpVelNoAccel((JUMP_HORIZONTAL_SPEED_MIN + JUMP_HORIZONTAL_SPEED_MAX) / 2.0f);
+                SetFacing ();
+
+                // gotta do a second call of fixed update to make sure we move off the wall
+                base.FixedUpdate ();
+            } 
+            else if (lookingOverLedge && InputManager.JumpInputInst) 
+            {
+                // if we're looking below
+                if (grabCollider.bounds.min.y == characterCollider.bounds.min.y)
                 {
-                    bzrEndPosition = characterCollider.bounds.center + characterCollider.bounds.size;
-                    bzrCurvePosition = new Vector2(characterCollider.bounds.center.x - characterCollider.bounds.extents.x, characterCollider.bounds.center.y + characterCollider.bounds.size.y * 2);
+                    grabbingWall = false;
+                }
+                // if we're looking above
+                else if (grabCollider.bounds.max.y == characterCollider.bounds.max.y)
+                {
+                    InputManager.JumpInputInst = false;
+                    InputManager.InputOverride = true;
+                    // translate body to on the ledge
+                    bzrDistance = 0.0f;
+                    bzrStartPosition = characterCollider.bounds.center;
+
+                    if (FacingDirection == 1)
+                    {
+                        bzrEndPosition = characterCollider.bounds.center + characterCollider.bounds.size;
+                        bzrCurvePosition = new Vector2(characterCollider.bounds.center.x - characterCollider.bounds.extents.x, characterCollider.bounds.center.y + characterCollider.bounds.size.y * 2);
+                    }
+                    else
+                    {
+                        bzrEndPosition = new Vector2(characterCollider.bounds.center.x - characterCollider.bounds.size.x, characterCollider.bounds.center.y + characterCollider.bounds.size.y);
+                        bzrCurvePosition = new Vector2(characterCollider.bounds.center.x + characterCollider.bounds.extents.x, characterCollider.bounds.center.y + characterCollider.bounds.size.y * 2);
+                    }
+                    ledgeClimb = true;
                 }
                 else
-                {
-                    bzrEndPosition = new Vector2(characterCollider.bounds.center.x - characterCollider.bounds.size.x, characterCollider.bounds.center.y + characterCollider.bounds.size.y);
-                    bzrCurvePosition = new Vector2(characterCollider.bounds.center.x + characterCollider.bounds.extents.x, characterCollider.bounds.center.y + characterCollider.bounds.size.y * 2);
-                }
-                ledgeClimb = true;
-			}
-            else
-                Debug.LogError("This should never happen");
-		}
+                    Debug.LogError("This should never happen");
+            }
+        }
     }
 
     void ClimbHorizontalVelocity()
@@ -226,7 +231,14 @@ public class Player : SimpleCharacterCore
     void ClimbVerticalVelocity()
     {
         if (currentMoveState == moveState.isSneaking)
-            Velocity.y = SNEAK_SPEED * InputManager.VerticalAxis;
+        {
+            if (InputManager.VerticalAxis > 0.0f)
+                Velocity.y = WALL_CLIMB_SPEED * InputManager.VerticalAxis;
+            else if (InputManager.VerticalAxis < 0.0f)
+                Velocity.y = -WALL_SLIDE_SPEED;
+            else
+                Velocity.y = 0.0f;
+        }
         else
             Debug.LogError("Character must be in SNEAK movement type when climbing");
     }
