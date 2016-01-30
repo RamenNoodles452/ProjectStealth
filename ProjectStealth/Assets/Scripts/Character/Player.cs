@@ -9,10 +9,6 @@ public class Player : SimpleCharacterCore
 
 	private CharacterStatus Status;
 
-    private enum ClimbState { notClimb, wallClimb, ceilingClimb };
-    private ClimbState currentClimbState = ClimbState.notClimb;
-
-	//public bool grabbingWall; // TODO: private
 	public bool ledgeClimb; // TODO: private
 	private const float WALL_GRAB_DELAY = 0.15f;
 	private float wallGrabDelayTimer = 0.15f;
@@ -169,7 +165,7 @@ public class Player : SimpleCharacterCore
 
     void ClimbMovementInput()
     {
-		LookingOverLedge (InputManager.VerticalAxis);
+		LookingOverLedge ();
 
         if (grabCollider)
         {
@@ -226,7 +222,7 @@ public class Player : SimpleCharacterCore
                     ledgeClimb = true;
                 }
                 else
-                    Debug.LogError("This should never happen");
+                    Debug.LogError("The grabCollider object is most likely null. This should never happen");
             }
         }
     }

@@ -54,6 +54,10 @@ public class SimpleCharacterCore : MonoBehaviour
 	public bool touchingGrabSurface; // TODO: private
     protected Collider2D grabCollider;
 
+    // climb state logic
+    protected enum ClimbState { notClimb, wallClimb, ceilingClimb };
+    protected ClimbState currentClimbState = ClimbState.notClimb;
+
 	// bezier curve vars for getting up ledges and jumping over cover
 	protected Vector2 bzrStartPosition;
 	protected Vector2 bzrEndPosition;
@@ -410,7 +414,7 @@ public class SimpleCharacterCore : MonoBehaviour
     protected void MovementInput()
     {
 		
-		LookingOverLedge(InputManager.HorizontalAxis);
+		LookingOverLedge();
 
         if (InputManager.RunInputInst && currentMoveState != moveState.isRunning)
         {
@@ -464,19 +468,33 @@ public class SimpleCharacterCore : MonoBehaviour
             isJumping = true;
             jumpGracePeriod = false;
             jumpInputTime = 0.0f;
-
         }
-
     }
 
-	protected void LookingOverLedge(float inputAxis)
-	{
-		// check if you're looking over the ledge
-		if (againstTheLedge && Mathf.Abs(inputAxis) > 0.0f)
-			lookingOverLedge = true;
-		else
-			lookingOverLedge = false;
-	}
+    protected void LookingOverLedge()
+    {
+        if (currentClimbState == ClimbState.notClimb)
+        {
+            // check if you're looking over the ledge
+            if (againstTheLedge && InputManager.VerticalAxis < 0.0f)
+                lookingOverLedge = true;
+            else
+                lookingOverLedge = false;
+        }
+        else if (currentClimbState == ClimbState.wallClimb)
+        {
+            if (againstTheLedge && (Mathf.Abs(InputManager.VerticalAxis) > 0.0f ||
+                (InputManager.HorizontalAxis > 0.0f && characterCollider.bounds.center.x < grabCollider.bounds.center.x) ||
+                (InputManager.HorizontalAxis < 0.0f && characterCollider.bounds.center.x > grabCollider.bounds.center.x)))
+                lookingOverLedge = true;
+            else
+                lookingOverLedge = false;
+        }
+        else if (currentClimbState == ClimbState.ceilingClimb)
+        {
+
+        }
+    }
 
 	protected Vector2 BezierCurveMovement(float distance, Vector2 start, Vector2 end, Vector2 curvePoint)
 	{
