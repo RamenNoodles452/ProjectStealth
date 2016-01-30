@@ -9,7 +9,10 @@ public class Player : SimpleCharacterCore
 
 	private CharacterStatus Status;
 
-	public bool grabbingWall; // TODO: private
+    private enum ClimbState { notClimb, wallClimb, ceilingClimb };
+    private ClimbState currentClimbState = ClimbState.notClimb;
+
+	//public bool grabbingWall; // TODO: private
 	public bool ledgeClimb; // TODO: private
 	private const float WALL_GRAB_DELAY = 0.15f;
 	private float wallGrabDelayTimer = 0.15f;
@@ -36,8 +39,6 @@ public class Player : SimpleCharacterCore
 		currentMoveState = moveState.isSneaking;
 
 		// MagGrip vars
-		grabbingWall = false;
-
 		AquiredMagGrip = true;
 	}
 
@@ -69,18 +70,22 @@ public class Player : SimpleCharacterCore
         else
             wallGrabDelayTimer = WALL_GRAB_DELAY;
 
-        if (grabbingWall)
+        if (currentClimbState == ClimbState.wallClimb)
         {
             ClimbMovementInput();
         }
-        else // if not in any special movement state
+        else if (currentClimbState == ClimbState.ceilingClimb)
+        {
+        }
+        else if (currentClimbState == ClimbState.notClimb) // if not in any special movement state
         {
             base.Update();
 
             // check for wall grab!
             if (AquiredMagGrip)
             {
-                if (touchingGrabSurface && !OnTheGround && !grabbingWall && wallGrabDelayTimer == WALL_GRAB_DELAY)
+                // TODO: This climbstate check might not be necessary
+                if (touchingGrabSurface && !OnTheGround && currentClimbState == ClimbState.notClimb && wallGrabDelayTimer == WALL_GRAB_DELAY)
                 {
                     // only grab the wall if we aren't popping out under it or over it
                     if (grabCollider.bounds.min.y <= characterCollider.bounds.min.y)
@@ -105,7 +110,7 @@ public class Player : SimpleCharacterCore
                         {
                             jumpTurned = false;
                             isJumping = false;
-                            grabbingWall = true;
+                            currentClimbState = ClimbState.wallClimb;
                             currentMoveState = moveState.isSneaking;
 
                             // variable sets to prevent weird turning when grabbing onto a wall
@@ -140,20 +145,24 @@ public class Player : SimpleCharacterCore
             else
             {
                 ledgeClimb = false;
-                grabbingWall = false;
+                currentClimbState = ClimbState.notClimb;
                 InputManager.InputOverride = false;
             }
-		}
-		else if (grabbingWall) 
-		{
-			ClimbHorizontalVelocity ();
-			ClimbVerticalVelocity ();
-			Collisions ();
-			ClimbVerticalEdgeDetect ();
+        }
+        else if (currentClimbState == ClimbState.wallClimb)
+        {
+            ClimbHorizontalVelocity();
+            ClimbVerticalVelocity();
+            Collisions();
+            ClimbVerticalEdgeDetect();
 
-			//move the character after all calculations have been done
-			transform.Translate (Velocity);
-		}
+            //move the character after all calculations have been done
+            transform.Translate(Velocity);
+        }
+        else if (currentClimbState == ClimbState.ceilingClimb)
+        {
+
+        }
 		else
 			base.FixedUpdate ();
 	}
@@ -172,7 +181,7 @@ public class Player : SimpleCharacterCore
 
             // Jump logic.
             if (!lookingOverLedge && InputManager.JumpInputInst) {
-                grabbingWall = false;
+                currentClimbState = ClimbState.notClimb;
                 isJumping = true;
                 jumpInputTime = 0.0f;
                 wallGrabDelayTimer = 0.0f;
@@ -193,7 +202,7 @@ public class Player : SimpleCharacterCore
                 // if we're looking below
                 if (grabCollider.bounds.min.y == characterCollider.bounds.min.y)
                 {
-                    grabbingWall = false;
+                    currentClimbState = ClimbState.notClimb;
                 }
                 // if we're looking above
                 else if (grabCollider.bounds.max.y == characterCollider.bounds.max.y)

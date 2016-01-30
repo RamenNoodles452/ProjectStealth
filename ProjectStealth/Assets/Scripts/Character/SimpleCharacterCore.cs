@@ -214,7 +214,6 @@ public class SimpleCharacterCore : MonoBehaviour
         // if you turned while jumping, turn off the jump var
         if (jumpTurned && Velocity.y > 0.0f)
         {
-            Velocity.y = Velocity.y / 1.5f;
             isJumping = false;
         }
 
