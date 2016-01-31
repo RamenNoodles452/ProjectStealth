@@ -121,6 +121,12 @@ public class Player : SimpleCharacterCore
                         }
                     }
                 }
+
+                // if we want to grab onto the wall from the ledge
+                if (lookingOverLedge) // && we're standing on a grabbable surface?
+                {
+
+                }
             }
         }
 	}
