@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
 public class Player : SimpleCharacterCore
 {
@@ -80,53 +81,8 @@ public class Player : SimpleCharacterCore
             // check for wall grab!
             if (AquiredMagGrip)
             {
-                // TODO: This climbstate check might not be necessary
-                if (touchingGrabSurface && !OnTheGround && currentClimbState == ClimbState.notClimb && wallGrabDelayTimer == WALL_GRAB_DELAY)
-                {
-                    // only grab the wall if we aren't popping out under it or over it
-                    if (grabCollider.bounds.min.y <= characterCollider.bounds.min.y)
-                    {
-                        // if character is a bit too above the ledge, bump them down till they're directly under it
-                        if (grabCollider.bounds.max.y < characterCollider.bounds.max.y)
-                        {
-                            // check to see if the wall we're gonna be offsetting against is too short.
-                            RaycastHit2D predictionCast;
-                            float offsetDistance = characterCollider.bounds.max.y - grabCollider.bounds.max.y;
-                            Vector2 predictionCastOrigin = new Vector2(characterCollider.bounds.center.x, characterCollider.bounds.min.y - offsetDistance);
-                            if (grabCollider.bounds.center.x < characterCollider.bounds.center.x)
-                                predictionCast = Physics2D.Raycast(predictionCastOrigin, Vector2.left, Mathf.Infinity, CollisionMasks.AllCollisionMask);
-                            else
-                                predictionCast = Physics2D.Raycast(predictionCastOrigin, Vector2.right, Mathf.Infinity, CollisionMasks.AllCollisionMask);
-
-                            if (predictionCast.collider == grabCollider)
-                                transform.Translate(0.0f, -(characterCollider.bounds.max.y - grabCollider.bounds.max.y), 0.0f);
-                        }
-                        // if we're good to grab, get everything in order
-                        if (grabCollider.bounds.max.y >= characterCollider.bounds.max.y)
-                        {
-                            jumpTurned = false;
-                            isJumping = false;
-                            currentClimbState = ClimbState.wallClimb;
-                            currentMoveState = moveState.isSneaking;
-
-                            // variable sets to prevent weird turning when grabbing onto a wall
-                            // if the wall is to our left
-                            if (grabCollider.bounds.center.x < characterCollider.bounds.center.x)
-                                FacingDirection = -1;
-                            // if the wall is to our right
-                            else
-                                FacingDirection = 1;
-                            SetFacing();
-                            Velocity.x = 0.0f;
-                        }
-                    }
-                }
-
-                // if we want to grab onto the wall from the ledge
-                if (lookingOverLedge) // && we're standing on a grabbable surface?
-                {
-
-                }
+                // are we wall climbing?
+                WallClimbCheck();
             }
         }
 	}
@@ -136,7 +92,7 @@ public class Player : SimpleCharacterCore
         base.LateUpdate();
     }
 
-	public override void FixedUpdate ()
+	public override void FixedUpdate()
 	{
         if (ledgeClimb)
         {
@@ -147,8 +103,9 @@ public class Player : SimpleCharacterCore
             else
             {
                 ledgeClimb = false;
-                currentClimbState = ClimbState.notClimb;
+                currentClimbState = transitioningToState;
                 InputManager.InputOverride = false;
+                //UnityEditor.EditorApplication.isPaused = true;
             }
         }
         else if (currentClimbState == ClimbState.wallClimb)
@@ -160,6 +117,12 @@ public class Player : SimpleCharacterCore
 
             //move the character after all calculations have been done
             transform.Translate(Velocity);
+
+            //if you climb down and touch the ground, stop climbing
+            if (OnTheGround)
+            {
+                currentClimbState = ClimbState.notClimb;
+            }
         }
         else if (currentClimbState == ClimbState.ceilingClimb)
         {
@@ -193,6 +156,7 @@ public class Player : SimpleCharacterCore
                 // gotta do a second call of fixed update to make sure we move off the wall
                 base.FixedUpdate ();
             } 
+            //ledge climb logic
             else if (lookingOverLedge && InputManager.JumpInputInst) 
             {
                 // if we're looking below
@@ -203,23 +167,7 @@ public class Player : SimpleCharacterCore
                 // if we're looking above
                 else if (grabCollider.bounds.max.y == characterCollider.bounds.max.y)
                 {
-                    InputManager.JumpInputInst = false;
-                    InputManager.InputOverride = true;
-                    // translate body to on the ledge
-                    bzrDistance = 0.0f;
-                    bzrStartPosition = characterCollider.bounds.center;
-
-                    if (FacingDirection == 1)
-                    {
-                        bzrEndPosition = characterCollider.bounds.center + characterCollider.bounds.size;
-                        bzrCurvePosition = new Vector2(characterCollider.bounds.center.x - characterCollider.bounds.extents.x, characterCollider.bounds.center.y + characterCollider.bounds.size.y * 2);
-                    }
-                    else
-                    {
-                        bzrEndPosition = new Vector2(characterCollider.bounds.center.x - characterCollider.bounds.size.x, characterCollider.bounds.center.y + characterCollider.bounds.size.y);
-                        bzrCurvePosition = new Vector2(characterCollider.bounds.center.x + characterCollider.bounds.extents.x, characterCollider.bounds.center.y + characterCollider.bounds.size.y * 2);
-                    }
-                    ledgeClimb = true;
+                    SetupLedgeClimb(currentClimbState);
                 }
                 else
                     Debug.LogError("The grabCollider object is most likely null. This should never happen");
@@ -248,6 +196,9 @@ public class Player : SimpleCharacterCore
             Debug.LogError("Character must be in SNEAK movement type when climbing");
     }
 
+    /// <summary>
+    /// This function detects if the player is touching the ledge when climbing vertically against a wall
+    /// </summary>
     void ClimbVerticalEdgeDetect()
     {
         // raycast to find the climbing object
@@ -276,5 +227,115 @@ public class Player : SimpleCharacterCore
         }
         else
             Debug.LogError("Can't find collider when climbing against a wall. This shouldn't happen");
+    }
+
+    void SetupLedgeClimb(ClimbState startingState, Collider2D climbObject = null)
+    {
+        InputManager.JumpInputInst = false;
+        InputManager.InputOverride = true;
+        // translate body to on the ledge
+        bzrDistance = 0.0f;
+        bzrStartPosition = characterCollider.bounds.center;
+
+        // variable sterilazation
+        isJumping = false;
+
+        if (startingState == ClimbState.notClimb)
+        {
+            currentMoveState = moveState.isSneaking;
+            if (FacingDirection == 1)
+            {
+                bzrEndPosition = new Vector2(climbObject.bounds.max.x + characterCollider.bounds.extents.x + 0.01f, climbObject.bounds.max.y - characterCollider.bounds.extents.y);
+                bzrCurvePosition = new Vector2(characterCollider.bounds.center.x + characterCollider.bounds.extents.x * 2, characterCollider.bounds.center.y + characterCollider.bounds.size.y);
+            }
+            else
+            {
+                bzrEndPosition = new Vector2(climbObject.bounds.min.x - characterCollider.bounds.extents.x - 0.01f, climbObject.bounds.max.y - characterCollider.bounds.extents.y);
+                bzrCurvePosition = new Vector2(characterCollider.bounds.center.x - characterCollider.bounds.extents.x * 2, characterCollider.bounds.center.y + characterCollider.bounds.size.y);
+            }
+            transitioningToState = ClimbState.wallClimb;
+            FacingDirection = -FacingDirection;
+            SetFacing();
+        }
+        else if (startingState == ClimbState.wallClimb)
+        {
+            if (FacingDirection == 1)
+            {
+                bzrEndPosition = characterCollider.bounds.center + characterCollider.bounds.size;
+                bzrCurvePosition = new Vector2(characterCollider.bounds.center.x - characterCollider.bounds.extents.x, characterCollider.bounds.center.y + characterCollider.bounds.size.y * 2);
+            }
+            else
+            {
+                bzrEndPosition = new Vector2(characterCollider.bounds.center.x - characterCollider.bounds.size.x, characterCollider.bounds.center.y + characterCollider.bounds.size.y);
+                bzrCurvePosition = new Vector2(characterCollider.bounds.center.x + characterCollider.bounds.extents.x, characterCollider.bounds.center.y + characterCollider.bounds.size.y * 2);
+            }
+            transitioningToState = ClimbState.notClimb;
+        }
+        ledgeClimb = true;
+    }
+
+    /// <summary>
+    /// Function that initiates a wallclimb if the conditions are met
+    /// </summary>
+    void WallClimbCheck()
+    {
+        // TODO: This climbstate check might not be necessary
+        if (touchingGrabSurface && !OnTheGround && currentClimbState == ClimbState.notClimb && wallGrabDelayTimer == WALL_GRAB_DELAY)
+        {
+            // only grab the wall if we aren't popping out under it or over it
+            if (grabCollider.bounds.min.y <= characterCollider.bounds.min.y)
+            {
+                // if character is a bit too above the ledge, bump them down till they're directly under it
+                if (grabCollider.bounds.max.y < characterCollider.bounds.max.y)
+                {
+                    // check to see if the wall we're gonna be offsetting against is too short.
+                    RaycastHit2D predictionCast;
+                    float offsetDistance = characterCollider.bounds.max.y - grabCollider.bounds.max.y;
+                    Vector2 predictionCastOrigin = new Vector2(characterCollider.bounds.center.x, characterCollider.bounds.min.y - offsetDistance);
+                    if (grabCollider.bounds.center.x < characterCollider.bounds.center.x)
+                        predictionCast = Physics2D.Raycast(predictionCastOrigin, Vector2.left, Mathf.Infinity, CollisionMasks.AllCollisionMask);
+                    else
+                        predictionCast = Physics2D.Raycast(predictionCastOrigin, Vector2.right, Mathf.Infinity, CollisionMasks.AllCollisionMask);
+
+                    if (predictionCast.collider == grabCollider)
+                        transform.Translate(0.0f, -(characterCollider.bounds.max.y - grabCollider.bounds.max.y), 0.0f);
+                }
+                // if we're good to grab, get everything in order
+                if (grabCollider.bounds.max.y >= characterCollider.bounds.max.y)
+                {
+                    jumpTurned = false;
+                    isJumping = false;
+                    currentClimbState = ClimbState.wallClimb;
+                    currentMoveState = moveState.isSneaking;
+
+                    // variable sets to prevent weird turning when grabbing onto a wall
+                    // if the wall is to our left
+                    if (grabCollider.bounds.center.x < characterCollider.bounds.center.x)
+                        FacingDirection = -1;
+                    // if the wall is to our right
+                    else
+                        FacingDirection = 1;
+                    SetFacing();
+                    Velocity.x = 0.0f;
+                }
+            }
+        }
+
+        // if we want to grab down onto the wall from the ledge
+        if (lookingOverLedge) // && we're standing on a grabbable surface?
+        {
+            if (OnTheGround && InputManager.JumpInputInst)
+            {
+                // This is kinda inefficient as it is redundant code from the collision detection...
+                Vector2 verticalBoxSize = new Vector2(characterCollider.bounds.size.x - 0.01f, 0.01f);
+                Vector2 downHitOrigin = new Vector2(characterCollider.bounds.center.x, characterCollider.bounds.center.y - characterCollider.bounds.extents.y + 0.01f);
+                RaycastHit2D downHit = Physics2D.BoxCast(downHitOrigin, verticalBoxSize, 0.0f, Vector2.down, Mathf.Infinity, CollisionMasks.AllCollisionMask);
+                if (downHit.collider != null)
+                {
+                    SetupLedgeClimb(currentClimbState, downHit.collider);
+
+                }
+            }
+        }
     }
 }

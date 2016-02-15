@@ -52,11 +52,12 @@ public class SimpleCharacterCore : MonoBehaviour
     public bool lookingOverLedge; // TODO: private
     public bool againstTheLedge; // TODO: private
 	public bool touchingGrabSurface; // TODO: private
-    protected Collider2D grabCollider;
+    protected Collider2D grabCollider; // TODO protected
 
     // climb state logic
     protected enum ClimbState { notClimb, wallClimb, ceilingClimb };
     protected ClimbState currentClimbState = ClimbState.notClimb;
+    protected ClimbState transitioningToState = ClimbState.notClimb; // used when bzr curving to a new climb state
 
 	// bezier curve vars for getting up ledges and jumping over cover
 	protected Vector2 bzrStartPosition;
@@ -70,7 +71,9 @@ public class SimpleCharacterCore : MonoBehaviour
         characterCollider = GetComponent<BoxCollider2D>();
         Anim = GetComponent<Animator>();
         InputManager = GetComponent<IInputManager>();
-        SpriteRenderer = GetComponent<SpriteRenderer>();
+
+        // character sprite is now a child object. If a chracter sprite has multiple child sprite tho, this might break
+        SpriteRenderer = GetComponentInChildren<SpriteRenderer>();
 
         Velocity = new Vector2(0.0f, 0.0f);
         jumpGracePeriod = false;
@@ -94,7 +97,6 @@ public class SimpleCharacterCore : MonoBehaviour
             if (jumpGracePeriodTime >= JUMP_GRACE_PERIOD_TIME)
                 jumpGracePeriod = false;
         }
-            
     }
 
     public virtual void LateUpdate()
@@ -159,7 +161,6 @@ public class SimpleCharacterCore : MonoBehaviour
                 {
                     HorizontalJumpVelAccel();
                 }
-
             }
         }
 
