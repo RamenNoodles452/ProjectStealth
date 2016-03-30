@@ -51,13 +51,6 @@ public class SimpleCharacterCore : MonoBehaviour
     // ledge logic
     public bool lookingOverLedge; // TODO: private
     public bool againstTheLedge; // TODO: private
-	public bool touchingGrabSurface; // TODO: private
-    protected Collider2D grabCollider; // TODO protected
-
-    // climb state logic
-    protected enum ClimbState { notClimb, wallClimb, ceilingClimb };
-    protected ClimbState currentClimbState = ClimbState.notClimb;
-    protected ClimbState transitioningToState = ClimbState.notClimb; // used when bzr curving to a new climb state
 
 	// bezier curve vars for getting up ledges and jumping over cover
 	protected Vector2 bzrStartPosition;
@@ -228,7 +221,6 @@ public class SimpleCharacterCore : MonoBehaviour
         {
             Velocity.y = 0;
         }
-
     }
 
 	public virtual void Collisions()
@@ -267,20 +259,10 @@ public class SimpleCharacterCore : MonoBehaviour
         RaycastHit2D centerRightHit = Physics2D.Raycast(characterCollider.bounds.center, Vector2.right, Mathf.Infinity, CollisionMasks.WallGrabMask);
         RaycastHit2D centerLeftHit = Physics2D.Raycast(characterCollider.bounds.center, Vector2.left, Mathf.Infinity, CollisionMasks.WallGrabMask);
         if (centerRightHit.collider != null && rightHit.collider != null && Mathf.Approximately(rightHitDist - 1000000, -1000000) && centerRightHit.collider.Equals(rightHit.collider))
-        {
-            touchingGrabSurface = true;
-            grabCollider = centerRightHit.collider;
-        }
+            TouchedWall(centerRightHit.collider.gameObject);
+
         else if (centerLeftHit.collider != null && leftHit.collider != null && Mathf.Approximately(leftHitDist - 1000000, -1000000) && centerLeftHit.collider.Equals(leftHit.collider))
-        {
-            touchingGrabSurface = true;
-            grabCollider = centerLeftHit.collider;
-        }
-        else
-        {
-            touchingGrabSurface = false;
-            grabCollider = null;
-        }
+            TouchedWall(centerLeftHit.collider.gameObject);
 
 		// Vertical Collision Block
         Vector2 verticalBoxSize = new Vector2(characterCollider.bounds.size.x - 0.01f, 0.01f);
@@ -472,36 +454,27 @@ public class SimpleCharacterCore : MonoBehaviour
         }
     }
 
-    protected void LookingOverLedge()
+    public virtual void LookingOverLedge()
     {
-        if (currentClimbState == ClimbState.notClimb)
-        {
-            // check if you're looking over the ledge
-            if (againstTheLedge && InputManager.VerticalAxis < 0.0f)
-                lookingOverLedge = true;
-            else
-                lookingOverLedge = false;
-        }
-        else if (currentClimbState == ClimbState.wallClimb)
-        {
-            if (againstTheLedge && (Mathf.Abs(InputManager.VerticalAxis) > 0.0f ||
-                (InputManager.HorizontalAxis > 0.0f && characterCollider.bounds.center.x < grabCollider.bounds.center.x) ||
-                (InputManager.HorizontalAxis < 0.0f && characterCollider.bounds.center.x > grabCollider.bounds.center.x)))
-                lookingOverLedge = true;
-            else
-                lookingOverLedge = false;
-        }
-        else if (currentClimbState == ClimbState.ceilingClimb)
-        {
-
-        }
+        // check if you're looking over the ledge
+        if (againstTheLedge && InputManager.VerticalAxis < 0.0f)
+            lookingOverLedge = true;
+        else
+            lookingOverLedge = false;
     }
 
-	protected Vector2 BezierCurveMovement(float distance, Vector2 start, Vector2 end, Vector2 curvePoint)
+    public virtual void TouchedWall(GameObject collisionObject)
+    {
+        //base class does nothing with this function. gets overridden at the subclass level to handle such occasions
+    }
+
+    protected Vector2 BezierCurveMovement(float distance, Vector2 start, Vector2 end, Vector2 curvePoint)
 	{
 		Vector2 ab = Vector2.Lerp(start, curvePoint, distance);
 		Vector2 bc = Vector2.Lerp(curvePoint, end, distance);
 		return Vector2.Lerp(ab, bc, distance);
 	}
+
+    
 
 }
