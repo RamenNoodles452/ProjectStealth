@@ -16,6 +16,8 @@ public class UserInputManager : IInputManager
         {
             HorizontalAxis = Input.GetAxisRaw("Horizontal");
             VerticalAxis = Input.GetAxisRaw("Vertical");
+            RunAxis = Input.GetAxisRaw("Run");
+
 
             if (HorizontalAxis != 0)
             {
@@ -60,14 +62,14 @@ public class UserInputManager : IInputManager
             else
                 JumpInputInst = false;
 
-            if (Input.GetButton("Run"))
+            if (RunAxis > 0)
                 RunInput = true;
             else
                 RunInput = false;
             if (Input.GetButtonDown("Run"))
-                RunInputInst = true;
+                RunInputDownInst = true;
             else
-                RunInputInst = false;
+                RunInputDownInst = false;
             if (Input.GetButtonUp("Run"))
                 RunInputUpInst = true;
             else

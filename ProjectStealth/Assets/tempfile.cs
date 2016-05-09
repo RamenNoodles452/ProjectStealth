@@ -334,7 +334,7 @@ public class tempfile : MonoBehaviour
 
     void RunInput()
     {
-        if (InputManager.RunInputInst && currentMoveState != moveState.isRunning)
+        if (InputManager.RunInputDownInst && currentMoveState != moveState.isRunning)
         {
             tempMoveState = currentMoveState;
             currentMoveState = moveState.isRunning;

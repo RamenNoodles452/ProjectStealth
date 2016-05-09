@@ -7,6 +7,7 @@ using System.Collections;
 /// </summary>
 public class DummyInputManager : IInputManager {
 
+    /*
     public void SendMove(int x, int y)
     {
         this.Move.Invoke(x, y);
@@ -21,4 +22,5 @@ public class DummyInputManager : IInputManager {
     {
         this.Jump.Invoke();
     }
+    */
 }

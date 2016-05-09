@@ -10,17 +10,6 @@ public abstract class IInputManager : MonoBehaviour {
 
     #region Events
 
-    // TRICKY: For some reason, Unity does not serialize parameterized events in the editor
-    // Creating a serializable version of the UnityEvent seems to fix it
-    [System.Serializable]
-    public class OnMove : UnityEvent<float, float> { };
-
-    public OnMove Move;
-    public UnityEvent Jump;
-    public UnityEvent Attack;
-    public UnityEvent Evade;
-    public UnityEvent Interact;
-    
     // TODO: I think the unityevents are better for something decoupled like a pause button. I don't think they should be used for things like, move/jump/etc
     public UnityEvent TogglePause;
 
@@ -40,7 +29,8 @@ public abstract class IInputManager : MonoBehaviour {
     public bool JumpInput;
     public bool JumpInputInst;
 
+    protected float RunAxis;
     public bool RunInput;
-    public bool RunInputInst;
+    public bool RunInputDownInst;
     public bool RunInputUpInst;
 }
