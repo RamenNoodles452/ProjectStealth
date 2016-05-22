@@ -3,7 +3,7 @@ using System.Collections;
 
 public class SimpleCharacterCore : MonoBehaviour
 {
-    CharacterStats char_stats;
+    protected CharacterStats char_stats;
 
     protected int previousFacingDirection = 1;
     //public int FacingDirection = 1;
@@ -22,7 +22,7 @@ public class SimpleCharacterCore : MonoBehaviour
     private const float JUMP_VERTICAL_SPEED = 6.0f;
     protected const float JUMP_HORIZONTAL_SPEED_MIN = 2.5f;
     protected const float JUMP_HORIZONTAL_SPEED_MAX = 4.0f;
-    protected const float JUMP_ACCEL = 4.0f;
+    //protected const float JUMP_ACCEL = 4.0f;
 
     private const float JUMP_CONTROL_TIME = 0.20f; //maximum duration of a jump if you hold it
     private const float JUMP_DURATION_MIN = 0.10f; //minimum duration of a jump if you tap it
@@ -30,7 +30,7 @@ public class SimpleCharacterCore : MonoBehaviour
     private bool jumpGracePeriod; //variable for jump tolerance if a player walks off a platform but wants to jump
     private float jumpGracePeriodTime;
     //public bool IsJumping; //TODO: protected
-	protected float jumpInputTime;
+	//protected float jumpInputTime;
 	//public bool jumpTurned; //TODO: protected
 
     //walk and run vars
@@ -43,7 +43,7 @@ public class SimpleCharacterCore : MonoBehaviour
     public enum moveState { isWalking, isSneaking, isRunning }; //TODO: protected
     public moveState currentMoveState = moveState.isWalking; //TODO: protected
     protected moveState prevMoveState;
-    protected float characterAccel = 0.0f;
+    //protected float characterAccel = 0.0f;
     private bool startRun; // this bool prevents wonky shit from happening if you turn around during a run
 
     // ledge logic
@@ -51,10 +51,10 @@ public class SimpleCharacterCore : MonoBehaviour
     public bool againstTheLedge; // TODO: private
 
 	// bezier curve vars for getting up ledges and jumping over cover
-	protected Vector2 bzrStartPosition;
-	protected Vector2 bzrEndPosition;
-	protected Vector2 bzrCurvePosition;
-	protected float bzrDistance;
+	//protected Vector2 bzrStartPosition;
+	//protected Vector2 bzrEndPosition;
+	//protected Vector2 bzrCurvePosition;
+	//protected float bzrDistance;
 
     // Use this for initialization
     public virtual void Start()
@@ -70,7 +70,7 @@ public class SimpleCharacterCore : MonoBehaviour
         //Velocity = new Vector2(0.0f, 0.0f);
         jumpGracePeriod = false;
         //char_stats.IsJumping = false;
-        jumpInputTime = 0.0f;
+        //jumpInputTime = 0.0f;
     }
 
     public virtual void Update()
@@ -133,7 +133,7 @@ public class SimpleCharacterCore : MonoBehaviour
             else if (currentMoveState == moveState.isRunning)
             {   
                 //smooth damp to 0 if there's no directional input for running or if you're trying to run the opposite direction
-                if (characterAccel == 0.0f || (characterAccel < 0.0f && char_stats.Velocity.x > 0.0f) || (characterAccel > 0.0f && char_stats.Velocity.x < 0.0f))
+                if (char_stats.CharacterAccel == 0.0f || (char_stats.CharacterAccel < 0.0f && char_stats.Velocity.x > 0.0f) || (char_stats.CharacterAccel > 0.0f && char_stats.Velocity.x < 0.0f))
                 {
                     if (Mathf.Abs(char_stats.Velocity.x) > SNEAK_SPEED)
                     {
@@ -149,7 +149,7 @@ public class SimpleCharacterCore : MonoBehaviour
                     }
                 }
                 else
-                    char_stats.Velocity.x = char_stats.Velocity.x + characterAccel * Time.deltaTime * TimeScale.timeScale;
+                    char_stats.Velocity.x = char_stats.Velocity.x + char_stats.CharacterAccel * Time.deltaTime * TimeScale.timeScale;
 
                 char_stats.Velocity.x = Mathf.Clamp(char_stats.Velocity.x, -RUN_SPEED, RUN_SPEED);
             }
@@ -179,27 +179,27 @@ public class SimpleCharacterCore : MonoBehaviour
         }
     }
 
-    protected void HorizontalJumpVelNoAccel(float speed)
+    public void HorizontalJumpVelNoAccel(float speed)
     {
-        if (characterAccel > 0.0f)
+        if (char_stats.CharacterAccel > 0.0f)
             char_stats.Velocity.x = speed;
-        else if (characterAccel < 0.0f)
+        else if (char_stats.CharacterAccel < 0.0f)
             char_stats.Velocity.x = -speed;
     }
 
     protected void HorizontalJumpVelAccel()
     {
-        if (characterAccel < 0.0f && char_stats.Velocity.x >= 0.0f)
+        if (char_stats.CharacterAccel < 0.0f && char_stats.Velocity.x >= 0.0f)
         {
             char_stats.Velocity.x = -SNEAK_SPEED;
         }
-        else if (characterAccel > 0.0f && char_stats.Velocity.x <= 0.0f)
+        else if (char_stats.CharacterAccel > 0.0f && char_stats.Velocity.x <= 0.0f)
         {
             char_stats.Velocity.x = SNEAK_SPEED;
         }
         else
         {
-            char_stats.Velocity.x = char_stats.Velocity.x + characterAccel * Time.deltaTime * TimeScale.timeScale;
+            char_stats.Velocity.x = char_stats.Velocity.x + char_stats.CharacterAccel * Time.deltaTime * TimeScale.timeScale;
             char_stats.Velocity.x = Mathf.Clamp(char_stats.Velocity.x, -JUMP_HORIZONTAL_SPEED_MAX, JUMP_HORIZONTAL_SPEED_MAX);
         }
     }
@@ -211,8 +211,8 @@ public class SimpleCharacterCore : MonoBehaviour
         //override the vertical velocity if we're in hte middle of jumping
         if (char_stats.IsJumping)
         {
-            jumpInputTime = jumpInputTime + Time.deltaTime * Time.timeScale;
-            if ((InputManager.JumpInput && jumpInputTime <= JUMP_CONTROL_TIME) || jumpInputTime <= JUMP_DURATION_MIN)
+            char_stats.JumpInputTime = char_stats.JumpInputTime + Time.deltaTime * Time.timeScale;
+            if ((InputManager.JumpInput && char_stats.JumpInputTime <= JUMP_CONTROL_TIME) || char_stats.JumpInputTime <= JUMP_DURATION_MIN)
             {
                 char_stats.Velocity.y = JUMP_VERTICAL_SPEED;
             }
@@ -399,7 +399,7 @@ public class SimpleCharacterCore : MonoBehaviour
         }
     }
 
-    protected void SetFacing()
+    public void SetFacing()
     {
         if (char_stats.FacingDirection == -1)
             spriteRenderer.flipX = true;
@@ -437,18 +437,18 @@ public class SimpleCharacterCore : MonoBehaviour
         }
         
         if (InputManager.HorizontalAxis > 0)
-            characterAccel = ACCELERATION;
+            char_stats.CharacterAccel = ACCELERATION;
         else if (InputManager.HorizontalAxis < 0)
-            characterAccel = -ACCELERATION;
+            char_stats.CharacterAccel = -ACCELERATION;
         else
-            characterAccel = 0.0f;
+            char_stats.CharacterAccel = 0.0f;
 
         // Jump logic. Keep the Y velocity constant while holding jump for the duration of JUMP_CONTROL_TIME
         if ((jumpGracePeriod || char_stats.OnTheGround) && InputManager.JumpInputInst)
         {
             char_stats.IsJumping = true;
             jumpGracePeriod = false;
-            jumpInputTime = 0.0f;
+            char_stats.JumpInputTime = 0.0f;
         }
     }
 
@@ -466,13 +466,23 @@ public class SimpleCharacterCore : MonoBehaviour
         //base class does nothing with this function. gets overridden at the subclass level to handle such occasions
     }
 
+    /*
     protected Vector2 BezierCurveMovement(float distance, Vector2 start, Vector2 end, Vector2 curvePoint)
 	{
 		Vector2 ab = Vector2.Lerp(start, curvePoint, distance);
 		Vector2 bc = Vector2.Lerp(curvePoint, end, distance);
 		return Vector2.Lerp(ab, bc, distance);
 	}
+    */   
 
     
+    public float GetJumpHoriSpeedMin()
+    {
+        return JUMP_HORIZONTAL_SPEED_MIN;
+    }
 
+    public float GetJumpHoriSpeedMax()
+    {
+        return JUMP_HORIZONTAL_SPEED_MAX;
+    }
 }
