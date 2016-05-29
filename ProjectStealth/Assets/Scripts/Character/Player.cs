@@ -5,8 +5,8 @@ using System;
 public class Player : SimpleCharacterCore
 {
     // Player Modules
-	private PlayerStats player_stats;
-    private MagGripUpgrade mag_grip;
+	private PlayerStats playerStats;
+    private MagGripUpgrade magGrip;
 
     void Awake ()
 	{
@@ -22,8 +22,8 @@ public class Player : SimpleCharacterCore
 		RUN_SPEED = 4.5f;
 		currentMoveState = moveState.isSneaking;
 
-		player_stats = GetComponent<PlayerStats>();
-        mag_grip = GetComponent<MagGripUpgrade>();
+		playerStats = GetComponent<PlayerStats>();
+        magGrip = GetComponent<MagGripUpgrade>();
 	}
 
 	void OnDestroy ()
@@ -43,20 +43,20 @@ public class Player : SimpleCharacterCore
 
 	public override void Update ()
 	{
-        if (char_stats.CurrentMasterState == CharacterStats.MasterState.defaultState)
+        if (charStats.CurrentMasterState == CharacterStats.MasterState.defaultState)
         {
             base.Update();
 
             // base mag grip checks
-            if (player_stats.AquiredMagGrip)
+            if (playerStats.AquiredMagGrip)
             {
                 // if we want to grab down onto the wall from the ledge
                 if (lookingOverLedge) // && we're standing on a grabbable surface?
                 {
-                    if (char_stats.OnTheGround && InputManager.JumpInputInst)
+                    if (charStats.OnTheGround && InputManager.JumpInputInst)
                     {
                         // do we want to climb down?
-                        mag_grip.WallClimbFromLedge();
+                        magGrip.WallClimbFromLedge();
                     }
                 }
             }
@@ -71,7 +71,7 @@ public class Player : SimpleCharacterCore
 
 	public override void FixedUpdate()
 	{
-        if (char_stats.CurrentMasterState == CharacterStats.MasterState.defaultState)
+        if (charStats.CurrentMasterState == CharacterStats.MasterState.defaultState)
         {
             base.FixedUpdate();
         }    
@@ -87,6 +87,6 @@ public class Player : SimpleCharacterCore
 
     public override void TouchedWall(GameObject collisionObject)
     {
-        mag_grip.InitiateWallGrab(collisionObject.GetComponent<Collider2D>());
+        magGrip.InitiateWallGrab(collisionObject.GetComponent<Collider2D>());
     }
 }

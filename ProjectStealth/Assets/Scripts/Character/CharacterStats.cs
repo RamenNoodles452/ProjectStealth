@@ -14,7 +14,7 @@ public class CharacterStats : MonoBehaviour
     public int FacingDirection = 1; //-1 / 1
 
 	public bool OnTheGround = false;
-    [HideInInspector]
+    //[HideInInspector]
     public bool IsJumping = false;
     [HideInInspector]
     public bool JumpTurned = false;

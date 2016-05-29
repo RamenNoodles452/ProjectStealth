@@ -3,7 +3,7 @@ using System.Collections;
 
 public class SimpleCharacterCore : MonoBehaviour
 {
-    protected CharacterStats char_stats;
+    protected CharacterStats charStats;
 
     protected int previousFacingDirection = 1;
     //public int FacingDirection = 1;
@@ -59,7 +59,7 @@ public class SimpleCharacterCore : MonoBehaviour
     // Use this for initialization
     public virtual void Start()
     {
-		char_stats = GetComponent<CharacterStats>();
+		charStats = GetComponent<CharacterStats>();
         //characterCollider = GetComponent<BoxCollider2D>();
         Anim = GetComponent<Animator>();
         InputManager = GetComponent<IInputManager>();
@@ -79,7 +79,7 @@ public class SimpleCharacterCore : MonoBehaviour
 
         CalculateDirection();
         // set Sprite flip
-        if (previousFacingDirection != char_stats.FacingDirection)
+        if (previousFacingDirection != charStats.FacingDirection)
             SetFacing();
 
         if (jumpGracePeriod == true)
@@ -94,7 +94,7 @@ public class SimpleCharacterCore : MonoBehaviour
     {
         // prev state assignments
         prevMoveState = currentMoveState;
-        previousFacingDirection = char_stats.FacingDirection;
+        previousFacingDirection = charStats.FacingDirection;
     }
 
     public virtual void FixedUpdate()
@@ -105,58 +105,61 @@ public class SimpleCharacterCore : MonoBehaviour
         Collisions();
 
         //move the character after all calculations have been done
-        transform.Translate(char_stats.Velocity);
+        if (charStats.CurrentMasterState == CharacterStats.MasterState.defaultState)
+        {
+            transform.Translate(charStats.Velocity);
+        }
     }
 
     private void HorizontalVelocity()
     {
-        if(char_stats.OnTheGround)
+        if(charStats.OnTheGround)
         {
             //movement stuff
             if (currentMoveState == moveState.isWalking)
-                char_stats.Velocity.x = WALK_SPEED * InputManager.HorizontalAxis;
+                charStats.Velocity.x = WALK_SPEED * InputManager.HorizontalAxis;
             else if (currentMoveState == moveState.isSneaking)
             {
                 // if current speed is greater than sneak speed, then decel to sneak speed.
-                if(Mathf.Abs(char_stats.Velocity.x) > SNEAK_SPEED)
+                if(Mathf.Abs(charStats.Velocity.x) > SNEAK_SPEED)
                 {
-                    if (char_stats.Velocity.x > 0.0f)
-                        char_stats.Velocity.x = char_stats.Velocity.x - DRAG * Time.deltaTime * TimeScale.timeScale;
-                    else if (char_stats.Velocity.x < 0.0f)
-                        char_stats.Velocity.x = char_stats.Velocity.x + DRAG * Time.deltaTime * TimeScale.timeScale;
+                    if (charStats.Velocity.x > 0.0f)
+                        charStats.Velocity.x = charStats.Velocity.x - DRAG * Time.deltaTime * TimeScale.timeScale;
+                    else if (charStats.Velocity.x < 0.0f)
+                        charStats.Velocity.x = charStats.Velocity.x + DRAG * Time.deltaTime * TimeScale.timeScale;
                 }
                 else
                 {
-                    char_stats.Velocity.x = SNEAK_SPEED * InputManager.HorizontalAxis;
+                    charStats.Velocity.x = SNEAK_SPEED * InputManager.HorizontalAxis;
                 }
             }
             else if (currentMoveState == moveState.isRunning)
             {   
                 //smooth damp to 0 if there's no directional input for running or if you're trying to run the opposite direction
-                if (char_stats.CharacterAccel == 0.0f || (char_stats.CharacterAccel < 0.0f && char_stats.Velocity.x > 0.0f) || (char_stats.CharacterAccel > 0.0f && char_stats.Velocity.x < 0.0f))
+                if (charStats.CharacterAccel == 0.0f || (charStats.CharacterAccel < 0.0f && charStats.Velocity.x > 0.0f) || (charStats.CharacterAccel > 0.0f && charStats.Velocity.x < 0.0f))
                 {
-                    if (Mathf.Abs(char_stats.Velocity.x) > SNEAK_SPEED)
+                    if (Mathf.Abs(charStats.Velocity.x) > SNEAK_SPEED)
                     {
                         //print("SKID BOIS");
-                        if (char_stats.Velocity.x > 0.0f)
-                            char_stats.Velocity.x = char_stats.Velocity.x - DRAG * Time.deltaTime * TimeScale.timeScale;
-                        else if(char_stats.Velocity.x < 0.0f)
-                            char_stats.Velocity.x = char_stats.Velocity.x + DRAG * Time.deltaTime * TimeScale.timeScale;
+                        if (charStats.Velocity.x > 0.0f)
+                            charStats.Velocity.x = charStats.Velocity.x - DRAG * Time.deltaTime * TimeScale.timeScale;
+                        else if(charStats.Velocity.x < 0.0f)
+                            charStats.Velocity.x = charStats.Velocity.x + DRAG * Time.deltaTime * TimeScale.timeScale;
                     }
                     else
                     {
-                        char_stats.Velocity.x = 0.0f;
+                        charStats.Velocity.x = 0.0f;
                     }
                 }
                 else
-                    char_stats.Velocity.x = char_stats.Velocity.x + char_stats.CharacterAccel * Time.deltaTime * TimeScale.timeScale;
+                    charStats.Velocity.x = charStats.Velocity.x + charStats.CharacterAccel * Time.deltaTime * TimeScale.timeScale;
 
-                char_stats.Velocity.x = Mathf.Clamp(char_stats.Velocity.x, -RUN_SPEED, RUN_SPEED);
+                charStats.Velocity.x = Mathf.Clamp(charStats.Velocity.x, -RUN_SPEED, RUN_SPEED);
             }
         }
         else
         {
-            if (char_stats.JumpTurned)
+            if (charStats.JumpTurned)
                 HorizontalJumpVelNoAccel(SNEAK_SPEED);
             else
             {
@@ -171,68 +174,68 @@ public class SimpleCharacterCore : MonoBehaviour
             }
         }
 
-        char_stats.Velocity.x = Mathf.Clamp(char_stats.Velocity.x, -MAX_HORIZONTAL_SPEED, MAX_HORIZONTAL_SPEED);
+        charStats.Velocity.x = Mathf.Clamp(charStats.Velocity.x, -MAX_HORIZONTAL_SPEED, MAX_HORIZONTAL_SPEED);
 
-        if (Mathf.Approximately(char_stats.Velocity.x - 1000000, -1000000))
+        if (Mathf.Approximately(charStats.Velocity.x - 1000000, -1000000))
         {
-            char_stats.Velocity.x = 0;
+            charStats.Velocity.x = 0;
         }
     }
 
     public void HorizontalJumpVelNoAccel(float speed)
     {
-        if (char_stats.CharacterAccel > 0.0f)
-            char_stats.Velocity.x = speed;
-        else if (char_stats.CharacterAccel < 0.0f)
-            char_stats.Velocity.x = -speed;
+        if (charStats.CharacterAccel > 0.0f)
+            charStats.Velocity.x = speed;
+        else if (charStats.CharacterAccel < 0.0f)
+            charStats.Velocity.x = -speed;
     }
 
     protected void HorizontalJumpVelAccel()
     {
-        if (char_stats.CharacterAccel < 0.0f && char_stats.Velocity.x >= 0.0f)
+        if (charStats.CharacterAccel < 0.0f && charStats.Velocity.x >= 0.0f)
         {
-            char_stats.Velocity.x = -SNEAK_SPEED;
+            charStats.Velocity.x = -SNEAK_SPEED;
         }
-        else if (char_stats.CharacterAccel > 0.0f && char_stats.Velocity.x <= 0.0f)
+        else if (charStats.CharacterAccel > 0.0f && charStats.Velocity.x <= 0.0f)
         {
-            char_stats.Velocity.x = SNEAK_SPEED;
+            charStats.Velocity.x = SNEAK_SPEED;
         }
         else
         {
-            char_stats.Velocity.x = char_stats.Velocity.x + char_stats.CharacterAccel * Time.deltaTime * TimeScale.timeScale;
-            char_stats.Velocity.x = Mathf.Clamp(char_stats.Velocity.x, -JUMP_HORIZONTAL_SPEED_MAX, JUMP_HORIZONTAL_SPEED_MAX);
+            charStats.Velocity.x = charStats.Velocity.x + charStats.CharacterAccel * Time.deltaTime * TimeScale.timeScale;
+            charStats.Velocity.x = Mathf.Clamp(charStats.Velocity.x, -JUMP_HORIZONTAL_SPEED_MAX, JUMP_HORIZONTAL_SPEED_MAX);
         }
     }
 
     private void VerticalVelocity()
     {
-        char_stats.Velocity.y = char_stats.Velocity.y + GRAVITATIONAL_FORCE * Time.deltaTime * TimeScale.timeScale;
+        charStats.Velocity.y = charStats.Velocity.y + GRAVITATIONAL_FORCE * Time.deltaTime * TimeScale.timeScale;
 
         //override the vertical velocity if we're in hte middle of jumping
-        if (char_stats.IsJumping)
+        if (charStats.IsJumping)
         {
-            char_stats.JumpInputTime = char_stats.JumpInputTime + Time.deltaTime * Time.timeScale;
-            if ((InputManager.JumpInput && char_stats.JumpInputTime <= JUMP_CONTROL_TIME) || char_stats.JumpInputTime <= JUMP_DURATION_MIN)
+            charStats.JumpInputTime = charStats.JumpInputTime + Time.deltaTime * Time.timeScale;
+            if ((InputManager.JumpInput && charStats.JumpInputTime <= JUMP_CONTROL_TIME) || charStats.JumpInputTime <= JUMP_DURATION_MIN)
             {
-                char_stats.Velocity.y = JUMP_VERTICAL_SPEED;
+                charStats.Velocity.y = JUMP_VERTICAL_SPEED;
             }
             else
             {
-                char_stats.IsJumping = false;
+                charStats.IsJumping = false;
             }
         }
 
         // if you turned while jumping, turn off the jump var
-        if (char_stats.JumpTurned && char_stats.Velocity.y > 0.0f)
+        if (charStats.JumpTurned && charStats.Velocity.y > 0.0f)
         {
-            char_stats.IsJumping = false;
+            charStats.IsJumping = false;
         }
 
-        char_stats.Velocity.y = Mathf.Clamp(char_stats.Velocity.y, -MAX_VERTICAL_SPEED, MAX_VERTICAL_SPEED);
+        charStats.Velocity.y = Mathf.Clamp(charStats.Velocity.y, -MAX_VERTICAL_SPEED, MAX_VERTICAL_SPEED);
 
-        if (char_stats.OnTheGround && Mathf.Approximately(char_stats.Velocity.y - 1000000, -1000000))
+        if (charStats.OnTheGround && Mathf.Approximately(charStats.Velocity.y - 1000000, -1000000))
         {
-            char_stats.Velocity.y = 0;
+            charStats.Velocity.y = 0;
         }
     }
 
@@ -241,36 +244,36 @@ public class SimpleCharacterCore : MonoBehaviour
         // Horizontal Collision Block
         // box used to collide against horizontal objects. Extend the hitbox vertically while in the air to avoid corner clipping
         Vector2 horizontalBoxSize;
-		if (char_stats.OnTheGround)
-            horizontalBoxSize = new Vector2 (0.01f, char_stats.CharCollider.bounds.size.y - 0.01f);
+		if (charStats.OnTheGround)
+            horizontalBoxSize = new Vector2 (0.01f, charStats.CharCollider.bounds.size.y - 0.01f);
 		else
-            horizontalBoxSize = new Vector2 (0.01f, char_stats.CharCollider.bounds.size.y + 25.0f);//15.0f);
+            horizontalBoxSize = new Vector2 (0.01f, charStats.CharCollider.bounds.size.y + 25.0f);//15.0f);
 
         // raycast to collide right
-        Vector2 rightHitOrigin = new Vector2(char_stats.CharCollider.bounds.center.x + char_stats.CharCollider.bounds.extents.x - 0.01f, char_stats.CharCollider.bounds.center.y);
+        Vector2 rightHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x + charStats.CharCollider.bounds.extents.x - 0.01f, charStats.CharCollider.bounds.center.y);
         RaycastHit2D rightHit = Physics2D.BoxCast(rightHitOrigin, horizontalBoxSize, 0.0f, Vector2.right, Mathf.Infinity, CollisionMasks.AllCollisionMask);
         float rightHitDist = Mathf.Infinity;
         if (rightHit.collider != null)
         {
             rightHitDist = rightHit.distance - 0.005f;
-            if (char_stats.Velocity.x > 0.0f && rightHitDist <= Mathf.Abs(char_stats.Velocity.x))
-                char_stats.Velocity.x = rightHitDist;
+            if (charStats.Velocity.x > 0.0f && rightHitDist <= Mathf.Abs(charStats.Velocity.x))
+                charStats.Velocity.x = rightHitDist;
         }
 
         // raycast to collide left
-        Vector2 leftHitOrigin = new Vector2(char_stats.CharCollider.bounds.center.x - char_stats.CharCollider.bounds.extents.x + 0.01f, char_stats.CharCollider.bounds.center.y);
+        Vector2 leftHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x - charStats.CharCollider.bounds.extents.x + 0.01f, charStats.CharCollider.bounds.center.y);
         RaycastHit2D leftHit = Physics2D.BoxCast(leftHitOrigin, horizontalBoxSize, 0.0f, Vector2.left, Mathf.Infinity, CollisionMasks.AllCollisionMask);
         float leftHitDist = Mathf.Infinity;
         if (leftHit.collider != null)
         {
             leftHitDist = leftHit.distance - 0.005f;
-            if (char_stats.Velocity.x < 0.0f && leftHitDist <= Mathf.Abs(char_stats.Velocity.x))
-                char_stats.Velocity.x = -leftHitDist;
+            if (charStats.Velocity.x < 0.0f && leftHitDist <= Mathf.Abs(charStats.Velocity.x))
+                charStats.Velocity.x = -leftHitDist;
         }
 
         // are we touching the wall?
-        RaycastHit2D centerRightHit = Physics2D.Raycast(char_stats.CharCollider.bounds.center, Vector2.right, Mathf.Infinity, CollisionMasks.WallGrabMask);
-        RaycastHit2D centerLeftHit = Physics2D.Raycast(char_stats.CharCollider.bounds.center, Vector2.left, Mathf.Infinity, CollisionMasks.WallGrabMask);
+        RaycastHit2D centerRightHit = Physics2D.Raycast(charStats.CharCollider.bounds.center, Vector2.right, Mathf.Infinity, CollisionMasks.WallGrabMask);
+        RaycastHit2D centerLeftHit = Physics2D.Raycast(charStats.CharCollider.bounds.center, Vector2.left, Mathf.Infinity, CollisionMasks.WallGrabMask);
         if (centerRightHit.collider != null && rightHit.collider != null && Mathf.Approximately(rightHitDist - 1000000, -1000000) && centerRightHit.collider.Equals(rightHit.collider))
             TouchedWall(centerRightHit.collider.gameObject);
 
@@ -278,46 +281,46 @@ public class SimpleCharacterCore : MonoBehaviour
             TouchedWall(centerLeftHit.collider.gameObject);
 
 		// Vertical Collision Block
-        Vector2 verticalBoxSize = new Vector2(char_stats.CharCollider.bounds.size.x - 0.01f, 0.01f);
+        Vector2 verticalBoxSize = new Vector2(charStats.CharCollider.bounds.size.x - 0.01f, 0.01f);
 
         // raycast to hit the ceiling
-        Vector2 upHitOrigin = new Vector2(char_stats.CharCollider.bounds.center.x, char_stats.CharCollider.bounds.center.y + char_stats.CharCollider.bounds.extents.y - 0.01f);
+        Vector2 upHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x, charStats.CharCollider.bounds.center.y + charStats.CharCollider.bounds.extents.y - 0.01f);
         RaycastHit2D upHit = Physics2D.BoxCast(upHitOrigin, verticalBoxSize, 0.0f, Vector2.up, Mathf.Infinity, CollisionMasks.UpwardsCollisionMask);
         if (upHit.collider != null)
         {
             float hitDist = upHit.distance - 0.005f;
-            if (char_stats.Velocity.y > 0.0f && hitDist <= Mathf.Abs(char_stats.Velocity.y))
-                char_stats.Velocity.y = hitDist;
+            if (charStats.Velocity.y > 0.0f && hitDist <= Mathf.Abs(charStats.Velocity.y))
+                charStats.Velocity.y = hitDist;
         }
 
         // raycast to find the floor
-        Vector2 downHitOrigin = new Vector2(char_stats.CharCollider.bounds.center.x, char_stats.CharCollider.bounds.center.y - char_stats.CharCollider.bounds.extents.y + 0.01f);
+        Vector2 downHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x, charStats.CharCollider.bounds.center.y - charStats.CharCollider.bounds.extents.y + 0.01f);
         RaycastHit2D downHit = Physics2D.BoxCast(downHitOrigin, verticalBoxSize, 0.0f, Vector2.down, Mathf.Infinity, CollisionMasks.AllCollisionMask);
         if (downHit.collider != null)
         {
             float downHitColliderLeft = downHit.collider.bounds.min.x;
             float downHitColliderRight = downHit.collider.bounds.max.x;
-            float characterLeft = char_stats.CharCollider.bounds.min.x;
-            float characterRight = char_stats.CharCollider.bounds.max.x;
+            float characterLeft = charStats.CharCollider.bounds.min.x;
+            float characterRight = charStats.CharCollider.bounds.max.x;
             bool touchGround = true; // this is to prevent the game from thinking you touched the ground when you're gonna slip off the side when falling
 
             float hitDist = downHit.distance - 0.005f;
-            if (char_stats.Velocity.y < 0.0f && hitDist <= Mathf.Abs(char_stats.Velocity.y))
+            if (charStats.Velocity.y < 0.0f && hitDist <= Mathf.Abs(charStats.Velocity.y))
             {
                 // if the character is about to clip into the enviornment with the back of their hit box, move them so that they won't clip
-                if (char_stats.Velocity.x > 0.0f && downHitColliderRight < char_stats.CharCollider.bounds.center.x)
+                if (charStats.Velocity.x > 0.0f && downHitColliderRight < charStats.CharCollider.bounds.center.x)
                 {
                     transform.Translate(downHitColliderRight - characterLeft, 0.0f, 0.0f);
                     touchGround = false;
                 }
-                else if (char_stats.Velocity.x < 0.0f && downHitColliderLeft > char_stats.CharCollider.bounds.center.x)
+                else if (charStats.Velocity.x < 0.0f && downHitColliderLeft > charStats.CharCollider.bounds.center.x)
                 {
                     transform.Translate(-(characterRight - downHitColliderLeft), 0.0f, 0.0f);
                     touchGround = false;
                 }
                 else // otherwise, touch the ground
                 {
-                    char_stats.Velocity.y = -hitDist;
+                    charStats.Velocity.y = -hitDist;
                 }
             }
             // Approximate! since floats are dumb
@@ -325,45 +328,45 @@ public class SimpleCharacterCore : MonoBehaviour
             {
                 if (touchGround)
                 {
-                    char_stats.OnTheGround = true;
-                    char_stats.JumpTurned = false;
+                    charStats.OnTheGround = true;
+                    charStats.JumpTurned = false;
                 }
             }
             else
             {
                 // this block is for jump tolerance
-                if (char_stats.OnTheGround && char_stats.IsJumping == false)
+                if (charStats.OnTheGround && charStats.IsJumping == false)
                 {
                     jumpGracePeriod = true;
                     jumpGracePeriodTime = 0.0f;
                 }
-                char_stats.OnTheGround = false;
+                charStats.OnTheGround = false;
                 againstTheLedge = false;
             }
 
             // stop at the edge of a platform
-            if (char_stats.OnTheGround && currentMoveState != moveState.isRunning)
+            if (charStats.OnTheGround && currentMoveState != moveState.isRunning)
             {
                 float rightLedgeDist = downHitColliderRight - characterRight;
-                if (char_stats.Velocity.x > 0.0f && rightLedgeDist <= Mathf.Abs(char_stats.Velocity.x))
+                if (charStats.Velocity.x > 0.0f && rightLedgeDist <= Mathf.Abs(charStats.Velocity.x))
                 {
                     if (characterRight < downHitColliderRight)
-                        char_stats.Velocity.x = rightLedgeDist;
+                        charStats.Velocity.x = rightLedgeDist;
                     else
-                        char_stats.Velocity.x = 0.0f;
+                        charStats.Velocity.x = 0.0f;
                 }
 
                 float leftLedgeDist = characterLeft - downHitColliderLeft;
-                if (char_stats.Velocity.x < 0.0f && leftLedgeDist <= Mathf.Abs(char_stats.Velocity.x))
+                if (charStats.Velocity.x < 0.0f && leftLedgeDist <= Mathf.Abs(charStats.Velocity.x))
                 {
                     if (characterLeft > downHitColliderLeft)
-                        char_stats.Velocity.x = -leftLedgeDist;
+                        charStats.Velocity.x = -leftLedgeDist;
                     else
-                        char_stats.Velocity.x = 0.0f;
+                        charStats.Velocity.x = 0.0f;
                 }
 
                 // set if character is against the ledge
-                if ((rightLedgeDist < 1.0f && char_stats.FacingDirection == 1) || (leftLedgeDist < 1.0f && char_stats.FacingDirection == -1))
+                if ((rightLedgeDist < 1.0f && charStats.FacingDirection == 1) || (leftLedgeDist < 1.0f && charStats.FacingDirection == -1))
                     againstTheLedge = true;
                 else
                     againstTheLedge = false;
@@ -371,37 +374,37 @@ public class SimpleCharacterCore : MonoBehaviour
         }
         // if there is no floor, just fall
         else
-            char_stats.OnTheGround = false;
+            charStats.OnTheGround = false;
     }
 
     void CalculateDirection()
     {
         // character direction logic
-        if (char_stats.FacingDirection == -1 && InputManager.HorizontalAxis > 0)
+        if (charStats.FacingDirection == -1 && InputManager.HorizontalAxis > 0)
         {
-            char_stats.FacingDirection = 1;
+            charStats.FacingDirection = 1;
             //Anim.SetBool("TurnAround", true);
 
-            if (!char_stats.OnTheGround)
+            if (!charStats.OnTheGround)
             {
-                char_stats.JumpTurned = true;
+                charStats.JumpTurned = true;
             }
         }
-        else if (char_stats.FacingDirection == 1 && InputManager.HorizontalAxis < 0)
+        else if (charStats.FacingDirection == 1 && InputManager.HorizontalAxis < 0)
         {
-            char_stats.FacingDirection = -1;
+            charStats.FacingDirection = -1;
             //Anim.SetBool("TurnAround", true);
 
-            if (!char_stats.OnTheGround)
+            if (!charStats.OnTheGround)
             {
-                char_stats.JumpTurned = true;
+                charStats.JumpTurned = true;
             }
         }
     }
 
     public void SetFacing()
     {
-        if (char_stats.FacingDirection == -1)
+        if (charStats.FacingDirection == -1)
             spriteRenderer.flipX = true;
         else
             spriteRenderer.flipX = false;
@@ -420,35 +423,35 @@ public class SimpleCharacterCore : MonoBehaviour
         {
             // if the character comes to a full stop, let them start the run again
             // This also works when turning around
-            if (char_stats.Velocity.x == 0.0f)
+            if (charStats.Velocity.x == 0.0f)
                 startRun = true;
 
             // running automatically starts at the sneaking speed and accelerates from there
-            if (startRun == true && InputManager.HorizontalAxis > 0 && Mathf.Abs(char_stats.Velocity.x) < SNEAK_SPEED)
+            if (startRun == true && InputManager.HorizontalAxis > 0 && Mathf.Abs(charStats.Velocity.x) < SNEAK_SPEED)
             {
-                char_stats.Velocity.x = SNEAK_SPEED;
+                charStats.Velocity.x = SNEAK_SPEED;
                 startRun = false;
             }
-            else if (startRun == true && InputManager.HorizontalAxis < 0 && Mathf.Abs(char_stats.Velocity.x) < SNEAK_SPEED)
+            else if (startRun == true && InputManager.HorizontalAxis < 0 && Mathf.Abs(charStats.Velocity.x) < SNEAK_SPEED)
             {
-                char_stats.Velocity.x = -SNEAK_SPEED;
+                charStats.Velocity.x = -SNEAK_SPEED;
                 startRun = false;
             }
         }
         
         if (InputManager.HorizontalAxis > 0)
-            char_stats.CharacterAccel = ACCELERATION;
+            charStats.CharacterAccel = ACCELERATION;
         else if (InputManager.HorizontalAxis < 0)
-            char_stats.CharacterAccel = -ACCELERATION;
+            charStats.CharacterAccel = -ACCELERATION;
         else
-            char_stats.CharacterAccel = 0.0f;
+            charStats.CharacterAccel = 0.0f;
 
         // Jump logic. Keep the Y velocity constant while holding jump for the duration of JUMP_CONTROL_TIME
-        if ((jumpGracePeriod || char_stats.OnTheGround) && InputManager.JumpInputInst)
+        if ((jumpGracePeriod || charStats.OnTheGround) && InputManager.JumpInputInst)
         {
-            char_stats.IsJumping = true;
+            charStats.IsJumping = true;
             jumpGracePeriod = false;
-            char_stats.JumpInputTime = 0.0f;
+            charStats.JumpInputTime = 0.0f;
         }
     }
 

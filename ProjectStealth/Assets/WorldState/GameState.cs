@@ -20,6 +20,10 @@ public class GameState : MonoBehaviour {
             Debug.LogWarning("Attempted to create two GameState instances - destroying");
             Destroy(gameObject);
         }
-
 	}
+
+    void Update()
+    {
+
+    }
 }
