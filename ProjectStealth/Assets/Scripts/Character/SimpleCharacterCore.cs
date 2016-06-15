@@ -282,7 +282,7 @@ public class SimpleCharacterCore : MonoBehaviour
 
         // raycast to hit the ceiling
         Vector2 upHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x, charStats.CharCollider.bounds.center.y + charStats.CharCollider.bounds.extents.y - 0.01f);
-        RaycastHit2D upHit = Physics2D.BoxCast(upHitOrigin, verticalBoxSize, 0.0f, Vector2.up, Mathf.Infinity, CollisionMasks.UpwardsCollisionMask);
+        RaycastHit2D upHit = Physics2D.BoxCast(upHitOrigin, verticalBoxSize, 0.0f, Vector2.up, Mathf.Infinity, CollisionMasks.AllCollisionMask);
         if (upHit.collider != null)
         {
             float hitDist = upHit.distance - 0.005f;
@@ -473,7 +473,6 @@ public class SimpleCharacterCore : MonoBehaviour
     public virtual void TouchedCeiling(GameObject collisionObject)
     {
         //base class does nothing with this function. gets overridden at the subclass level to handle such occasions
-        Debug.Log("asdfasdfasdf");
     }
 
     /*

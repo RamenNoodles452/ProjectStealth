@@ -235,66 +235,6 @@ public class MagGripUpgrade : MonoBehaviour
         Vector2 bc = Vector2.Lerp(curvePoint, end, distance);
         return Vector2.Lerp(ab, bc, distance);
     }
-    public void InitiateWallGrab(Collider2D collisionObject)
-    {
-        if (playerStats.AquiredMagGrip)
-        {
-            if (currentClimbState == ClimbState.notClimb)
-            {
-                //TODO: check to make sure the wall is climbable (walls should have a component with some public vars. if the object is climbable should be one of the properties
-
-                if (!charStats.OnTheGround && currentClimbState == ClimbState.notClimb && wallGrabDelayTimer == WALL_GRAB_DELAY)
-                {
-                    // only grab the wall if we aren't popping out under it or over it
-                    if (collisionObject.bounds.min.y <= charStats.CharCollider.bounds.min.y)
-                    {
-                        // if character is a bit too above the ledge, bump them down till they're directly under it
-                        // if this block is commented out, then the character will not snap directly to the ledge if slightly above it and will slide down till they grab on
-                        /*
-                        if (collisionObject.bounds.max.y < charStats.CharCollider.bounds.max.y)
-                        {
-                            // check to see if the wall we're gonna be offsetting against is too short.
-                            RaycastHit2D predictionCast;
-                            float offsetDistance = charStats.CharCollider.bounds.max.y - collisionObject.bounds.max.y;
-                            Vector2 predictionCastOrigin = new Vector2(charStats.CharCollider.bounds.center.x, charStats.CharCollider.bounds.min.y - offsetDistance);
-                            if (collisionObject.bounds.center.x < charStats.CharCollider.bounds.center.x)
-                                predictionCast = Physics2D.Raycast(predictionCastOrigin, Vector2.left, Mathf.Infinity, CollisionMasks.AllCollisionMask);
-                            else
-                                predictionCast = Physics2D.Raycast(predictionCastOrigin, Vector2.right, Mathf.Infinity, CollisionMasks.AllCollisionMask);
-
-                            if (predictionCast.collider == collisionObject)
-                                transform.Translate(0.0f, -(charStats.CharCollider.bounds.max.y - collisionObject.bounds.max.y), 0.0f);
-                        }
-                        */
-                        // if we're good to grab, get everything in order
-                        if (collisionObject.bounds.max.y >= charStats.CharCollider.bounds.max.y)
-                        {
-                            charStats.ResetJump();
-                            currentClimbState = ClimbState.wallClimb;
-                            charStats.CurrentMasterState = CharacterStats.MasterState.climbState;
-
-                            // variable sets to prevent weird turning when grabbing onto a wall
-                            // if the wall is to our left
-                            if (collisionObject.bounds.center.x < charStats.CharCollider.bounds.center.x)
-                            {
-                                charStats.FacingDirection = -1;
-                                spriteRenderer.flipX = true;
-                            }
-                            // if the wall is to our right
-                            else
-                            {
-                                charStats.FacingDirection = 1;
-                                spriteRenderer.flipX = false;
-                            }
-                            charStats.Velocity.x = 0.0f;
-                            // assign the grabCollider now that the grab is actually happening
-                            grabCollider = collisionObject.GetComponent<Collider2D>();
-                        }
-                    }
-                }
-            }
-        }
-    }
 
     void SetupLedgeClimb(ClimbState startingState, Collider2D climbObject = null)
     {
@@ -377,5 +317,78 @@ public class MagGripUpgrade : MonoBehaviour
                 
             }
         }
+    }
+
+    /// <summary>
+    /// if the player jumps into a wall and meet requirements, grab onto it if they meet requirements
+    /// </summary>
+    /// <param name="collisionObject"></param>
+    public void InitiateWallGrab(Collider2D collisionObject)
+    {
+        if (playerStats.AquiredMagGrip)
+        {
+            if (currentClimbState == ClimbState.notClimb)
+            {
+                //TODO: check to make sure the wall is climbable (walls should have a component with some public vars. if the object is climbable should be one of the properties
+                if (!charStats.OnTheGround && currentClimbState == ClimbState.notClimb && wallGrabDelayTimer == WALL_GRAB_DELAY)
+                {
+                    // only grab the wall if we aren't popping out under it or over it
+                    if (collisionObject.bounds.min.y <= charStats.CharCollider.bounds.min.y)
+                    {
+                        // if character is a bit too above the ledge, bump them down till they're directly under it
+                        // if this block is commented out, then the character will not snap directly to the ledge if slightly above it and will slide down till they grab on
+                        /*
+                        if (collisionObject.bounds.max.y < charStats.CharCollider.bounds.max.y)
+                        {
+                            // check to see if the wall we're gonna be offsetting against is too short.
+                            RaycastHit2D predictionCast;
+                            float offsetDistance = charStats.CharCollider.bounds.max.y - collisionObject.bounds.max.y;
+                            Vector2 predictionCastOrigin = new Vector2(charStats.CharCollider.bounds.center.x, charStats.CharCollider.bounds.min.y - offsetDistance);
+                            if (collisionObject.bounds.center.x < charStats.CharCollider.bounds.center.x)
+                                predictionCast = Physics2D.Raycast(predictionCastOrigin, Vector2.left, Mathf.Infinity, CollisionMasks.AllCollisionMask);
+                            else
+                                predictionCast = Physics2D.Raycast(predictionCastOrigin, Vector2.right, Mathf.Infinity, CollisionMasks.AllCollisionMask);
+
+                            if (predictionCast.collider == collisionObject)
+                                transform.Translate(0.0f, -(charStats.CharCollider.bounds.max.y - collisionObject.bounds.max.y), 0.0f);
+                        }
+                        */
+                        // if we're good to grab, get everything in order
+                        if (collisionObject.bounds.max.y >= charStats.CharCollider.bounds.max.y)
+                        {
+                            charStats.ResetJump();
+                            currentClimbState = ClimbState.wallClimb;
+                            charStats.CurrentMasterState = CharacterStats.MasterState.climbState;
+
+                            // variable sets to prevent weird turning when grabbing onto a wall
+                            // if the wall is to our left
+                            if (collisionObject.bounds.center.x < charStats.CharCollider.bounds.center.x)
+                            {
+                                charStats.FacingDirection = -1;
+                                spriteRenderer.flipX = true;
+                            }
+                            // if the wall is to our right
+                            else
+                            {
+                                charStats.FacingDirection = 1;
+                                spriteRenderer.flipX = false;
+                            }
+                            charStats.Velocity.x = 0.0f;
+                            // assign the grabCollider now that the grab is actually happening
+                            grabCollider = collisionObject.GetComponent<Collider2D>();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// if the player jumps into a ceiling and meet requirements, grab onto it if they meet requirements
+    /// </summary>
+    /// <param name="collisionObject"></param>
+    public void InitiateCeilingGrab(Collider2D collisionObject)
+    {
+
     }
 }

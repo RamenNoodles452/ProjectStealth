@@ -89,4 +89,9 @@ public class Player : SimpleCharacterCore
     {
         magGrip.InitiateWallGrab(collisionObject.GetComponent<Collider2D>());
     }
+
+    public override void TouchedCeiling(GameObject collisionObject)
+    {
+        magGrip.InitiateCeilingGrab(collisionObject.GetComponent<Collider2D>());
+    }
 }
