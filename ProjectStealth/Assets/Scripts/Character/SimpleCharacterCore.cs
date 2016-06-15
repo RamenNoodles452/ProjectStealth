@@ -276,7 +276,6 @@ public class SimpleCharacterCore : MonoBehaviour
         RaycastHit2D centerLeftHit = Physics2D.Raycast(charStats.CharCollider.bounds.center, Vector2.left, Mathf.Infinity, CollisionMasks.WallGrabMask);
         if (centerRightHit.collider != null && rightHit.collider != null && Mathf.Approximately(rightHitDist - 1000000, -1000000) && centerRightHit.collider.Equals(rightHit.collider))
             TouchedWall(centerRightHit.collider.gameObject);
-
         else if (centerLeftHit.collider != null && leftHit.collider != null && Mathf.Approximately(leftHitDist - 1000000, -1000000) && centerLeftHit.collider.Equals(leftHit.collider))
             TouchedWall(centerLeftHit.collider.gameObject);
 
@@ -477,7 +476,6 @@ public class SimpleCharacterCore : MonoBehaviour
 		return Vector2.Lerp(ab, bc, distance);
 	}
     */   
-
     
     public float GetJumpHoriSpeedMin()
     {
