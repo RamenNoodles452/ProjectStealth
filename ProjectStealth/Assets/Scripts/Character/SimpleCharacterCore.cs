@@ -252,32 +252,30 @@ public class SimpleCharacterCore : MonoBehaviour
         // raycast to collide right
         Vector2 rightHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x + charStats.CharCollider.bounds.extents.x - 0.01f, charStats.CharCollider.bounds.center.y);
         RaycastHit2D rightHit = Physics2D.BoxCast(rightHitOrigin, horizontalBoxSize, 0.0f, Vector2.right, Mathf.Infinity, CollisionMasks.AllCollisionMask);
-        float rightHitDist = Mathf.Infinity;
         if (rightHit.collider != null)
         {
-            rightHitDist = rightHit.distance - 0.005f;
+            float rightHitDist = rightHit.distance - 0.005f;
             if (charStats.Velocity.x > 0.0f && rightHitDist <= Mathf.Abs(charStats.Velocity.x))
                 charStats.Velocity.x = rightHitDist;
+
+            // are we touching the right wall?
+            if (Mathf.Approximately(rightHitDist - 1000000, -1000000))
+                TouchedWall(rightHit.collider.gameObject);
         }
 
         // raycast to collide left
         Vector2 leftHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x - charStats.CharCollider.bounds.extents.x + 0.01f, charStats.CharCollider.bounds.center.y);
         RaycastHit2D leftHit = Physics2D.BoxCast(leftHitOrigin, horizontalBoxSize, 0.0f, Vector2.left, Mathf.Infinity, CollisionMasks.AllCollisionMask);
-        float leftHitDist = Mathf.Infinity;
         if (leftHit.collider != null)
         {
-            leftHitDist = leftHit.distance - 0.005f;
+            float leftHitDist = leftHit.distance - 0.005f;
             if (charStats.Velocity.x < 0.0f && leftHitDist <= Mathf.Abs(charStats.Velocity.x))
                 charStats.Velocity.x = -leftHitDist;
-        }
 
-        // are we touching the wall?
-        RaycastHit2D centerRightHit = Physics2D.Raycast(charStats.CharCollider.bounds.center, Vector2.right, Mathf.Infinity, CollisionMasks.WallGrabMask);
-        RaycastHit2D centerLeftHit = Physics2D.Raycast(charStats.CharCollider.bounds.center, Vector2.left, Mathf.Infinity, CollisionMasks.WallGrabMask);
-        if (centerRightHit.collider != null && rightHit.collider != null && Mathf.Approximately(rightHitDist - 1000000, -1000000) && centerRightHit.collider.Equals(rightHit.collider))
-            TouchedWall(centerRightHit.collider.gameObject);
-        else if (centerLeftHit.collider != null && leftHit.collider != null && Mathf.Approximately(leftHitDist - 1000000, -1000000) && centerLeftHit.collider.Equals(leftHit.collider))
-            TouchedWall(centerLeftHit.collider.gameObject);
+            // are we touching the left wall?
+            if (Mathf.Approximately(leftHitDist - 1000000, -1000000))
+                TouchedWall(leftHit.collider.gameObject);
+        }
 
 		// Vertical Collision Block
         Vector2 verticalBoxSize = new Vector2(charStats.CharCollider.bounds.size.x - 0.01f, 0.01f);
@@ -290,6 +288,10 @@ public class SimpleCharacterCore : MonoBehaviour
             float hitDist = upHit.distance - 0.005f;
             if (charStats.Velocity.y > 0.0f && hitDist <= Mathf.Abs(charStats.Velocity.y))
                 charStats.Velocity.y = hitDist;
+
+            // are we touching the ceiling?
+            if (Mathf.Approximately(hitDist - 1000000, -1000000))
+                TouchedCeiling(upHit.collider.gameObject);
         }
 
         // raycast to find the floor
@@ -468,6 +470,12 @@ public class SimpleCharacterCore : MonoBehaviour
         //base class does nothing with this function. gets overridden at the subclass level to handle such occasions
     }
 
+    public virtual void TouchedCeiling(GameObject collisionObject)
+    {
+        //base class does nothing with this function. gets overridden at the subclass level to handle such occasions
+        Debug.Log("asdfasdfasdf");
+    }
+
     /*
     protected Vector2 BezierCurveMovement(float distance, Vector2 start, Vector2 end, Vector2 curvePoint)
 	{
@@ -475,8 +483,8 @@ public class SimpleCharacterCore : MonoBehaviour
 		Vector2 bc = Vector2.Lerp(curvePoint, end, distance);
 		return Vector2.Lerp(ab, bc, distance);
 	}
-    */   
-    
+    */
+
     public float GetJumpHoriSpeedMin()
     {
         return JUMP_HORIZONTAL_SPEED_MIN;
