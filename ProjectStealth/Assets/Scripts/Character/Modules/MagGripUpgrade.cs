@@ -158,10 +158,10 @@ public class MagGripUpgrade : MonoBehaviour
 
     void ClimbMovementInput()
     {
-        LedgeLook();
-
         if (grabCollider)
         {
+            LedgeLook();
+
             // Jump logic.
             if (!lookingOverLedge && InputManager.JumpInputInst) {
                 StopClimbing();
@@ -287,8 +287,8 @@ public class MagGripUpgrade : MonoBehaviour
     public void WallClimbFromLedge()
     {
         // This is kinda inefficient as it is redundant code from the collision detection...
-        Vector2 verticalBoxSize = new Vector2(charStats.CharCollider.bounds.size.x - 0.01f, 0.01f);
-        Vector2 downHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x, charStats.CharCollider.bounds.center.y - charStats.CharCollider.bounds.extents.y + 0.01f);
+        Vector2 verticalBoxSize = new Vector2(charStats.CharCollider.bounds.size.x - 0.1f, 0.1f);
+        Vector2 downHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x, charStats.CharCollider.bounds.center.y - charStats.CharCollider.bounds.extents.y + 0.1f);
         RaycastHit2D downHit = Physics2D.BoxCast(downHitOrigin, verticalBoxSize, 0.0f, Vector2.down, Mathf.Infinity, CollisionMasks.AllCollisionMask);
         if (downHit.collider != null)
         {

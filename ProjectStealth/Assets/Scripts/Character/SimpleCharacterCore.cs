@@ -245,16 +245,16 @@ public class SimpleCharacterCore : MonoBehaviour
         // box used to collide against horizontal objects. Extend the hitbox vertically while in the air to avoid corner clipping
         Vector2 horizontalBoxSize;
 		if (charStats.OnTheGround)
-            horizontalBoxSize = new Vector2 (0.01f, charStats.CharCollider.bounds.size.y - 0.01f);
+            horizontalBoxSize = new Vector2 (0.1f, charStats.CharCollider.bounds.size.y - 0.1f);
 		else
-            horizontalBoxSize = new Vector2 (0.01f, charStats.CharCollider.bounds.size.y + 25.0f);//15.0f);
+            horizontalBoxSize = new Vector2 (0.1f, charStats.CharCollider.bounds.size.y + 25.0f);//15.0f);
 
         // raycast to collide right
-        Vector2 rightHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x + charStats.CharCollider.bounds.extents.x - 0.01f, charStats.CharCollider.bounds.center.y);
+        Vector2 rightHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x + charStats.CharCollider.bounds.extents.x - 0.1f, charStats.CharCollider.bounds.center.y);
         RaycastHit2D rightHit = Physics2D.BoxCast(rightHitOrigin, horizontalBoxSize, 0.0f, Vector2.right, Mathf.Infinity, CollisionMasks.AllCollisionMask);
         if (rightHit.collider != null)
         {
-            float rightHitDist = rightHit.distance - 0.005f;
+            float rightHitDist = rightHit.distance - 0.05f;
             if (charStats.Velocity.x > 0.0f && rightHitDist <= Mathf.Abs(charStats.Velocity.x))
                 charStats.Velocity.x = rightHitDist;
 
@@ -264,11 +264,11 @@ public class SimpleCharacterCore : MonoBehaviour
         }
 
         // raycast to collide left
-        Vector2 leftHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x - charStats.CharCollider.bounds.extents.x + 0.01f, charStats.CharCollider.bounds.center.y);
+        Vector2 leftHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x - charStats.CharCollider.bounds.extents.x + 0.1f, charStats.CharCollider.bounds.center.y);
         RaycastHit2D leftHit = Physics2D.BoxCast(leftHitOrigin, horizontalBoxSize, 0.0f, Vector2.left, Mathf.Infinity, CollisionMasks.AllCollisionMask);
         if (leftHit.collider != null)
         {
-            float leftHitDist = leftHit.distance - 0.005f;
+            float leftHitDist = leftHit.distance - 0.05f;
             if (charStats.Velocity.x < 0.0f && leftHitDist <= Mathf.Abs(charStats.Velocity.x))
                 charStats.Velocity.x = -leftHitDist;
 
@@ -278,14 +278,14 @@ public class SimpleCharacterCore : MonoBehaviour
         }
 
 		// Vertical Collision Block
-        Vector2 verticalBoxSize = new Vector2(charStats.CharCollider.bounds.size.x - 0.01f, 0.01f);
+        Vector2 verticalBoxSize = new Vector2(charStats.CharCollider.bounds.size.x - 0.1f, 0.1f);
 
         // raycast to hit the ceiling
-        Vector2 upHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x, charStats.CharCollider.bounds.center.y + charStats.CharCollider.bounds.extents.y - 0.01f);
+        Vector2 upHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x, charStats.CharCollider.bounds.center.y + charStats.CharCollider.bounds.extents.y - 0.1f);
         RaycastHit2D upHit = Physics2D.BoxCast(upHitOrigin, verticalBoxSize, 0.0f, Vector2.up, Mathf.Infinity, CollisionMasks.AllCollisionMask);
         if (upHit.collider != null)
         {
-            float hitDist = upHit.distance - 0.005f;
+            float hitDist = upHit.distance - 0.05f;
             if (charStats.Velocity.y > 0.0f && hitDist <= Mathf.Abs(charStats.Velocity.y))
                 charStats.Velocity.y = hitDist;
 
@@ -295,7 +295,7 @@ public class SimpleCharacterCore : MonoBehaviour
         }
 
         // raycast to find the floor
-        Vector2 downHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x, charStats.CharCollider.bounds.center.y - charStats.CharCollider.bounds.extents.y + 0.01f);
+        Vector2 downHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x, charStats.CharCollider.bounds.center.y - charStats.CharCollider.bounds.extents.y + 0.1f);
         RaycastHit2D downHit = Physics2D.BoxCast(downHitOrigin, verticalBoxSize, 0.0f, Vector2.down, Mathf.Infinity, CollisionMasks.AllCollisionMask);
         if (downHit.collider != null)
         {
@@ -305,7 +305,7 @@ public class SimpleCharacterCore : MonoBehaviour
             float characterRight = charStats.CharCollider.bounds.max.x;
             bool touchGround = true; // this is to prevent the game from thinking you touched the ground when you're gonna slip off the side when falling
 
-            float hitDist = downHit.distance - 0.005f;
+            float hitDist = downHit.distance - 0.05f;
             if (charStats.Velocity.y < 0.0f && hitDist <= Mathf.Abs(charStats.Velocity.y))
             {
                 // if the character is about to clip into the enviornment with the back of their hit box, move them so that they won't clip
@@ -375,7 +375,9 @@ public class SimpleCharacterCore : MonoBehaviour
         }
         // if there is no floor, just fall
         else
+        {
             charStats.OnTheGround = false;
+        }
     }
 
     void CalculateDirection()
