@@ -305,7 +305,7 @@ public class MagGripUpgrade : MonoBehaviour
                 grabCheck = Physics2D.Raycast(rightPoint, Vector2.right);
             }
 
-            if (grabCheck.collider == downHit.collider)
+            if (grabCheck.collider == downHit.collider && downHit.collider.gameObject.GetComponent<ClimbType>().WallClimb)
             {
                 charStats.CurrentMasterState = CharacterStats.MasterState.climbState;
                 SetupLedgeClimb(currentClimbState, downHit.collider);
@@ -325,7 +325,7 @@ public class MagGripUpgrade : MonoBehaviour
     /// <param name="collisionObject"></param>
     public void InitiateWallGrab(Collider2D collisionObject)
     {
-        if (playerStats.AquiredMagGrip)
+        if (playerStats.AquiredMagGrip && collisionObject.gameObject.GetComponent<ClimbType>().WallClimb)
         {
             if (currentClimbState == ClimbState.notClimb)
             {
