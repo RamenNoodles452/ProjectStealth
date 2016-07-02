@@ -251,7 +251,7 @@ public class SimpleCharacterCore : MonoBehaviour
 
         // raycast to collide right
         Vector2 rightHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x + charStats.CharCollider.bounds.extents.x - 0.1f, charStats.CharCollider.bounds.center.y);
-        RaycastHit2D rightHit = Physics2D.BoxCast(rightHitOrigin, horizontalBoxSize, 0.0f, Vector2.right, Mathf.Infinity, CollisionMasks.AllCollisionMask);
+        RaycastHit2D rightHit = Physics2D.BoxCast(rightHitOrigin, horizontalBoxSize, 0.0f, Vector2.right, 25.0f, CollisionMasks.AllCollisionMask);
         if (rightHit.collider != null)
         {
             float rightHitDist = rightHit.distance - 0.05f;
@@ -265,7 +265,7 @@ public class SimpleCharacterCore : MonoBehaviour
 
         // raycast to collide left
         Vector2 leftHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x - charStats.CharCollider.bounds.extents.x + 0.1f, charStats.CharCollider.bounds.center.y);
-        RaycastHit2D leftHit = Physics2D.BoxCast(leftHitOrigin, horizontalBoxSize, 0.0f, Vector2.left, Mathf.Infinity, CollisionMasks.AllCollisionMask);
+        RaycastHit2D leftHit = Physics2D.BoxCast(leftHitOrigin, horizontalBoxSize, 0.0f, Vector2.left, 25.0f, CollisionMasks.AllCollisionMask);
         if (leftHit.collider != null)
         {
             float leftHitDist = leftHit.distance - 0.05f;
@@ -282,7 +282,7 @@ public class SimpleCharacterCore : MonoBehaviour
 
         // raycast to hit the ceiling
         Vector2 upHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x, charStats.CharCollider.bounds.center.y + charStats.CharCollider.bounds.extents.y - 0.1f);
-        RaycastHit2D upHit = Physics2D.BoxCast(upHitOrigin, verticalBoxSize, 0.0f, Vector2.up, Mathf.Infinity, CollisionMasks.AllCollisionMask);
+        RaycastHit2D upHit = Physics2D.BoxCast(upHitOrigin, verticalBoxSize, 0.0f, Vector2.up, 25.0f, CollisionMasks.AllCollisionMask);
         if (upHit.collider != null)
         {
             float hitDist = upHit.distance - 0.05f;
@@ -296,7 +296,7 @@ public class SimpleCharacterCore : MonoBehaviour
 
         // raycast to find the floor
         Vector2 downHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x, charStats.CharCollider.bounds.center.y - charStats.CharCollider.bounds.extents.y + 0.1f);
-        RaycastHit2D downHit = Physics2D.BoxCast(downHitOrigin, verticalBoxSize, 0.0f, Vector2.down, Mathf.Infinity, CollisionMasks.AllCollisionMask);
+        RaycastHit2D downHit = Physics2D.BoxCast(downHitOrigin, verticalBoxSize, 0.0f, Vector2.down, 25.0f, CollisionMasks.AllCollisionMask);
         if (downHit.collider != null)
         {
             float downHitColliderLeft = downHit.collider.bounds.min.x;

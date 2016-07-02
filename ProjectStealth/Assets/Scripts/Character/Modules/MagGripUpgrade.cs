@@ -129,7 +129,7 @@ public class MagGripUpgrade : MonoBehaviour
     void ClimbVerticalEdgeDetect()
     {
         // raycast to find the climbing object
-        RaycastHit2D hit = Physics2D.Raycast(charStats.CharCollider.bounds.center, new Vector2(charStats.FacingDirection, 0), Mathf.Infinity, CollisionMasks.WallGrabMask);
+        RaycastHit2D hit = Physics2D.Raycast(charStats.CharCollider.bounds.center, new Vector2(charStats.FacingDirection, 0), charStats.CharCollider.bounds.size.x, CollisionMasks.WallGrabMask);
         if (hit.collider != null)
         {
             float colliderTop = hit.collider.bounds.max.y;
@@ -175,9 +175,6 @@ public class MagGripUpgrade : MonoBehaviour
 
                 playerScript.HorizontalJumpVelNoAccel((playerScript.GetJumpHoriSpeedMin() + playerScript.GetJumpHoriSpeedMax()) / 2.0f);
                 playerScript.SetFacing();
-
-                // gotta do a second call of fixed update to make sure we move off the wall
-                //base.FixedUpdate (); //BECAUSE OF THE SEPERATION OF THIS INTO IT'S OWN MODULE, THIS IS PROBABLYNOT NECESSARY ANYMORE. MASTER STATE WILL PREVENT US FROM STICKING TO THE WALL
             } 
             //ledge climb logic
             else if (lookingOverLedge && InputManager.JumpInputInst) 
@@ -193,7 +190,7 @@ public class MagGripUpgrade : MonoBehaviour
                     SetupLedgeClimb(currentClimbState);
                 }
                 else
-                    Debug.LogError("The grabCollider object is most likely null. This should never happen");
+                    Debug.LogError("The grabCollider object is most likely null. grabCollider.bounds.min.y: " + grabCollider.bounds.min.y);
             }
         }
     }
@@ -282,14 +279,14 @@ public class MagGripUpgrade : MonoBehaviour
     }
 
     /// <summary>
-    /// Function that initiates a wallclimb from a ledge
+    /// Function that initiates a wallclimb from a standing on the ground against a ledge
     /// </summary>
     public void WallClimbFromLedge()
     {
         // This is kinda inefficient as it is redundant code from the collision detection...
         Vector2 verticalBoxSize = new Vector2(charStats.CharCollider.bounds.size.x - 0.1f, 0.1f);
         Vector2 downHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x, charStats.CharCollider.bounds.center.y - charStats.CharCollider.bounds.extents.y + 0.1f);
-        RaycastHit2D downHit = Physics2D.BoxCast(downHitOrigin, verticalBoxSize, 0.0f, Vector2.down, Mathf.Infinity, CollisionMasks.AllCollisionMask);
+        RaycastHit2D downHit = Physics2D.BoxCast(downHitOrigin, verticalBoxSize, 0.0f, Vector2.down, 25.0f, CollisionMasks.AllCollisionMask);
         if (downHit.collider != null)
         {
             //check the ledge to see if it's tall enough to grab onto
@@ -297,12 +294,12 @@ public class MagGripUpgrade : MonoBehaviour
             if (charStats.FacingDirection == 1)
             {
                 Vector2 leftPoint = new Vector2(charStats.CharCollider.bounds.center.x + charStats.CharCollider.bounds.size.x, charStats.CharCollider.bounds.min.y - charStats.CharCollider.bounds.size.y);
-                grabCheck = Physics2D.Raycast(leftPoint, Vector2.left);
+                grabCheck = Physics2D.Raycast(leftPoint, Vector2.left, charStats.CharCollider.bounds.size.x);
             }
             else
             {
                 Vector2 rightPoint = new Vector2(charStats.CharCollider.bounds.center.x - charStats.CharCollider.bounds.size.x, charStats.CharCollider.bounds.min.y - charStats.CharCollider.bounds.size.y);
-                grabCheck = Physics2D.Raycast(rightPoint, Vector2.right);
+                grabCheck = Physics2D.Raycast(rightPoint, Vector2.right, charStats.CharCollider.bounds.size.x);
             }
 
             if (grabCheck.collider == downHit.collider && downHit.collider.gameObject.GetComponent<ClimbType>().WallClimb)
@@ -329,7 +326,6 @@ public class MagGripUpgrade : MonoBehaviour
         {
             if (currentClimbState == ClimbState.notClimb)
             {
-                //TODO: check to make sure the wall is climbable (walls should have a component with some public vars. if the object is climbable should be one of the properties
                 if (!charStats.OnTheGround && currentClimbState == ClimbState.notClimb && wallGrabDelayTimer == WALL_GRAB_DELAY)
                 {
                     // only grab the wall if we aren't popping out under it or over it
@@ -345,9 +341,9 @@ public class MagGripUpgrade : MonoBehaviour
                             float offsetDistance = charStats.CharCollider.bounds.max.y - collisionObject.bounds.max.y;
                             Vector2 predictionCastOrigin = new Vector2(charStats.CharCollider.bounds.center.x, charStats.CharCollider.bounds.min.y - offsetDistance);
                             if (collisionObject.bounds.center.x < charStats.CharCollider.bounds.center.x)
-                                predictionCast = Physics2D.Raycast(predictionCastOrigin, Vector2.left, Mathf.Infinity, CollisionMasks.AllCollisionMask);
+                                predictionCast = Physics2D.Raycast(predictionCastOrigin, Vector2.left, charStats.CharCollider.bounds.size.x, CollisionMasks.AllCollisionMask);
                             else
-                                predictionCast = Physics2D.Raycast(predictionCastOrigin, Vector2.right, Mathf.Infinity, CollisionMasks.AllCollisionMask);
+                                predictionCast = Physics2D.Raycast(predictionCastOrigin, Vector2.right, charStats.CharCollider.bounds.size.x, CollisionMasks.AllCollisionMask);
 
                             if (predictionCast.collider == collisionObject)
                                 transform.Translate(0.0f, -(charStats.CharCollider.bounds.max.y - collisionObject.bounds.max.y), 0.0f);
@@ -389,6 +385,17 @@ public class MagGripUpgrade : MonoBehaviour
     /// <param name="collisionObject"></param>
     public void InitiateCeilingGrab(Collider2D collisionObject)
     {
+        if (playerStats.AquiredMagGrip && collisionObject.gameObject.GetComponent<ClimbType>().CeilingClimb)
+        {
+            if (currentClimbState == ClimbState.notClimb)
+            {
+                if (!charStats.OnTheGround && currentClimbState == ClimbState.notClimb && wallGrabDelayTimer == WALL_GRAB_DELAY)
+                {
+                    // only grab the ceiling if we aren't popping out over the side
+                    //if (collisionObject.bounds.min.y <= charStats.CharCollider.bounds.min.y)
 
+                }
+            }
+        }
     }
 }
