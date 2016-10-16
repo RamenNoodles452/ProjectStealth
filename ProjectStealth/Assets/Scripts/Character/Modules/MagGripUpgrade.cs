@@ -52,7 +52,7 @@ public class MagGripUpgrade : MonoBehaviour
         else
             wallGrabDelayTimer = WALL_GRAB_DELAY;
         
-        if (charStats.CurrentMasterState == CharacterStats.MasterState.climbState) 
+        if (charStats.CurrentMasterState == CharEnums.MasterState.climbState) 
 		{
             if (currentClimbState == ClimbState.wallClimb)
             {
@@ -81,7 +81,7 @@ public class MagGripUpgrade : MonoBehaviour
                 {
                     lookingOverLedge = false;
                     againstTheLedge = false;
-                    charStats.CurrentMasterState = CharacterStats.MasterState.defaultState;
+                    charStats.CurrentMasterState = CharEnums.MasterState.defaultState;
                 }
             }
         }
@@ -226,7 +226,7 @@ public class MagGripUpgrade : MonoBehaviour
         //reset the delay before we can wall grab again
         wallGrabDelayTimer = 0.0f;
         //set the master state to the default state. It'll transition into any other state from there. 
-        charStats.CurrentMasterState = CharacterStats.MasterState.defaultState;
+        charStats.CurrentMasterState = CharEnums.MasterState.defaultState;
     }
 
     Vector2 BezierCurveMovement(float distance, Vector2 start, Vector2 end, Vector2 curvePoint)
@@ -307,7 +307,7 @@ public class MagGripUpgrade : MonoBehaviour
 
             if (grabCheck.collider == downHit.collider)
             {
-                charStats.CurrentMasterState = CharacterStats.MasterState.climbState;
+                charStats.CurrentMasterState = CharEnums.MasterState.climbState;
                 SetupLedgeClimb(currentClimbState, downHit.collider);
             }
             else
@@ -358,7 +358,7 @@ public class MagGripUpgrade : MonoBehaviour
                         {
                             charStats.ResetJump();
                             currentClimbState = ClimbState.wallClimb;
-                            charStats.CurrentMasterState = CharacterStats.MasterState.climbState;
+                            charStats.CurrentMasterState = CharEnums.MasterState.climbState;
 
                             // variable sets to prevent weird turning when grabbing onto a wall
                             // if the wall is to our left

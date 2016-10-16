@@ -8,10 +8,8 @@ public class SimpleCharacterCore : MonoBehaviour
     protected int previousFacingDirection = 1;
     //public int FacingDirection = 1;
     private SpriteRenderer spriteRenderer;
-    public Animator Anim;
     public IInputManager InputManager;
     //public Vector2 Velocity;
-    //public BoxCollider2D characterCollider;
 
     //gravity vars
     //public bool OnTheGround = false;
@@ -26,12 +24,9 @@ public class SimpleCharacterCore : MonoBehaviour
 
     private const float JUMP_CONTROL_TIME = 0.20f; //maximum duration of a jump if you hold it
     private const float JUMP_DURATION_MIN = 0.10f; //minimum duration of a jump if you tap it
-    private const float JUMP_GRACE_PERIOD_TIME = 0.10f; //how long a player has to jump if they slip off a platform
+    private const float JUMP_GRACE_PERIOD_TIME = 0.05f; //how long a player has to jump if they slip off a platform
     private bool jumpGracePeriod; //variable for jump tolerance if a player walks off a platform but wants to jump
     private float jumpGracePeriodTime;
-    //public bool IsJumping; //TODO: protected
-	//protected float jumpInputTime;
-	//public bool jumpTurned; //TODO: protected
 
     //walk and run vars
     private const float MAX_HORIZONTAL_SPEED = 10.0f;
@@ -40,9 +35,7 @@ public class SimpleCharacterCore : MonoBehaviour
     protected float RUN_SPEED = 4.5f;
     protected float ACCELERATION = 6.0f; // acceleration used for velocity calcs when running
     protected float DRAG = 15.0f; // how quickly a character decelerates when running
-    public enum moveState { isWalking, isSneaking, isRunning }; //TODO: protected
-    public moveState currentMoveState = moveState.isWalking; //TODO: protected
-    protected moveState prevMoveState;
+
     //protected float characterAccel = 0.0f;
     private bool startRun; // this bool prevents wonky shit from happening if you turn around during a run
 
@@ -50,27 +43,20 @@ public class SimpleCharacterCore : MonoBehaviour
     public bool lookingOverLedge; // TODO: private
     public bool againstTheLedge; // TODO: private
 
-	// bezier curve vars for getting up ledges and jumping over cover
-	//protected Vector2 bzrStartPosition;
-	//protected Vector2 bzrEndPosition;
-	//protected Vector2 bzrCurvePosition;
-	//protected float bzrDistance;
+    protected CharEnums.MoveState prevMoveState;
+
 
     // Use this for initialization
     public virtual void Start()
     {
 		charStats = GetComponent<CharacterStats>();
-        //characterCollider = GetComponent<BoxCollider2D>();
-        Anim = GetComponent<Animator>();
         InputManager = GetComponent<IInputManager>();
 
         // character sprite is now a child object. If a chracter sprite has multiple child sprite tho, this might break
-        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
 
         //Velocity = new Vector2(0.0f, 0.0f);
         jumpGracePeriod = false;
-        //char_stats.IsJumping = false;
-        //jumpInputTime = 0.0f;
     }
 
     public virtual void Update()
@@ -88,24 +74,26 @@ public class SimpleCharacterCore : MonoBehaviour
             if (jumpGracePeriodTime >= JUMP_GRACE_PERIOD_TIME)
                 jumpGracePeriod = false;
         }
+
+        // Give all characters gravity
+        HorizontalVelocity();
+        VerticalVelocity();
+        Collisions();
     }
 
     public virtual void LateUpdate()
     {
         // prev state assignments
-        prevMoveState = currentMoveState;
+        prevMoveState = charStats.currentMoveState;
         previousFacingDirection = charStats.FacingDirection;
     }
 
     public virtual void FixedUpdate()
     {
-        // Give all characters gravity
-        HorizontalVelocity();
-        VerticalVelocity();
-        Collisions();
+        
 
         //move the character after all calculations have been done
-        if (charStats.CurrentMasterState == CharacterStats.MasterState.defaultState)
+        if (charStats.CurrentMasterState == CharEnums.MasterState.defaultState)
         {
             transform.Translate(charStats.Velocity);
         }
@@ -116,9 +104,9 @@ public class SimpleCharacterCore : MonoBehaviour
         if(charStats.OnTheGround)
         {
             //movement stuff
-            if (currentMoveState == moveState.isWalking)
+            if (charStats.currentMoveState == CharEnums.MoveState.isWalking)
                 charStats.Velocity.x = WALK_SPEED * InputManager.HorizontalAxis;
-            else if (currentMoveState == moveState.isSneaking)
+            else if (charStats.currentMoveState == CharEnums.MoveState.isSneaking)
             {
                 // if current speed is greater than sneak speed, then decel to sneak speed.
                 if(Mathf.Abs(charStats.Velocity.x) > SNEAK_SPEED)
@@ -133,7 +121,7 @@ public class SimpleCharacterCore : MonoBehaviour
                     charStats.Velocity.x = SNEAK_SPEED * InputManager.HorizontalAxis;
                 }
             }
-            else if (currentMoveState == moveState.isRunning)
+            else if (charStats.currentMoveState == CharEnums.MoveState.isRunning)
             {   
                 //smooth damp to 0 if there's no directional input for running or if you're trying to run the opposite direction
                 if (charStats.CharacterAccel == 0.0f || (charStats.CharacterAccel < 0.0f && charStats.Velocity.x > 0.0f) || (charStats.CharacterAccel > 0.0f && charStats.Velocity.x < 0.0f))
@@ -163,11 +151,11 @@ public class SimpleCharacterCore : MonoBehaviour
                 HorizontalJumpVelNoAccel(SNEAK_SPEED);
             else
             {
-                if (currentMoveState == moveState.isWalking || currentMoveState == moveState.isSneaking)
+                if (charStats.currentMoveState == CharEnums.MoveState.isWalking || charStats.currentMoveState == CharEnums.MoveState.isSneaking)
                 {
                     HorizontalJumpVelAccel();
                 }
-                else if (currentMoveState == moveState.isRunning)
+                else if (charStats.currentMoveState == CharEnums.MoveState.isRunning)
                 {
                     HorizontalJumpVelAccel();
                 }
@@ -247,35 +235,48 @@ public class SimpleCharacterCore : MonoBehaviour
 		if (charStats.OnTheGround)
             horizontalBoxSize = new Vector2 (0.1f, charStats.CharCollider.bounds.size.y - 0.1f);
 		else
-            horizontalBoxSize = new Vector2 (0.1f, charStats.CharCollider.bounds.size.y + 25.0f);//15.0f);
+            horizontalBoxSize = new Vector2 (0.1f, charStats.CharCollider.bounds.size.y + 10.0f);//15.0f);
 
         // raycast to collide right
-        Vector2 rightHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x + charStats.CharCollider.bounds.extents.x - 0.1f, charStats.CharCollider.bounds.center.y);
-        RaycastHit2D rightHit = Physics2D.BoxCast(rightHitOrigin, horizontalBoxSize, 0.0f, Vector2.right, Mathf.Infinity, CollisionMasks.AllCollisionMask);
-        if (rightHit.collider != null)
-        {
-            float rightHitDist = rightHit.distance - 0.05f;
-            if (charStats.Velocity.x > 0.0f && rightHitDist <= Mathf.Abs(charStats.Velocity.x))
-                charStats.Velocity.x = rightHitDist;
+        if (charStats.Velocity.x >= 0)
+        { 
+            Vector2 rightHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x + charStats.CharCollider.bounds.extents.x - 0.1f, charStats.CharCollider.bounds.center.y);
+            if (!charStats.OnTheGround)
+            {
+                if (charStats.Velocity.y > 0)
+                    rightHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x + charStats.CharCollider.bounds.extents.x - 0.1f, charStats.CharCollider.bounds.center.y + 5f);
+                else
+                    rightHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x + charStats.CharCollider.bounds.extents.x - 0.1f, charStats.CharCollider.bounds.center.y - 5f);
+            }
+            RaycastHit2D rightHit = Physics2D.BoxCast(rightHitOrigin, horizontalBoxSize, 0.0f, Vector2.right, Mathf.Infinity, CollisionMasks.AllCollisionMask);
+            if (rightHit.collider != null)
+            {
+                float rightHitDist = rightHit.distance - 0.05f;
+                if (charStats.Velocity.x > 0.0f && rightHitDist <= Mathf.Abs(charStats.Velocity.x))
+                    charStats.Velocity.x = rightHitDist;
 
-            // are we touching the right wall?
-            if (Mathf.Approximately(rightHitDist - 1000000, -1000000))
-                TouchedWall(rightHit.collider.gameObject);
+                // are we touching the right wall?
+                if (Mathf.Approximately(rightHitDist - 1000000, -1000000))
+                    TouchedWall(rightHit.collider.gameObject);
+            }
         }
-
-        // raycast to collide left
-        Vector2 leftHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x - charStats.CharCollider.bounds.extents.x + 0.1f, charStats.CharCollider.bounds.center.y);
-        RaycastHit2D leftHit = Physics2D.BoxCast(leftHitOrigin, horizontalBoxSize, 0.0f, Vector2.left, Mathf.Infinity, CollisionMasks.AllCollisionMask);
-        if (leftHit.collider != null)
+        if (charStats.Velocity.x <= 0)
         {
-            float leftHitDist = leftHit.distance - 0.05f;
-            if (charStats.Velocity.x < 0.0f && leftHitDist <= Mathf.Abs(charStats.Velocity.x))
-                charStats.Velocity.x = -leftHitDist;
+            // raycast to collide left
+            Vector2 leftHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x - charStats.CharCollider.bounds.extents.x + 0.1f, charStats.CharCollider.bounds.center.y);
+            RaycastHit2D leftHit = Physics2D.BoxCast(leftHitOrigin, horizontalBoxSize, 0.0f, Vector2.left, Mathf.Infinity, CollisionMasks.AllCollisionMask);
+            if (leftHit.collider != null)
+            {
+                float leftHitDist = leftHit.distance - 0.05f;
+                if (charStats.Velocity.x < 0.0f && leftHitDist <= Mathf.Abs(charStats.Velocity.x))
+                    charStats.Velocity.x = -leftHitDist;
 
-            // are we touching the left wall?
-            if (Mathf.Approximately(leftHitDist - 1000000, -1000000))
-                TouchedWall(leftHit.collider.gameObject);
+                // are we touching the left wall?
+                if (Mathf.Approximately(leftHitDist - 1000000, -1000000))
+                    TouchedWall(leftHit.collider.gameObject);
+            }
         }
+        
 
 		// Vertical Collision Block
         Vector2 verticalBoxSize = new Vector2(charStats.CharCollider.bounds.size.x - 0.1f, 0.1f);
@@ -346,7 +347,7 @@ public class SimpleCharacterCore : MonoBehaviour
             }
 
             // stop at the edge of a platform
-            if (charStats.OnTheGround && currentMoveState != moveState.isRunning)
+            if (charStats.OnTheGround && charStats.currentMoveState != CharEnums.MoveState.isRunning)
             {
                 float rightLedgeDist = downHitColliderRight - characterRight;
                 if (charStats.Velocity.x > 0.0f && rightLedgeDist <= Mathf.Abs(charStats.Velocity.x))
@@ -418,11 +419,11 @@ public class SimpleCharacterCore : MonoBehaviour
 		LookingOverLedge();
 
         if(InputManager.RunInput)
-            currentMoveState = moveState.isRunning;
+            charStats.currentMoveState = CharEnums.MoveState.isRunning;
         else
-            currentMoveState = moveState.isSneaking;
+            charStats.currentMoveState = CharEnums.MoveState.isSneaking;
 
-        if(currentMoveState == moveState.isRunning)
+        if(charStats.currentMoveState == CharEnums.MoveState.isRunning)
         {
             // if the character comes to a full stop, let them start the run again
             // This also works when turning around
