@@ -22,7 +22,7 @@ public class CharacterStats : MonoBehaviour
     public float JumpInputTime;
 
     public CharEnums.MasterState CurrentMasterState = CharEnums.MasterState.defaultState;
-    public CharEnums.MoveState currentMoveState = CharEnums.MoveState.isWalking; //TODO: protected
+    public CharEnums.MoveState currentMoveState = CharEnums.MoveState.isWalking;
 
     // bezier curve vars for getting up ledges and jumping over cover
     [HideInInspector]
