@@ -197,7 +197,7 @@ public class SimpleCharacterCore : MonoBehaviour
     {
         charStats.Velocity.y = charStats.Velocity.y + GRAVITATIONAL_FORCE * Time.deltaTime * TimeScale.timeScale;
 
-        //override the vertical velocity if we're in hte middle of jumping
+        //override the vertical velocity if we're in the middle of jumping
         if (charStats.IsJumping)
         {
             charStats.JumpInputTime = charStats.JumpInputTime + Time.deltaTime * Time.timeScale;
@@ -318,12 +318,12 @@ public class SimpleCharacterCore : MonoBehaviour
             if (charStats.Velocity.y < 0.0f && hitDist <= Mathf.Abs(charStats.Velocity.y))
             {
                 // if the character is about to clip into the enviornment with the back of their hit box, move them so that they won't clip
-                if (charStats.Velocity.x > 0.0f && downHitColliderRight < charStats.CharCollider.bounds.center.x)
+                if (charStats.Velocity.x > 0.0f && downHitColliderRight < charStats.CharCollider.bounds.center.x && downHit.transform.gameObject.GetComponent<ClimbType>().RightConnect == false)
                 {
                     transform.Translate(downHitColliderRight - characterLeft, 0.0f, 0.0f);
                     touchGround = false;
                 }
-                else if (charStats.Velocity.x < 0.0f && downHitColliderLeft > charStats.CharCollider.bounds.center.x)
+                else if (charStats.Velocity.x < 0.0f && downHitColliderLeft > charStats.CharCollider.bounds.center.x && downHit.transform.gameObject.GetComponent<ClimbType>().LeftConnect == false)
                 {
                     transform.Translate(-(characterRight - downHitColliderLeft), 0.0f, 0.0f);
                     touchGround = false;
@@ -353,8 +353,7 @@ public class SimpleCharacterCore : MonoBehaviour
                 charStats.OnTheGround = false;
                 againstTheLedge = false;
             }
-
-            if ((charStats.Velocity.x < 0.0f && downHit.collider.gameObject.GetComponent<ClimbType>().leftConnect == null) || (charStats.Velocity.x > 0.0f && downHit.collider.gameObject.GetComponent<ClimbType>().rightConnect == null))
+            if ((charStats.Velocity.x < 0.0f && downHit.collider.gameObject.GetComponent<ClimbType>().LeftConnect == false) || (charStats.Velocity.x > 0.0f && downHit.collider.gameObject.GetComponent<ClimbType>().RightConnect == false))
             {
                 // stop at the edge of a platform
                 if (charStats.OnTheGround && charStats.currentMoveState != CharEnums.MoveState.isRunning)
