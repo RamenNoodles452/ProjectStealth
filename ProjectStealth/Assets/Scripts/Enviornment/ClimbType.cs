@@ -10,6 +10,10 @@ public class ClimbType : MonoBehaviour
     [SerializeField]
     private bool ceiling_pass = false;
 
+    // these are env objects that are of the same level that characters can smoothly transition over to
+    public GameObject leftConnect;
+    public GameObject rightConnect;
+
     public bool WallClimb
     {
         get { return wall_climb; }

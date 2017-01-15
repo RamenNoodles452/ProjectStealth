@@ -237,7 +237,7 @@ public class SimpleCharacterCore : MonoBehaviour
 
         // raycast to collide right
         if (charStats.Velocity.x >= 0)
-        { 
+        {
             Vector2 rightHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x + charStats.CharCollider.bounds.extents.x - 0.1f, charStats.CharCollider.bounds.center.y);
             if (!charStats.OnTheGround)
             {
@@ -258,10 +258,17 @@ public class SimpleCharacterCore : MonoBehaviour
                     TouchedWall(rightHit.collider.gameObject);
             }
         }
-        if (charStats.Velocity.x <= 0)
+        // raycast to collide left
+        else if (charStats.Velocity.x <= 0)
         {
-            // raycast to collide left
             Vector2 leftHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x - charStats.CharCollider.bounds.extents.x + 0.1f, charStats.CharCollider.bounds.center.y);
+            if (!charStats.OnTheGround)
+            {
+                if (charStats.Velocity.y > 0)
+                    leftHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x - charStats.CharCollider.bounds.extents.x + 0.1f, charStats.CharCollider.bounds.center.y + 5f);
+                else
+                    leftHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x - charStats.CharCollider.bounds.extents.x + 0.1f, charStats.CharCollider.bounds.center.y - 5f);
+            }
             RaycastHit2D leftHit = Physics2D.BoxCast(leftHitOrigin, horizontalBoxSize, 0.0f, Vector2.left, Mathf.Infinity, CollisionMasks.AllCollisionMask);
             if (leftHit.collider != null)
             {
@@ -274,14 +281,13 @@ public class SimpleCharacterCore : MonoBehaviour
                     TouchedWall(leftHit.collider.gameObject);
             }
         }
-        
 
-		// Vertical Collision Block
-        Vector2 verticalBoxSize = new Vector2(charStats.CharCollider.bounds.size.x - 0.1f, 0.1f);
+        // Vertical Collision Block
+        Vector2 verticalBoxSize = verticalBoxSize = new Vector2(charStats.CharCollider.bounds.size.x - 0.1f, 0.1f);
 
         // raycast to hit the ceiling
         Vector2 upHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x, charStats.CharCollider.bounds.center.y + charStats.CharCollider.bounds.extents.y - 0.1f);
-        RaycastHit2D upHit = Physics2D.BoxCast(upHitOrigin, verticalBoxSize, 0.0f, Vector2.up, 25.0f, CollisionMasks.AllCollisionMask);
+        RaycastHit2D upHit = Physics2D.BoxCast(upHitOrigin, verticalBoxSize, 0.0f, Vector2.up, 25.0f, CollisionMasks.UpwardsCollisionMask);
         if (upHit.collider != null)
         {
             float hitDist = upHit.distance - 0.05f;
@@ -290,7 +296,11 @@ public class SimpleCharacterCore : MonoBehaviour
 
             // are we touching the ceiling?
             if (Mathf.Approximately(hitDist - 1000000, -1000000))
+            {
+                //stop upward movement
+                charStats.IsJumping = false;
                 TouchedCeiling(upHit.collider.gameObject);
+            }
         }
 
         // raycast to find the floor
@@ -344,32 +354,33 @@ public class SimpleCharacterCore : MonoBehaviour
                 againstTheLedge = false;
             }
 
-            // stop at the edge of a platform
-            if (charStats.OnTheGround && charStats.currentMoveState != CharEnums.MoveState.isRunning)
+            if ((charStats.Velocity.x < 0.0f && downHit.collider.gameObject.GetComponent<ClimbType>().leftConnect == null) || (charStats.Velocity.x > 0.0f && downHit.collider.gameObject.GetComponent<ClimbType>().rightConnect == null))
             {
-                float rightLedgeDist = downHitColliderRight - characterRight;
-                if (charStats.Velocity.x > 0.0f && rightLedgeDist <= Mathf.Abs(charStats.Velocity.x))
+                // stop at the edge of a platform
+                if (charStats.OnTheGround && charStats.currentMoveState != CharEnums.MoveState.isRunning)
                 {
-                    if (characterRight < downHitColliderRight)
-                        charStats.Velocity.x = rightLedgeDist;
+                    float rightLedgeDist = downHitColliderRight - characterRight;
+                    if (charStats.Velocity.x > 0.0f && rightLedgeDist <= Mathf.Abs(charStats.Velocity.x))
+                    {
+                        if (characterRight < downHitColliderRight)
+                            charStats.Velocity.x = rightLedgeDist;
+                        else
+                            charStats.Velocity.x = 0.0f;
+                    }
+                    float leftLedgeDist = characterLeft - downHitColliderLeft;
+                    if (charStats.Velocity.x < 0.0f && leftLedgeDist <= Mathf.Abs(charStats.Velocity.x))
+                    {
+                        if (characterLeft > downHitColliderLeft)
+                            charStats.Velocity.x = -leftLedgeDist;
+                        else
+                            charStats.Velocity.x = 0.0f;
+                    }
+                    // set if character is against the ledge
+                    if ((rightLedgeDist < 1.0f && charStats.FacingDirection == 1) || (leftLedgeDist < 1.0f && charStats.FacingDirection == -1))
+                        againstTheLedge = true;
                     else
-                        charStats.Velocity.x = 0.0f;
+                        againstTheLedge = false;
                 }
-
-                float leftLedgeDist = characterLeft - downHitColliderLeft;
-                if (charStats.Velocity.x < 0.0f && leftLedgeDist <= Mathf.Abs(charStats.Velocity.x))
-                {
-                    if (characterLeft > downHitColliderLeft)
-                        charStats.Velocity.x = -leftLedgeDist;
-                    else
-                        charStats.Velocity.x = 0.0f;
-                }
-
-                // set if character is against the ledge
-                if ((rightLedgeDist < 1.0f && charStats.FacingDirection == 1) || (leftLedgeDist < 1.0f && charStats.FacingDirection == -1))
-                    againstTheLedge = true;
-                else
-                    againstTheLedge = false;
             }
         }
         // if there is no floor, just fall
