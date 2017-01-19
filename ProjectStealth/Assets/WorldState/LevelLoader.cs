@@ -1,12 +1,13 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 using System.Collections;
 
 public class LevelLoader : MonoBehaviour {
 
-    public int LevelNumber;
+    public string sceneName;
 
     public void LoadScene()
     {
-        Application.LoadLevel(LevelNumber);
+        SceneManager.LoadScene(sceneName, LoadSceneMode.Additive);
     }
 }

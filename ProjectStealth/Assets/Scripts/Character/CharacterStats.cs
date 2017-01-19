@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
+//using System.Collections;
 
 public class CharacterStats : MonoBehaviour 
 {
@@ -21,8 +21,8 @@ public class CharacterStats : MonoBehaviour
     [HideInInspector]
     public float JumpInputTime;
 
-    public enum MasterState { defaultState, climbState, attackState };
-    public MasterState CurrentMasterState = MasterState.defaultState;
+    public CharEnums.MasterState CurrentMasterState = CharEnums.MasterState.defaultState;
+    public CharEnums.MoveState currentMoveState = CharEnums.MoveState.isWalking;
 
     // bezier curve vars for getting up ledges and jumping over cover
     [HideInInspector]

@@ -28,7 +28,7 @@ public class CameraControl : MonoBehaviour
 		Spider.cameraController = this;
 		if ( playerCharacter == null) { playerCharacter = GameObject.Find ("Player"); } //eew, gross
 
-		cam = Camera.main; //TODO: attach to camera, getcomponent<Camera> instead
+		cam = Camera.main; //attach to camera, getcomponent<Camera> instead
 		camShake = new CameraShake ();
 		cameraPositions = new Vector3[10];
 

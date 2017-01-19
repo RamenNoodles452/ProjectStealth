@@ -10,7 +10,7 @@ public abstract class IInputManager : MonoBehaviour {
 
     #region Events
 
-    // TODO: I think the unityevents are better for something decoupled like a pause button. I don't think they should be used for things like, move/jump/etc
+    //I think the unityevents are better for something decoupled like a pause button. I don't think they should be used for things like, move/jump/etc
     public UnityEvent TogglePause;
 
     #endregion Events

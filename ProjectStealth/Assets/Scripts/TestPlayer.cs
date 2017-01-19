@@ -33,7 +33,7 @@ public class TestPlayer : MonoBehaviour
 		if (Input.GetKey (KeyCode.A)) { x -= 1.0f; }
 		if (Input.GetKey (KeyCode.S)) { y -= 1.0f; }
 		if (Input.GetKey (KeyCode.D)) { x += 1.0f; }
-		//TODO: arctan to make unit circle speeds
+		//arctan to make unit circle speeds
 		x = x * speed * dt;
 		y = y * speed * dt;
 

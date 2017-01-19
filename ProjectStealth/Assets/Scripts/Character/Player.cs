@@ -20,7 +20,7 @@ public class Player : SimpleCharacterCore
 		WALK_SPEED = 1.0f; //used for cutscenes with Alice
 		SNEAK_SPEED = 2.0f; //Alice's default speed
 		RUN_SPEED = 4.5f;
-		currentMoveState = moveState.isSneaking;
+        charStats.currentMoveState = CharEnums.MoveState.isSneaking;
 
 		playerStats = GetComponent<PlayerStats>();
         magGrip = GetComponent<MagGripUpgrade>();
@@ -43,7 +43,7 @@ public class Player : SimpleCharacterCore
 
 	public override void Update ()
 	{
-        if (charStats.CurrentMasterState == CharacterStats.MasterState.defaultState)
+        if (charStats.CurrentMasterState == CharEnums.MasterState.defaultState)
         {
             base.Update();
 
@@ -71,7 +71,7 @@ public class Player : SimpleCharacterCore
 
 	public override void FixedUpdate()
 	{
-        if (charStats.CurrentMasterState == CharacterStats.MasterState.defaultState)
+        if (charStats.CurrentMasterState == CharEnums.MasterState.defaultState)
         {
             base.FixedUpdate();
         }    
@@ -88,5 +88,10 @@ public class Player : SimpleCharacterCore
     public override void TouchedWall(GameObject collisionObject)
     {
         magGrip.InitiateWallGrab(collisionObject.GetComponent<Collider2D>());
+    }
+
+    public override void TouchedCeiling(GameObject collisionObject)
+    {
+        magGrip.InitiateCeilingGrab(collisionObject.GetComponent<Collider2D>());
     }
 }
