@@ -25,9 +25,9 @@ public class MagGripUpgrade : MonoBehaviour
     private const float WALL_SLIDE_SPEED = 3.0f;
 
     // ledge logic
-    public bool lookingOverLedge; // TODO: private
-    public bool againstTheLedge; // TODO: private
-    public bool ledgeClimb; // TODO: private
+    private bool lookingOverLedge;
+    private bool againstTheLedge;
+    private bool ledgeClimb;
 
     //consts
     protected const float JUMP_ACCEL = 4.0f; //base accel for jump off the wall with no input
@@ -226,6 +226,7 @@ public class MagGripUpgrade : MonoBehaviour
         charStats.CurrentMasterState = CharEnums.MasterState.defaultState;
     }
 
+    //TODO: this needs to be in a general universal function (short wall vaulting will use this)
     Vector2 BezierCurveMovement(float distance, Vector2 start, Vector2 end, Vector2 curvePoint)
     {
         Vector2 ab = Vector2.Lerp(start, curvePoint, distance);

@@ -8,7 +8,7 @@ public class ClimbType : MonoBehaviour
     [SerializeField]
     private bool ceiling_climb = false;
     [SerializeField]
-    private bool ceiling_pass = false;
+    private bool fall_through = false;
 
     // these are env objects that are of the same level that characters can smoothly transition over to
     [SerializeField]
@@ -27,9 +27,9 @@ public class ClimbType : MonoBehaviour
     }
     // This is used for down+jumping through floors
     // To jump up through passable floors CollisionMasks.UpwardsCollisionMask
-    public bool CeilingPass
+    public bool Fallthrough
     {
-        get { return ceiling_pass; }
+        get { return fall_through; }
     }
     public bool LeftConnect
     {
