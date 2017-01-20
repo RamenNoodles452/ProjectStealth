@@ -3,15 +3,17 @@
 
 public class CharacterStats : MonoBehaviour 
 {
-	// vars related to character core that are referenced in other scripts
+    // vars related to character core that are referenced in other scripts
+    public CharEnums.MasterState CurrentMasterState = CharEnums.MasterState.defaultState;
+    public CharEnums.MoveState currentMoveState = CharEnums.MoveState.isWalking;
+
     [HideInInspector]
     public BoxCollider2D CharCollider;
     public Vector2 Velocity;
 
     [HideInInspector]
     public float CharacterAccel = 0.0f; //this changes based on if a character is mid air or not.
-
-    public int FacingDirection = 1; //-1 / 1
+    public int FacingDirection = 1; // [-1,1]
 
 	public bool OnTheGround = false;
     //[HideInInspector]
@@ -21,8 +23,9 @@ public class CharacterStats : MonoBehaviour
     [HideInInspector]
     public float JumpInputTime;
 
-    public CharEnums.MasterState CurrentMasterState = CharEnums.MasterState.defaultState;
-    public CharEnums.MoveState currentMoveState = CharEnums.MoveState.isWalking;
+    // Taking cover vars
+    public bool IsTouchingVaultObstacle = false;
+    public bool IsTakingCover = false;
 
     // bezier curve vars for getting up ledges and jumping over cover
     [HideInInspector]

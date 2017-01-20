@@ -20,8 +20,10 @@ public class SimpleCharacterCore : MonoBehaviour
 
     private const float JUMP_CONTROL_TIME = 0.20f; //maximum duration of a jump if you hold it
     private const float JUMP_DURATION_MIN = 0.10f; //minimum duration of a jump if you tap it
-    private const float JUMP_GRACE_PERIOD_TIME = 0.05f; //how long a player has to jump if they slip off a platform
+    private const float JUMP_GRACE_PERIOD_TIME = 0.1f; //how long a player has to jump if they slip off a platform
+    [SerializeField]
     private bool jumpGracePeriod; //variable for jump tolerance if a player walks off a platform but wants to jump
+    [SerializeField]
     private float jumpGracePeriodTime;
 
     //walk and run vars
@@ -38,7 +40,6 @@ public class SimpleCharacterCore : MonoBehaviour
     // ledge logic
     protected bool lookingOverLedge;
     protected bool againstTheLedge;
-    [SerializeField]
     protected bool fallthrough;
 
     protected CharEnums.MoveState prevMoveState;
@@ -55,6 +56,7 @@ public class SimpleCharacterCore : MonoBehaviour
 
         //Velocity = new Vector2(0.0f, 0.0f);
         jumpGracePeriod = false;
+        jumpGracePeriodTime = 1.0f;
         fallthrough = false;
     }
 
@@ -66,6 +68,11 @@ public class SimpleCharacterCore : MonoBehaviour
         // set Sprite flip
         if (previousFacingDirection != charStats.FacingDirection)
             SetFacing();
+
+        // Give all characters gravity
+        HorizontalVelocity();
+        VerticalVelocity();
+        Collisions();
 
         if (jumpGracePeriod == true)
         {
@@ -84,10 +91,6 @@ public class SimpleCharacterCore : MonoBehaviour
 
     public virtual void FixedUpdate()
     {
-        // Give all characters gravity
-        HorizontalVelocity();
-        VerticalVelocity();
-        Collisions();
         //move the character after all calculations have been done
         if (charStats.CurrentMasterState == CharEnums.MasterState.defaultState)
         {
@@ -239,7 +242,7 @@ public class SimpleCharacterCore : MonoBehaviour
             horizontalBoxSize = new Vector2 (0.1f, charStats.CharCollider.bounds.size.y + 10.0f);//15.0f);
 
         // raycast to collide right
-        if (charStats.Velocity.x >= 0)
+        if (charStats.Velocity.x > 0)
         {
             Vector2 rightHitOrigin = new Vector2(charStats.CharCollider.bounds.max.x - 0.1f, charStats.CharCollider.bounds.center.y);
             if (!charStats.OnTheGround)
@@ -258,11 +261,18 @@ public class SimpleCharacterCore : MonoBehaviour
 
                 // are we touching the right wall?
                 if (Mathf.Approximately(rightHitDist - 1000000, -1000000))
+                {
+                    charStats.Velocity.x = 0;
                     TouchedWall(rightHit.collider.gameObject);
+                    if (rightHit.collider.GetComponent<CollisionType>().VaultObstacle == true)
+                        charStats.IsTouchingVaultObstacle = true;
+                }
+                else
+                    charStats.IsTouchingVaultObstacle = false;
             }
         }
         // raycast to collide left
-        else if (charStats.Velocity.x <= 0)
+        else if (charStats.Velocity.x < 0)
         {
             Vector2 leftHitOrigin = new Vector2(charStats.CharCollider.bounds.min.x + 0.1f, charStats.CharCollider.bounds.center.y);
             if (!charStats.OnTheGround)
@@ -281,12 +291,19 @@ public class SimpleCharacterCore : MonoBehaviour
 
                 // are we touching the left wall?
                 if (Mathf.Approximately(leftHitDist - 1000000, -1000000))
+                {
+                    charStats.Velocity.x = 0;
                     TouchedWall(leftHit.collider.gameObject);
+                    if (leftHit.collider.GetComponent<CollisionType>().VaultObstacle == true)
+                        charStats.IsTouchingVaultObstacle = true;
+                }
+                else
+                    charStats.IsTouchingVaultObstacle = false;
             }
         }
 
         // Vertical Collision Block
-        Vector2 verticalBoxSize = verticalBoxSize = new Vector2(charStats.CharCollider.bounds.size.x - 0.1f, 0.1f);
+        Vector2 verticalBoxSize = new Vector2(charStats.CharCollider.bounds.size.x - 0.1f, 0.1f);
 
         // raycast to hit the ceiling
         Vector2 upHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x, charStats.CharCollider.bounds.max.y - 0.1f);
@@ -321,12 +338,12 @@ public class SimpleCharacterCore : MonoBehaviour
             if (charStats.Velocity.y < 0.0f && hitDist <= Mathf.Abs(charStats.Velocity.y))
             {
                 // if the character is about to clip into the enviornment with the back of their hit box, move them so that they won't clip
-                if (charStats.Velocity.x > 0.0f && downHitColliderRight < charStats.CharCollider.bounds.center.x && downHit.transform.gameObject.GetComponent<ClimbType>().RightConnect == false)
+                if (charStats.Velocity.x > 0.0f && downHitColliderRight < charStats.CharCollider.bounds.center.x && downHit.transform.gameObject.GetComponent<CollisionType>().RightConnect == false)
                 {
                     transform.Translate(downHitColliderRight - characterLeft, 0.0f, 0.0f);
                     touchGround = false;
                 }
-                else if (charStats.Velocity.x < 0.0f && downHitColliderLeft > charStats.CharCollider.bounds.center.x && downHit.transform.gameObject.GetComponent<ClimbType>().LeftConnect == false)
+                else if (charStats.Velocity.x < 0.0f && downHitColliderLeft > charStats.CharCollider.bounds.center.x && downHit.transform.gameObject.GetComponent<CollisionType>().LeftConnect == false)
                 {
                     transform.Translate(-(characterRight - downHitColliderLeft), 0.0f, 0.0f);
                     touchGround = false;
@@ -337,7 +354,8 @@ public class SimpleCharacterCore : MonoBehaviour
                 }
             }
             //This logic allows characters to walk over connected platforms
-            if ((charStats.Velocity.x < 0.0f && downHit.collider.gameObject.GetComponent<ClimbType>().LeftConnect == false) || (charStats.Velocity.x > 0.0f && downHit.collider.gameObject.GetComponent<ClimbType>().RightConnect == false))
+            if ((charStats.FacingDirection == -1 && downHit.collider.gameObject.GetComponent<CollisionType>().LeftConnect == false) || 
+                (charStats.FacingDirection == 1 && downHit.collider.gameObject.GetComponent<CollisionType>().RightConnect == false))
             {
                 // stop at the edge of a platform
                 if (charStats.OnTheGround && charStats.currentMoveState != CharEnums.MoveState.isRunning)
@@ -365,7 +383,11 @@ public class SimpleCharacterCore : MonoBehaviour
                         againstTheLedge = false;
                 }
             }
-            // Approximate! since floats are dumb
+            else
+            {
+                againstTheLedge = false;
+            }
+            // Approximate since floats are dumb
             if (Mathf.Approximately(hitDist - 1000000, -1000000))
             {
                 if (touchGround)
@@ -376,19 +398,12 @@ public class SimpleCharacterCore : MonoBehaviour
             }
             else
             {
-                // this block is for jump tolerance
-                if (charStats.OnTheGround && charStats.IsJumping == false)
-                {
-                    jumpGracePeriod = true;
-                    jumpGracePeriodTime = 0.0f;
-                }
-                charStats.OnTheGround = false;
-                againstTheLedge = false;
+                FallingLogic();
             }
             //Fallthrough platforms
             if (fallthrough == true)
             {
-                if (downHit.collider.gameObject.GetComponent<ClimbType>().Fallthrough == false)
+                if (downHit.collider.gameObject.GetComponent<CollisionType>().Fallthrough == false)
                 {
                     fallthrough = false;
                 }
@@ -397,8 +412,8 @@ public class SimpleCharacterCore : MonoBehaviour
                     // make sure that the player character is not straddling a solid platform
                     // issue can't fall down when straddling two fallthrough platforms 
                     //(but there shouldn't be a need to have two passthrough platforms touch, they can just merge into 1)
-                    if ((downHit.collider.gameObject.GetComponent<ClimbType>().RightConnect == true && characterRight > downHitColliderRight) ||
-                        (downHit.collider.gameObject.GetComponent<ClimbType>().LeftConnect == true && characterLeft < downHitColliderLeft))
+                    if ((downHit.collider.gameObject.GetComponent<CollisionType>().RightConnect == true && characterRight > downHitColliderRight) ||
+                        (downHit.collider.gameObject.GetComponent<CollisionType>().LeftConnect == true && characterLeft < downHitColliderLeft))
                     {
                         fallthrough = false;
                     }
@@ -408,8 +423,20 @@ public class SimpleCharacterCore : MonoBehaviour
         // if there is no floor, just fall
         else
         {
-            charStats.OnTheGround = false;
+            FallingLogic();
         }
+    }
+
+    void FallingLogic()
+    {
+        // this block is for jump grace period
+        if (charStats.OnTheGround && charStats.IsJumping == false)
+        {
+            jumpGracePeriod = true;
+            jumpGracePeriodTime = 0.0f;
+        }
+        charStats.OnTheGround = false;
+        againstTheLedge = false;
     }
 
     void CalculateDirection()
@@ -484,6 +511,9 @@ public class SimpleCharacterCore : MonoBehaviour
         // Jump logic. Keep the Y velocity constant while holding jump for the duration of JUMP_CONTROL_TIME
         if ((jumpGracePeriod || charStats.OnTheGround) && InputManager.JumpInputInst)
         {
+            if (jumpGracePeriod)
+                print("GRACE JUMP");
+
             if (InputManager.VerticalAxis < 0)
             {
                 //trigger fallthrough
