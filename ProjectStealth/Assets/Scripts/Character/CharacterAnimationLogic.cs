@@ -16,8 +16,11 @@ public class CharacterAnimationLogic : MonoBehaviour
     // Update is called once per frame
     void Update ()
     {
-	    if (charStats.OnTheGround == true)
+        AnimationTriggers();
+
+        if (charStats.OnTheGround == true)
         {
+            
             if (charStats.currentMoveState == CharEnums.MoveState.isSneaking)
             {
                 if (charStats.Velocity.x != 0.0f)
@@ -31,5 +34,18 @@ public class CharacterAnimationLogic : MonoBehaviour
             }
         }
 	}
+
+    void AnimationTriggers()
+    {
+        CoverTrigger();
+    }
+
+    void CoverTrigger()
+    {
+        if (charStats.IsTakingCover == false)
+            Anim.SetBool("taking_cover", false);
+        else
+            Anim.SetBool("taking_cover", true);
+    }
 }
 

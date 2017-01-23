@@ -32,8 +32,7 @@ public class TakeCoverAction : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
     {
-
-        if (charStats.IsTouchingVaultObstacle && 
+        if (charStats.IsTouchingVaultObstacle &&
            ((charStats.FacingDirection == -1 && inputManager.HorizontalAxis < 0f) || (charStats.FacingDirection == 1 && inputManager.HorizontalAxis > 0f)))
         {
             if (coverTimer < COVER_TIME)
@@ -42,11 +41,34 @@ public class TakeCoverAction : MonoBehaviour
             }
             if (coverTimer >= COVER_TIME)
             {
-                print("TAKE COVER!");
+                if (charStats.IsTakingCover == false)
+                    charStats.IsTakingCover = true;
             }
         }
         else
+        {
             coverTimer = 0.0f;
+            if (charStats.IsTakingCover)
+                charStats.IsTakingCover = false;
+        }
+        UpdateCollisions();
+    }
+
+    /// <summary>
+    /// When taking cover, the collider will be cut in half to reflect the crouching position
+    /// </summary>
+    void UpdateCollisions()
+    {
+        if (charStats.IsTakingCover)
+        {
+            charStats.CharCollider.size = charStats.CROUCHING_COLLIDER_SIZE;
+            charStats.CharCollider.offset = charStats.CROUCHING_COLLIDER_OFFSET;
+        }
+        else
+        {
+            charStats.CharCollider.size = charStats.STANDING_COLLIDER_SIZE;
+            charStats.CharCollider.offset = charStats.STANDING_COLLIDER_OFFSET;
+        }
 
     }
 }

@@ -8,7 +8,12 @@ public class CharacterStats : MonoBehaviour
     public CharEnums.MoveState currentMoveState = CharEnums.MoveState.isWalking;
 
     [HideInInspector]
-    public BoxCollider2D CharCollider;
+    public BoxCollider2D CharCollider; // defaults: offset[0,-2] size [26,40]
+    public Vector2 STANDING_COLLIDER_SIZE = new Vector2(26f, 40f);
+    public Vector2 STANDING_COLLIDER_OFFSET = new Vector2(0f, -2f);
+    public Vector2 CROUCHING_COLLIDER_SIZE = new Vector2(26f, 20f);
+    public Vector2 CROUCHING_COLLIDER_OFFSET = new Vector2(0f, -12f);
+
     public Vector2 Velocity;
 
     [HideInInspector]
@@ -41,6 +46,8 @@ public class CharacterStats : MonoBehaviour
     void Start()
     {
         CharCollider = GetComponent<BoxCollider2D>();
+        CharCollider.size = STANDING_COLLIDER_SIZE;
+        CharCollider.offset = STANDING_COLLIDER_OFFSET;
         Velocity = new Vector2(0.0f, 0.0f);
         JumpInputTime = 0.0f;
     }

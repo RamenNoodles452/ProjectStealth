@@ -252,7 +252,7 @@ public class SimpleCharacterCore : MonoBehaviour
                 else
                     rightHitOrigin = new Vector2(charStats.CharCollider.bounds.max.x - 0.1f, charStats.CharCollider.bounds.center.y - 5f);
             }
-            RaycastHit2D rightHit = Physics2D.BoxCast(rightHitOrigin, horizontalBoxSize, 0.0f, Vector2.right, Mathf.Infinity, CollisionMasks.AllCollisionMask);
+            RaycastHit2D rightHit = Physics2D.BoxCast(rightHitOrigin, horizontalBoxSize, 0.0f, Vector2.right, 50.0f, CollisionMasks.AllCollisionMask);
             if (rightHit.collider != null)
             {
                 float rightHitDist = rightHit.distance - 0.05f;
@@ -264,11 +264,19 @@ public class SimpleCharacterCore : MonoBehaviour
                 {
                     charStats.Velocity.x = 0;
                     TouchedWall(rightHit.collider.gameObject);
-                    if (rightHit.collider.GetComponent<CollisionType>().VaultObstacle == true)
+                    if (rightHit.collider.GetComponent<CollisionType>().VaultObstacle == true && charStats.OnTheGround)
                         charStats.IsTouchingVaultObstacle = true;
+                    else
+                        charStats.IsTouchingVaultObstacle = false;
                 }
                 else
+                {
                     charStats.IsTouchingVaultObstacle = false;
+                }
+            }
+            else
+            {
+                charStats.IsTouchingVaultObstacle = false;
             }
         }
         // raycast to collide left
@@ -282,7 +290,7 @@ public class SimpleCharacterCore : MonoBehaviour
                 else
                     leftHitOrigin = new Vector2(charStats.CharCollider.bounds.min.x + 0.1f, charStats.CharCollider.bounds.center.y - 5f);
             }
-            RaycastHit2D leftHit = Physics2D.BoxCast(leftHitOrigin, horizontalBoxSize, 0.0f, Vector2.left, Mathf.Infinity, CollisionMasks.AllCollisionMask);
+            RaycastHit2D leftHit = Physics2D.BoxCast(leftHitOrigin, horizontalBoxSize, 0.0f, Vector2.left, 50.0f, CollisionMasks.AllCollisionMask);
             if (leftHit.collider != null)
             {
                 float leftHitDist = leftHit.distance - 0.05f;
@@ -294,11 +302,19 @@ public class SimpleCharacterCore : MonoBehaviour
                 {
                     charStats.Velocity.x = 0;
                     TouchedWall(leftHit.collider.gameObject);
-                    if (leftHit.collider.GetComponent<CollisionType>().VaultObstacle == true)
+                    if (leftHit.collider.GetComponent<CollisionType>().VaultObstacle == true && charStats.OnTheGround)
                         charStats.IsTouchingVaultObstacle = true;
+                    else
+                        charStats.IsTouchingVaultObstacle = false;
                 }
                 else
+                {
                     charStats.IsTouchingVaultObstacle = false;
+                }
+            }
+            else
+            {
+                charStats.IsTouchingVaultObstacle = false;
             }
         }
 
@@ -307,7 +323,7 @@ public class SimpleCharacterCore : MonoBehaviour
 
         // raycast to hit the ceiling
         Vector2 upHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x, charStats.CharCollider.bounds.max.y - 0.1f);
-        RaycastHit2D upHit = Physics2D.BoxCast(upHitOrigin, verticalBoxSize, 0.0f, Vector2.up, 25.0f, CollisionMasks.UpwardsCollisionMask);
+        RaycastHit2D upHit = Physics2D.BoxCast(upHitOrigin, verticalBoxSize, 0.0f, Vector2.up, 50.0f, CollisionMasks.UpwardsCollisionMask);
         if (upHit.collider != null)
         {
             float hitDist = upHit.distance - 0.05f;
@@ -325,7 +341,7 @@ public class SimpleCharacterCore : MonoBehaviour
 
         // raycast to find the floor
         Vector2 downHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x, charStats.CharCollider.bounds.min.y + 0.1f);
-        RaycastHit2D downHit = Physics2D.BoxCast(downHitOrigin, verticalBoxSize, 0.0f, Vector2.down, 25.0f, CollisionMasks.AllCollisionMask);
+        RaycastHit2D downHit = Physics2D.BoxCast(downHitOrigin, verticalBoxSize, 0.0f, Vector2.down, 50.0f, CollisionMasks.AllCollisionMask);
         if (downHit.collider != null)
         {
             float downHitColliderLeft = downHit.collider.bounds.min.x;
@@ -338,12 +354,12 @@ public class SimpleCharacterCore : MonoBehaviour
             if (charStats.Velocity.y < 0.0f && hitDist <= Mathf.Abs(charStats.Velocity.y))
             {
                 // if the character is about to clip into the enviornment with the back of their hit box, move them so that they won't clip
-                if (charStats.Velocity.x > 0.0f && downHitColliderRight < charStats.CharCollider.bounds.center.x && downHit.transform.gameObject.GetComponent<CollisionType>().RightConnect == false)
+                if (charStats.Velocity.x > 0.0f && downHitColliderRight < charStats.CharCollider.bounds.center.x && downHit.transform.gameObject.GetComponent<CollisionType>().WalkOffRight == false)
                 {
                     transform.Translate(downHitColliderRight - characterLeft, 0.0f, 0.0f);
                     touchGround = false;
                 }
-                else if (charStats.Velocity.x < 0.0f && downHitColliderLeft > charStats.CharCollider.bounds.center.x && downHit.transform.gameObject.GetComponent<CollisionType>().LeftConnect == false)
+                else if (charStats.Velocity.x < 0.0f && downHitColliderLeft > charStats.CharCollider.bounds.center.x && downHit.transform.gameObject.GetComponent<CollisionType>().WalkOffLeft == false)
                 {
                     transform.Translate(-(characterRight - downHitColliderLeft), 0.0f, 0.0f);
                     touchGround = false;
@@ -354,8 +370,8 @@ public class SimpleCharacterCore : MonoBehaviour
                 }
             }
             //This logic allows characters to walk over connected platforms
-            if ((charStats.FacingDirection == -1 && downHit.collider.gameObject.GetComponent<CollisionType>().LeftConnect == false) || 
-                (charStats.FacingDirection == 1 && downHit.collider.gameObject.GetComponent<CollisionType>().RightConnect == false))
+            if ((charStats.FacingDirection == -1 && downHit.collider.gameObject.GetComponent<CollisionType>().WalkOffLeft == false) || 
+                (charStats.FacingDirection == 1 && downHit.collider.gameObject.GetComponent<CollisionType>().WalkOffRight == false))
             {
                 // stop at the edge of a platform
                 if (charStats.OnTheGround && charStats.currentMoveState != CharEnums.MoveState.isRunning)
@@ -412,8 +428,8 @@ public class SimpleCharacterCore : MonoBehaviour
                     // make sure that the player character is not straddling a solid platform
                     // issue can't fall down when straddling two fallthrough platforms 
                     //(but there shouldn't be a need to have two passthrough platforms touch, they can just merge into 1)
-                    if ((downHit.collider.gameObject.GetComponent<CollisionType>().RightConnect == true && characterRight > downHitColliderRight) ||
-                        (downHit.collider.gameObject.GetComponent<CollisionType>().LeftConnect == true && characterLeft < downHitColliderLeft))
+                    if ((downHit.collider.gameObject.GetComponent<CollisionType>().WalkOffRight == true && characterRight > downHitColliderRight) ||
+                        (downHit.collider.gameObject.GetComponent<CollisionType>().WalkOffLeft == true && characterLeft < downHitColliderLeft))
                     {
                         fallthrough = false;
                     }

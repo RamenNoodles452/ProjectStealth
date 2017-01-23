@@ -12,10 +12,9 @@ public class CollisionType : MonoBehaviour
     private bool ceiling_climb = false;
 
     // these are env objects that are of the same level that characters can smoothly transition over to
-    [SerializeField]
-    private bool left_connect;
-    [SerializeField]
-    private bool right_connect;
+    // or can be simply used to allow the character to walk off the object (such as obstacles)
+    public bool walk_off_left = false;
+    public bool walk_off_right = false;
 
     public bool WallClimb
     {
@@ -39,12 +38,12 @@ public class CollisionType : MonoBehaviour
     }
 
 
-    public bool LeftConnect
+    public bool WalkOffLeft
     {
-        get { return left_connect; }
+        get { return walk_off_left; }
     }
-    public bool RightConnect
+    public bool WalkOffRight
     {
-        get { return right_connect; }
+        get { return walk_off_right; }
     }
 }
