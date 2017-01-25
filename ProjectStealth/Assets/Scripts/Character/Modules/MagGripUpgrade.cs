@@ -4,7 +4,9 @@ using System.Collections;
 public class MagGripUpgrade : MonoBehaviour 
 {
     private SpriteRenderer spriteRenderer;
-    public IInputManager InputManager;
+    private IInputManager InputManager;
+    private GenericMovementLib MovLib;
+    
 
 	//this allows us to reference player stuff like their movement state
 	Player playerScript; //AVOID CIRCULAR REFERENCING
@@ -41,6 +43,7 @@ public class MagGripUpgrade : MonoBehaviour
 		playerStats = GetComponent<PlayerStats>();
         charStats = GetComponent<CharacterStats>();
         InputManager = GetComponent<IInputManager>();
+        MovLib = GetComponent<GenericMovementLib>();
 	}
 	
 	// Update is called once per frame
@@ -68,7 +71,7 @@ public class MagGripUpgrade : MonoBehaviour
     {
         if (ledgeClimb)
         {
-            transform.position = BezierCurveMovement(charStats.BzrDistance, charStats.BzrStartPosition, charStats.BzrEndPosition, charStats.BzrCurvePosition);
+            transform.position = MovLib.BezierCurveMovement(charStats.BzrDistance, charStats.BzrStartPosition, charStats.BzrEndPosition, charStats.BzrCurvePosition);
 
             if (charStats.BzrDistance < 1.0f)
                 charStats.BzrDistance = charStats.BzrDistance + Time.deltaTime * TimeScale.timeScale * 5;
@@ -226,6 +229,7 @@ public class MagGripUpgrade : MonoBehaviour
         charStats.CurrentMasterState = CharEnums.MasterState.defaultState;
     }
 
+    /*
     //TODO: this needs to be in a general universal function (short wall vaulting will use this)
     Vector2 BezierCurveMovement(float distance, Vector2 start, Vector2 end, Vector2 curvePoint)
     {
@@ -233,6 +237,7 @@ public class MagGripUpgrade : MonoBehaviour
         Vector2 bc = Vector2.Lerp(curvePoint, end, distance);
         return Vector2.Lerp(ab, bc, distance);
     }
+    */
 
     void SetupLedgeClimb(ClimbState startingState, Collider2D climbObject = null)
     {
@@ -250,12 +255,12 @@ public class MagGripUpgrade : MonoBehaviour
         {
             if (charStats.FacingDirection == 1)
             {
-                charStats.BzrEndPosition = new Vector2(climbObject.bounds.max.x + charStats.CharCollider.bounds.extents.x + 0.01f, climbObject.bounds.max.y - charStats.CharCollider.bounds.extents.y);
+                charStats.BzrEndPosition = new Vector2(climbObject.bounds.max.x - charStats.CharCollider.offset.x + charStats.CharCollider.bounds.extents.x + 0.01f, climbObject.bounds.max.y - charStats.CharCollider.offset.y - charStats.CharCollider.bounds.extents.y);
                 charStats.BzrCurvePosition = new Vector2(charStats.CharCollider.bounds.center.x + charStats.CharCollider.bounds.extents.x * 2, charStats.CharCollider.bounds.center.y + charStats.CharCollider.bounds.size.y);
             }
             else
             {
-                charStats.BzrEndPosition = new Vector2(climbObject.bounds.min.x - charStats.CharCollider.bounds.extents.x - 0.01f, climbObject.bounds.max.y - charStats.CharCollider.bounds.extents.y);
+                charStats.BzrEndPosition = new Vector2(climbObject.bounds.min.x - charStats.CharCollider.offset.x - charStats.CharCollider.bounds.extents.x - 0.01f, climbObject.bounds.max.y - charStats.CharCollider.offset.y - charStats.CharCollider.bounds.extents.y);
                 charStats.BzrCurvePosition = new Vector2(charStats.CharCollider.bounds.center.x - charStats.CharCollider.bounds.extents.x * 2, charStats.CharCollider.bounds.center.y + charStats.CharCollider.bounds.size.y);
             }
             transitioningToState = ClimbState.wallClimb;
@@ -266,12 +271,13 @@ public class MagGripUpgrade : MonoBehaviour
         {
             if (charStats.FacingDirection == 1)
             {
-                charStats.BzrEndPosition = charStats.CharCollider.bounds.center + charStats.CharCollider.bounds.size;
+                //charStats.BzrEndPosition = (Vector2)charStats.CharCollider.bounds.center + charStats.CharCollider.offset + (Vector2)charStats.CharCollider.bounds.size;
+                charStats.BzrEndPosition = new Vector2(charStats.CharCollider.bounds.center.x - charStats.CharCollider.offset.x + charStats.CharCollider.bounds.size.x, charStats.CharCollider.bounds.center.y - charStats.CharCollider.offset.y + charStats.CharCollider.bounds.size.y);
                 charStats.BzrCurvePosition = new Vector2(charStats.CharCollider.bounds.center.x - charStats.CharCollider.bounds.extents.x, charStats.CharCollider.bounds.center.y + charStats.CharCollider.bounds.size.y * 2);
             }
             else
             {
-                charStats.BzrEndPosition = new Vector2(charStats.CharCollider.bounds.center.x - charStats.CharCollider.bounds.size.x, charStats.CharCollider.bounds.center.y + charStats.CharCollider.bounds.size.y);
+                charStats.BzrEndPosition = new Vector2(charStats.CharCollider.bounds.center.x - charStats.CharCollider.offset.x - charStats.CharCollider.bounds.size.x, charStats.CharCollider.bounds.center.y - charStats.CharCollider.offset.y + charStats.CharCollider.bounds.size.y);
                 charStats.BzrCurvePosition = new Vector2(charStats.CharCollider.bounds.center.x + charStats.CharCollider.bounds.extents.x, charStats.CharCollider.bounds.center.y + charStats.CharCollider.bounds.size.y * 2);
             }
             transitioningToState = ClimbState.notClimb;

@@ -18,21 +18,20 @@ public class TakeCoverAction : MonoBehaviour
 
     [SerializeField]
     private float coverTimer;
-    private const float COVER_TIME = 0.05f;
+    private const float COVER_TIME = 0.10f;
 
     // Use this for initialization
     void Start ()
     {
         charStats = GetComponent<CharacterStats>();
         inputManager = GetComponent<IInputManager>();
-
         coverTimer = 0.0f;
     }
 	
 	// Update is called once per frame
 	void Update ()
     {
-        if (charStats.IsTouchingVaultObstacle &&
+        if (charStats.IsTouchingVaultObstacle && charStats.currentMoveState == CharEnums.MoveState.isSneaking &&
            ((charStats.FacingDirection == -1 && inputManager.HorizontalAxis < 0f) || (charStats.FacingDirection == 1 && inputManager.HorizontalAxis > 0f)))
         {
             if (coverTimer < COVER_TIME)

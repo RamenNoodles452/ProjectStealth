@@ -1,13 +1,13 @@
 fileFormatVersion: 2
-guid: fbb01a347fb379b40b730e5b373c8334
-timeCreated: 1485137337
+guid: 8c94e2856df249446aac198a92688453
+timeCreated: 1485148810
 licenseType: Free
 TextureImporter:
   fileIDToRecycleName:
-    21300000: valerie idle sheet_0
-    21300002: valerie idle sheet_1
-    21300004: valerie idle sheet_2
-    21300006: valerie idle sheet_3
+    21300000: Valerie idle sheet_0
+    21300002: Valerie idle sheet_1
+    21300004: Valerie idle sheet_2
+    21300006: Valerie idle sheet_3
   serializedVersion: 2
   mipmaps:
     mipMapMode: 0
@@ -30,7 +30,7 @@ TextureImporter:
   cubemapConvolutionSteps: 7
   cubemapConvolutionExponent: 1.5
   seamlessCubemap: 0
-  textureFormat: -1
+  textureFormat: -3
   maxTextureSize: 4096
   textureSettings:
     filterMode: 0
@@ -57,7 +57,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: valerie idle sheet_0
+      name: Valerie idle sheet_0
       rect:
         serializedVersion: 2
         x: 0
@@ -70,7 +70,7 @@ TextureImporter:
       outline: []
       tessellationDetail: 0
     - serializedVersion: 2
-      name: valerie idle sheet_1
+      name: Valerie idle sheet_1
       rect:
         serializedVersion: 2
         x: 150
@@ -83,7 +83,7 @@ TextureImporter:
       outline: []
       tessellationDetail: 0
     - serializedVersion: 2
-      name: valerie idle sheet_2
+      name: Valerie idle sheet_2
       rect:
         serializedVersion: 2
         x: 300
@@ -96,7 +96,7 @@ TextureImporter:
       outline: []
       tessellationDetail: 0
     - serializedVersion: 2
-      name: valerie idle sheet_3
+      name: Valerie idle sheet_3
       rect:
         serializedVersion: 2
         x: 450

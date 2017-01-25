@@ -252,7 +252,7 @@ public class SimpleCharacterCore : MonoBehaviour
                 else
                     rightHitOrigin = new Vector2(charStats.CharCollider.bounds.max.x - 0.1f, charStats.CharCollider.bounds.center.y - 5f);
             }
-            RaycastHit2D rightHit = Physics2D.BoxCast(rightHitOrigin, horizontalBoxSize, 0.0f, Vector2.right, 50.0f, CollisionMasks.AllCollisionMask);
+            RaycastHit2D rightHit = Physics2D.BoxCast(rightHitOrigin, horizontalBoxSize, 0.0f, Vector2.right, 50.0f, CollisionMasks.UpwardsCollisionMask);
             if (rightHit.collider != null)
             {
                 float rightHitDist = rightHit.distance - 0.05f;
@@ -290,7 +290,7 @@ public class SimpleCharacterCore : MonoBehaviour
                 else
                     leftHitOrigin = new Vector2(charStats.CharCollider.bounds.min.x + 0.1f, charStats.CharCollider.bounds.center.y - 5f);
             }
-            RaycastHit2D leftHit = Physics2D.BoxCast(leftHitOrigin, horizontalBoxSize, 0.0f, Vector2.left, 50.0f, CollisionMasks.AllCollisionMask);
+            RaycastHit2D leftHit = Physics2D.BoxCast(leftHitOrigin, horizontalBoxSize, 0.0f, Vector2.left, 50.0f, CollisionMasks.UpwardsCollisionMask);
             if (leftHit.collider != null)
             {
                 float leftHitDist = leftHit.distance - 0.05f;
@@ -527,9 +527,6 @@ public class SimpleCharacterCore : MonoBehaviour
         // Jump logic. Keep the Y velocity constant while holding jump for the duration of JUMP_CONTROL_TIME
         if ((jumpGracePeriod || charStats.OnTheGround) && InputManager.JumpInputInst)
         {
-            if (jumpGracePeriod)
-                print("GRACE JUMP");
-
             if (InputManager.VerticalAxis < 0)
             {
                 //trigger fallthrough

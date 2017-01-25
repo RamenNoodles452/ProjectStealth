@@ -1,6 +1,6 @@
 fileFormatVersion: 2
-guid: 94f0cfe13243d32469d097c6f22aaaf3
-timeCreated: 1485139156
+guid: f94e17b0edec19b4d8b7d289e2047407
+timeCreated: 1485146908
 licenseType: Free
 TextureImporter:
   fileIDToRecycleName:
@@ -18,6 +18,8 @@ TextureImporter:
     21300022: Valerie crouch sheet_11
     21300024: Valerie crouch sheet_12
     21300026: Valerie crouch sheet_13
+    21300028: Valerie crouch sheet_14
+    21300030: Valerie crouch sheet_15
   serializedVersion: 2
   mipmaps:
     mipMapMode: 0
@@ -40,7 +42,7 @@ TextureImporter:
   cubemapConvolutionSteps: 7
   cubemapConvolutionExponent: 1.5
   seamlessCubemap: 0
-  textureFormat: -1
+  textureFormat: -3
   maxTextureSize: 4096
   textureSettings:
     filterMode: 0
@@ -71,7 +73,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 450
+        y: 600
         width: 150
         height: 150
       alignment: 0
@@ -84,7 +86,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 150
-        y: 450
+        y: 600
         width: 150
         height: 150
       alignment: 0
@@ -97,7 +99,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 300
-        y: 450
+        y: 600
         width: 150
         height: 150
       alignment: 0
@@ -110,7 +112,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 300
+        y: 450
         width: 150
         height: 150
       alignment: 0
@@ -123,7 +125,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 150
-        y: 300
+        y: 450
         width: 150
         height: 150
       alignment: 0
@@ -136,7 +138,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 300
-        y: 300
+        y: 450
         width: 150
         height: 150
       alignment: 0
@@ -149,7 +151,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 150
+        y: 300
         width: 150
         height: 150
       alignment: 0
@@ -162,7 +164,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 150
-        y: 150
+        y: 300
         width: 150
         height: 150
       alignment: 0
@@ -175,7 +177,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 300
-        y: 150
+        y: 300
         width: 150
         height: 150
       alignment: 0
@@ -188,7 +190,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 450
-        y: 150
+        y: 300
         width: 150
         height: 150
       alignment: 0
@@ -201,7 +203,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 0
+        y: 150
         width: 150
         height: 150
       alignment: 0
@@ -214,7 +216,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 150
-        y: 0
+        y: 150
         width: 150
         height: 150
       alignment: 0
@@ -227,7 +229,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 300
-        y: 0
+        y: 150
         width: 150
         height: 150
       alignment: 0
@@ -240,6 +242,32 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 450
+        y: 150
+        width: 150
+        height: 150
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      tessellationDetail: 0
+    - serializedVersion: 2
+      name: Valerie crouch sheet_14
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 150
+        height: 150
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      tessellationDetail: 0
+    - serializedVersion: 2
+      name: Valerie crouch sheet_15
+      rect:
+        serializedVersion: 2
+        x: 150
         y: 0
         width: 150
         height: 150
