@@ -18,9 +18,9 @@ public class Player : SimpleCharacterCore
 
 		//walk and run vars
 		WALK_SPEED = 1.0f; //used for cutscenes with Alice
-		SNEAK_SPEED = 2.0f; //Alice's default speed
-		RUN_SPEED = 4.5f;
-        charStats.currentMoveState = CharEnums.MoveState.isSneaking;
+        SNEAK_SPEED = 2.0f; //PC's default speed
+        RUN_SPEED = 4.5f;
+        charStats.CurrentMoveState = CharEnums.MoveState.isSneaking;
 
 		playerStats = GetComponent<PlayerStats>();
         magGrip = GetComponent<MagGripUpgrade>();

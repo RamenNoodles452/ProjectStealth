@@ -87,13 +87,17 @@ public class UserInputManager : IInputManager
                 //Debug.Log("Evade");
                 this.Evade.Invoke();
             }
-
-            if (Input.GetButton("Interact"))
-            {
-                //Debug.Log("Interact");
-                this.Interact.Invoke();
-            }
             */
+            if (Input.GetButton("Interact"))
+                InteractInput = true;
+            else
+                InteractInput = false;
+
+            if (Input.GetButtonDown("Interact"))
+                InteractInputInst = true;
+            else
+                InteractInputInst = false;
+
         }
     }
 }

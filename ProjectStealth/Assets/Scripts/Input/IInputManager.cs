@@ -33,4 +33,7 @@ public abstract class IInputManager : MonoBehaviour {
     public bool RunInput;
     public bool RunInputDownInst;
     public bool RunInputUpInst;
+
+    public bool InteractInput;
+    public bool InteractInputInst;
 }

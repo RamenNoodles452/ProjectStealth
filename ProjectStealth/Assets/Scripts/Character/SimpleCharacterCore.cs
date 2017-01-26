@@ -28,8 +28,8 @@ public class SimpleCharacterCore : MonoBehaviour
 
     //walk and run vars
     private const float MAX_HORIZONTAL_SPEED = 10.0f;
-    protected float WALK_SPEED = 1.0f; //used for cutscenes with Alice, guards will walk when not alerted
-    protected float SNEAK_SPEED = 2.0f; //Alice's default speed, enemies that were walking will use this speed when on guard
+    protected float WALK_SPEED = 1.0f; //used for cutscenes for PC, guards will walk when not alerted
+    protected float SNEAK_SPEED = 2.0f; //default speed, enemies that were walking will use this speed when on guard
     protected float RUN_SPEED = 4.5f;
     protected float ACCELERATION = 6.0f; // acceleration used for velocity calcs when running
     protected float DRAG = 15.0f; // how quickly a character decelerates when running
@@ -85,7 +85,7 @@ public class SimpleCharacterCore : MonoBehaviour
     public virtual void LateUpdate()
     {
         // prev state assignments
-        prevMoveState = charStats.currentMoveState;
+        prevMoveState = charStats.CurrentMoveState;
         previousFacingDirection = charStats.FacingDirection;
     }
 
@@ -108,12 +108,12 @@ public class SimpleCharacterCore : MonoBehaviour
         if(charStats.OnTheGround)
         {
             //movement stuff
-            if (charStats.currentMoveState == CharEnums.MoveState.isWalking)
-                charStats.Velocity.x = WALK_SPEED * InputManager.HorizontalAxis;
-            else if (charStats.currentMoveState == CharEnums.MoveState.isSneaking)
+            if (charStats.CurrentMoveState == CharEnums.MoveState.isWalking)
+                charStats.Velocity.x = charStats.WALK_SPEED * InputManager.HorizontalAxis;
+            else if (charStats.CurrentMoveState == CharEnums.MoveState.isSneaking)
             {
                 // if current speed is greater than sneak speed, then decel to sneak speed.
-                if(Mathf.Abs(charStats.Velocity.x) > SNEAK_SPEED)
+                if(Mathf.Abs(charStats.Velocity.x) > charStats.SNEAK_SPEED)
                 {
                     if (charStats.Velocity.x > 0.0f)
                         charStats.Velocity.x = charStats.Velocity.x - DRAG * Time.deltaTime * TimeScale.timeScale;
@@ -122,15 +122,15 @@ public class SimpleCharacterCore : MonoBehaviour
                 }
                 else
                 {
-                    charStats.Velocity.x = SNEAK_SPEED * InputManager.HorizontalAxis;
+                    charStats.Velocity.x = charStats.SNEAK_SPEED * InputManager.HorizontalAxis;
                 }
             }
-            else if (charStats.currentMoveState == CharEnums.MoveState.isRunning)
+            else if (charStats.CurrentMoveState == CharEnums.MoveState.isRunning)
             {   
                 //smooth damp to 0 if there's no directional input for running or if you're trying to run the opposite direction
                 if (charStats.CharacterAccel == 0.0f || (charStats.CharacterAccel < 0.0f && charStats.Velocity.x > 0.0f) || (charStats.CharacterAccel > 0.0f && charStats.Velocity.x < 0.0f))
                 {
-                    if (Mathf.Abs(charStats.Velocity.x) > SNEAK_SPEED)
+                    if (Mathf.Abs(charStats.Velocity.x) > charStats.SNEAK_SPEED)
                     {
                         //print("SKID BOIS");
                         if (charStats.Velocity.x > 0.0f)
@@ -146,20 +146,20 @@ public class SimpleCharacterCore : MonoBehaviour
                 else
                     charStats.Velocity.x = charStats.Velocity.x + charStats.CharacterAccel * Time.deltaTime * TimeScale.timeScale;
 
-                charStats.Velocity.x = Mathf.Clamp(charStats.Velocity.x, -RUN_SPEED, RUN_SPEED);
+                charStats.Velocity.x = Mathf.Clamp(charStats.Velocity.x, -charStats.RUN_SPEED, charStats.RUN_SPEED);
             }
         }
         else
         {
             if (charStats.JumpTurned)
-                HorizontalJumpVelNoAccel(SNEAK_SPEED);
+                HorizontalJumpVelNoAccel(charStats.SNEAK_SPEED);
             else
             {
-                if (charStats.currentMoveState == CharEnums.MoveState.isWalking || charStats.currentMoveState == CharEnums.MoveState.isSneaking)
+                if (charStats.CurrentMoveState == CharEnums.MoveState.isWalking || charStats.CurrentMoveState == CharEnums.MoveState.isSneaking)
                 {
                     HorizontalJumpVelAccel();
                 }
-                else if (charStats.currentMoveState == CharEnums.MoveState.isRunning)
+                else if (charStats.CurrentMoveState == CharEnums.MoveState.isRunning)
                 {
                     HorizontalJumpVelAccel();
                 }
@@ -186,11 +186,11 @@ public class SimpleCharacterCore : MonoBehaviour
     {
         if (charStats.CharacterAccel < 0.0f && charStats.Velocity.x >= 0.0f)
         {
-            charStats.Velocity.x = -SNEAK_SPEED;
+            charStats.Velocity.x = -charStats.SNEAK_SPEED;
         }
         else if (charStats.CharacterAccel > 0.0f && charStats.Velocity.x <= 0.0f)
         {
-            charStats.Velocity.x = SNEAK_SPEED;
+            charStats.Velocity.x = charStats.SNEAK_SPEED;
         }
         else
         {
@@ -265,18 +265,18 @@ public class SimpleCharacterCore : MonoBehaviour
                     charStats.Velocity.x = 0;
                     TouchedWall(rightHit.collider.gameObject);
                     if (rightHit.collider.GetComponent<CollisionType>().VaultObstacle == true && charStats.OnTheGround)
-                        charStats.IsTouchingVaultObstacle = true;
+                        charStats.IsTouchingVaultObstacle = rightHit.collider;
                     else
-                        charStats.IsTouchingVaultObstacle = false;
+                        charStats.IsTouchingVaultObstacle = null;
                 }
                 else
                 {
-                    charStats.IsTouchingVaultObstacle = false;
+                    charStats.IsTouchingVaultObstacle = null;
                 }
             }
             else
             {
-                charStats.IsTouchingVaultObstacle = false;
+                charStats.IsTouchingVaultObstacle = null;
             }
         }
         // raycast to collide left
@@ -303,18 +303,18 @@ public class SimpleCharacterCore : MonoBehaviour
                     charStats.Velocity.x = 0;
                     TouchedWall(leftHit.collider.gameObject);
                     if (leftHit.collider.GetComponent<CollisionType>().VaultObstacle == true && charStats.OnTheGround)
-                        charStats.IsTouchingVaultObstacle = true;
+                        charStats.IsTouchingVaultObstacle = leftHit.collider;
                     else
-                        charStats.IsTouchingVaultObstacle = false;
+                        charStats.IsTouchingVaultObstacle = null;
                 }
                 else
                 {
-                    charStats.IsTouchingVaultObstacle = false;
+                    charStats.IsTouchingVaultObstacle = null;
                 }
             }
             else
             {
-                charStats.IsTouchingVaultObstacle = false;
+                charStats.IsTouchingVaultObstacle = null;
             }
         }
 
@@ -374,7 +374,7 @@ public class SimpleCharacterCore : MonoBehaviour
                 (charStats.FacingDirection == 1 && downHit.collider.gameObject.GetComponent<CollisionType>().WalkOffRight == false))
             {
                 // stop at the edge of a platform
-                if (charStats.OnTheGround && charStats.currentMoveState != CharEnums.MoveState.isRunning)
+                if (charStats.OnTheGround && charStats.CurrentMoveState != CharEnums.MoveState.isRunning)
                 {
                     float rightLedgeDist = downHitColliderRight - characterRight;
                     if (charStats.Velocity.x > 0.0f && rightLedgeDist <= Mathf.Abs(charStats.Velocity.x))
@@ -493,11 +493,11 @@ public class SimpleCharacterCore : MonoBehaviour
 		LookingOverLedge();
 
         if(InputManager.RunInput)
-            charStats.currentMoveState = CharEnums.MoveState.isRunning;
+            charStats.CurrentMoveState = CharEnums.MoveState.isRunning;
         else
-            charStats.currentMoveState = CharEnums.MoveState.isSneaking;
+            charStats.CurrentMoveState = CharEnums.MoveState.isSneaking;
 
-        if(charStats.currentMoveState == CharEnums.MoveState.isRunning)
+        if(charStats.CurrentMoveState == CharEnums.MoveState.isRunning)
         {
             // if the character comes to a full stop, let them start the run again
             // This also works when turning around
@@ -505,14 +505,14 @@ public class SimpleCharacterCore : MonoBehaviour
                 startRun = true;
 
             // running automatically starts at the sneaking speed and accelerates from there
-            if (startRun == true && InputManager.HorizontalAxis > 0 && Mathf.Abs(charStats.Velocity.x) < SNEAK_SPEED)
+            if (startRun == true && InputManager.HorizontalAxis > 0 && Mathf.Abs(charStats.Velocity.x) < charStats.SNEAK_SPEED)
             {
-                charStats.Velocity.x = SNEAK_SPEED;
+                charStats.Velocity.x = charStats.SNEAK_SPEED;
                 startRun = false;
             }
-            else if (startRun == true && InputManager.HorizontalAxis < 0 && Mathf.Abs(charStats.Velocity.x) < SNEAK_SPEED)
+            else if (startRun == true && InputManager.HorizontalAxis < 0 && Mathf.Abs(charStats.Velocity.x) < charStats.SNEAK_SPEED)
             {
-                charStats.Velocity.x = -SNEAK_SPEED;
+                charStats.Velocity.x = -charStats.SNEAK_SPEED;
                 startRun = false;
             }
         }

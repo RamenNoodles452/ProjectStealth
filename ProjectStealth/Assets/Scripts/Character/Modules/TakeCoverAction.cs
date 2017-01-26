@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 public class TakeCoverAction : MonoBehaviour
 {
@@ -16,11 +15,9 @@ public class TakeCoverAction : MonoBehaviour
     private CharacterStats charStats;
     private IInputManager inputManager;
 
-    [SerializeField]
     private float coverTimer;
     private const float COVER_TIME = 0.10f;
 
-    // Use this for initialization
     void Start ()
     {
         charStats = GetComponent<CharacterStats>();
@@ -28,10 +25,9 @@ public class TakeCoverAction : MonoBehaviour
         coverTimer = 0.0f;
     }
 	
-	// Update is called once per frame
 	void Update ()
     {
-        if (charStats.IsTouchingVaultObstacle && charStats.currentMoveState == CharEnums.MoveState.isSneaking &&
+        if (charStats.IsTouchingVaultObstacle && charStats.CurrentMoveState == CharEnums.MoveState.isSneaking &&
            ((charStats.FacingDirection == -1 && inputManager.HorizontalAxis < 0f) || (charStats.FacingDirection == 1 && inputManager.HorizontalAxis > 0f)))
         {
             if (coverTimer < COVER_TIME)
@@ -41,16 +37,21 @@ public class TakeCoverAction : MonoBehaviour
             if (coverTimer >= COVER_TIME)
             {
                 if (charStats.IsTakingCover == false)
+                {
                     charStats.IsTakingCover = true;
+                    UpdateCollisions();
+                }
             }
         }
         else
         {
             coverTimer = 0.0f;
             if (charStats.IsTakingCover)
+            {
                 charStats.IsTakingCover = false;
+                UpdateCollisions();
+            }
         }
-        UpdateCollisions();
     }
 
     /// <summary>

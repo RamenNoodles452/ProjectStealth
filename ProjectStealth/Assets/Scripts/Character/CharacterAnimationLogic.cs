@@ -21,7 +21,7 @@ public class CharacterAnimationLogic : MonoBehaviour
         if (charStats.OnTheGround == true)
         {
             
-            if (charStats.currentMoveState == CharEnums.MoveState.isSneaking)
+            if (charStats.CurrentMoveState == CharEnums.MoveState.isSneaking)
             {
                 if (charStats.Velocity.x != 0.0f)
                 {
