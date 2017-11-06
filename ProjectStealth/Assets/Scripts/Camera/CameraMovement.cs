@@ -23,36 +23,46 @@ public class CameraMovement : MonoBehaviour
     void Update ()
     {
         //transform.position = FocalTarget.position;
-        
+
         if (FocalTarget)
         {
             #region clamp
-            Vector3 center = cam.ViewportToWorldPoint( new Vector3( 0.5f, 0.5f, 0.0f ) );
-            Vector3 bottomRight = cam.ViewportToWorldPoint( new Vector3( 1.0f, 1.0f, 0.0f ) );
-            float halfWidthInWorld = bottomRight.x - center.x;
-            float halfHeightInWorld = bottomRight.y - center.y;
             Vector3 ClampedFocalTarget = FocalTarget.position;
 
-            if (FocalTarget.position.x + halfWidthInWorld > boundingBox.gameObject.transform.position.x + boundingBox.offset.x + boundingBox.size.x / 2.0f)
+            if (!boundingBox)
             {
-                // don't go too far right
-                ClampedFocalTarget.x = (boundingBox.gameObject.transform.position.x + boundingBox.offset.x + boundingBox.size.x / 2.0f) - halfWidthInWorld;
+                Debug.LogError( "Someone forgot to put a bounding box around the level / messed it up." );
             }
-            else if ( FocalTarget.position.x - halfWidthInWorld < boundingBox.gameObject.transform.position.x + boundingBox.offset.x - boundingBox.size.x / 2.0f )
+            else
             {
-                // don't go too far left
-                ClampedFocalTarget.x = (boundingBox.gameObject.transform.position.x + boundingBox.offset.x - boundingBox.size.x / 2.0f) + halfWidthInWorld;
-            }
+                // Clamping math
+                Vector3 center = cam.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, 0.0f));
+                Vector3 bottomRight = cam.ViewportToWorldPoint(new Vector3(1.0f, 1.0f, 0.0f));
+                float halfWidthInWorld = bottomRight.x - center.x;
+                float halfHeightInWorld = bottomRight.y - center.y;
 
-            if (FocalTarget.position.y + halfHeightInWorld > boundingBox.gameObject.transform.position.y + boundingBox.offset.y + boundingBox.size.y / 2.0f)
-            {
-                // don't go too far up
-                ClampedFocalTarget.y = (boundingBox.gameObject.transform.position.y + boundingBox.offset.y + boundingBox.size.y / 2.0f) - halfHeightInWorld;
-            }
-            else if (FocalTarget.position.y - halfHeightInWorld < boundingBox.gameObject.transform.position.y + boundingBox.offset.y - boundingBox.size.y / 2.0f)
-            {
-                // don't go too far down
-                ClampedFocalTarget.y = (boundingBox.gameObject.transform.position.y + boundingBox.offset.y - boundingBox.size.y / 2.0f) + halfHeightInWorld;
+                // Implementation ASSUMES a level will never be smaller than 1 screen
+                if (FocalTarget.position.x + halfWidthInWorld > boundingBox.gameObject.transform.position.x + boundingBox.offset.x + boundingBox.size.x / 2.0f)
+                {
+                    // don't go too far right
+                    ClampedFocalTarget.x = (boundingBox.gameObject.transform.position.x + boundingBox.offset.x + boundingBox.size.x / 2.0f) - halfWidthInWorld;
+                }
+                else if (FocalTarget.position.x - halfWidthInWorld < boundingBox.gameObject.transform.position.x + boundingBox.offset.x - boundingBox.size.x / 2.0f)
+                {
+                    // don't go too far left
+                    ClampedFocalTarget.x = (boundingBox.gameObject.transform.position.x + boundingBox.offset.x - boundingBox.size.x / 2.0f) + halfWidthInWorld;
+                }
+
+                if (FocalTarget.position.y + halfHeightInWorld > boundingBox.gameObject.transform.position.y + boundingBox.offset.y + boundingBox.size.y / 2.0f)
+                {
+                    // don't go too far up/down
+                    ClampedFocalTarget.y = (boundingBox.gameObject.transform.position.y + boundingBox.offset.y + boundingBox.size.y / 2.0f) - halfHeightInWorld;
+                }
+                else if (FocalTarget.position.y - halfHeightInWorld < boundingBox.gameObject.transform.position.y + boundingBox.offset.y - boundingBox.size.y / 2.0f)
+                {
+                    // don't go too far up/down
+                    ClampedFocalTarget.y = (boundingBox.gameObject.transform.position.y + boundingBox.offset.y - boundingBox.size.y / 2.0f) + halfHeightInWorld;
+                }
             }
             #endregion
 
