@@ -8,11 +8,15 @@ public class CameraMovement : MonoBehaviour
     public Transform FocalTarget;
     private Camera cam;
 
+    private BoxCollider2D boundingBox;
+
     // Use this for initialization
     void Start ()
     {
         Screen.SetResolution(640, 480, false, 60);
         cam = GetComponent<Camera>();
+
+        boundingBox = GameObject.Find("BoundingBox").GetComponent<BoxCollider2D>(); //bad
     }
 
     // Update is called once per frame
@@ -22,10 +26,40 @@ public class CameraMovement : MonoBehaviour
         
         if (FocalTarget)
         {
-            Vector3 point = cam.WorldToViewportPoint(FocalTarget.position);
-            Vector3 delta = FocalTarget.position - cam.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, point.z)); //(new Vector3(0.5, 0.5, point.z));
+            #region clamp
+            Vector3 center = cam.ViewportToWorldPoint( new Vector3( 0.5f, 0.5f, 0.0f ) );
+            Vector3 bottomRight = cam.ViewportToWorldPoint( new Vector3( 1.0f, 1.0f, 0.0f ) );
+            float halfWidthInWorld = bottomRight.x - center.x;
+            float halfHeightInWorld = bottomRight.y - center.y;
+            Vector3 ClampedFocalTarget = FocalTarget.position;
+
+            if (FocalTarget.position.x + halfWidthInWorld > boundingBox.gameObject.transform.position.x + boundingBox.offset.x + boundingBox.size.x / 2.0f)
+            {
+                // don't go too far right
+                ClampedFocalTarget.x = (boundingBox.gameObject.transform.position.x + boundingBox.offset.x + boundingBox.size.x / 2.0f) - halfWidthInWorld;
+            }
+            else if ( FocalTarget.position.x - halfWidthInWorld < boundingBox.gameObject.transform.position.x + boundingBox.offset.x - boundingBox.size.x / 2.0f )
+            {
+                // don't go too far left
+                ClampedFocalTarget.x = (boundingBox.gameObject.transform.position.x + boundingBox.offset.x - boundingBox.size.x / 2.0f) + halfWidthInWorld;
+            }
+
+            if (FocalTarget.position.y + halfHeightInWorld > boundingBox.gameObject.transform.position.y + boundingBox.offset.y + boundingBox.size.y / 2.0f)
+            {
+                // don't go too far up
+                ClampedFocalTarget.y = (boundingBox.gameObject.transform.position.y + boundingBox.offset.y + boundingBox.size.y / 2.0f) - halfHeightInWorld;
+            }
+            else if (FocalTarget.position.y - halfHeightInWorld < boundingBox.gameObject.transform.position.y + boundingBox.offset.y - boundingBox.size.y / 2.0f)
+            {
+                // don't go too far down
+                ClampedFocalTarget.y = (boundingBox.gameObject.transform.position.y + boundingBox.offset.y - boundingBox.size.y / 2.0f) + halfHeightInWorld;
+            }
+            #endregion
+
+            Vector3 point = cam.WorldToViewportPoint( ClampedFocalTarget );
+            Vector3 delta = ClampedFocalTarget - cam.ViewportToWorldPoint( new Vector3( 0.5f, 0.5f, point.z ) );
             Vector3 destination = transform.position + delta;
-            transform.position = Vector3.SmoothDamp(transform.position, destination, ref velocity, DampTime);
+            transform.position = Vector3.SmoothDamp( transform.position, destination, ref velocity, DampTime );
         }
         
     }
