@@ -94,4 +94,25 @@ public class Player : SimpleCharacterCore
     {
         magGrip.InitiateCeilingGrab(collisionObject.GetComponent<Collider2D>());
     }
+
+     /// <returns>The coordinates of the center point of the player (in pixels)</returns>
+    public Vector2 CenterPoint()
+    {
+        BoxCollider2D collider = this.gameObject.GetComponent<BoxCollider2D>();
+        return new Vector2( this.gameObject.transform.position.x + collider.size.x / 2.0f, this.gameObject.transform.position.y + collider.size.y / 2.0f );
+    }
+
+    /// <summary>
+    /// Hits the player
+    /// </summary>
+    /// <param name="damage">The amount of damage</param>
+    public void Hit( float damage )
+    {
+        playerStats.Hit( damage );
+    }
+
+    public void Kill()
+    {
+        //this is for things like dropping off a cliff, not damage-based death
+    }
 }
