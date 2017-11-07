@@ -81,13 +81,19 @@ public class UserInputManager : IInputManager
                 //Debug.Log("LightAttack");
                 this.Attack.Invoke();
             }
+            */
 
-            if (Input.GetButton("Evade"))
+            if ( Input.GetButton("Evade") )
             {
                 //Debug.Log("Evade");
-                this.Evade.Invoke();
+                //this.Evade.Invoke();
+                EvadeInput = true;
             }
-            */
+            else { EvadeInput = false; }
+
+            if ( Input.GetButtonDown("Evade") ) { EvadeInputInst = true; }
+            else { EvadeInputInst = false; }
+            
             if (Input.GetButton("Interact"))
                 InteractInput = true;
             else

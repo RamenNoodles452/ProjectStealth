@@ -6,7 +6,8 @@ using System.Collections;
 /// The IInputManager class provides a common interface for mapping input messages to action messages.
 /// Subclasses may inherit this class an invoke action events according to need
 /// </summary>
-public abstract class IInputManager : MonoBehaviour {
+public abstract class IInputManager : MonoBehaviour
+{
 
     #region Events
 
@@ -28,6 +29,9 @@ public abstract class IInputManager : MonoBehaviour {
 
     public bool JumpInput;
     public bool JumpInputInst;
+
+    public bool EvadeInput;
+    public bool EvadeInputInst;
 
     protected float RunAxis;
     public bool RunInput;

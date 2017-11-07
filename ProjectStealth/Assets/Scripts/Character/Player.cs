@@ -47,6 +47,12 @@ public class Player : SimpleCharacterCore
         {
             base.Update();
 
+            //Evade
+            if (InputManager.EvadeInputInst)
+            {
+                playerStats.Evade();
+            }
+
             // base mag grip checks
             if (playerStats.AquiredMagGrip)
             {
