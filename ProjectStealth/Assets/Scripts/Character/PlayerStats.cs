@@ -39,6 +39,12 @@ public class PlayerStats : MonoBehaviour
     private float EvadeRecoveryCounter = 0.15f;
     #endregion
 
+    #region cloak
+    private bool IsCloaked = false;
+    private const float CloakCost = 5.0f;
+    private const float CloakDrainPerSecond = 10.0f; //9.5s
+    #endregion
+
     // progress values
     public bool AquiredMagGrip;
 
@@ -73,6 +79,40 @@ public class PlayerStats : MonoBehaviour
                 // kill
             }
         }
+    }
+
+    public void Shoot()
+    {
+        if ( IsEvading ) { return; } // no shooting mid-evade
+        //animation lock checks?
+
+        //make noise?
+        //use silencer meter / shooting when cloaked makes no noise
+
+        if ( IsCloaked ) { IsCloaked = false; } // attacking breaks stealth
+    }
+
+    public void Attack()
+    {
+        if ( IsEvading ) { return; } // no attacking mid-evade
+        //animation lock checks?
+
+        if ( IsCloaked ) { IsCloaked = false; } // attacking breaks stealth
+
+        //enqueueing? + comboing
+        //tag enemies for auto aim
+    }
+
+    public void Assassinate()
+    {
+        if ( IsEvading ) { return; } // no assassinating mid-evade
+        //animation lock checks?
+
+        //need to be positioned
+        //look at enemy positions
+        if ( IsCloaked ) { IsCloaked = false; } // attacking breaks stealth
+
+        //enqueueing?
     }
 
     /// <summary>
@@ -116,6 +156,39 @@ public class PlayerStats : MonoBehaviour
         //return true/false? based on abort / already evading / stuck in recovery / resource insuffiency / success
     }
 
+    #region Cloak
+    /// <summary>
+    /// Turn on cloaking
+    /// </summary>
+    public void Cloak()
+    {
+        if ( IsCloaked ) { return; }
+
+        // check if unlocked
+        // animation lock checks?
+
+        if ( Energy >= CloakCost )
+        {
+            Energy = Energy - CloakCost;
+        }
+
+        IsCloaked = true;
+        //animate
+    }
+
+    /// <summary>
+    /// Turn off cloaking
+    /// </summary>
+    public void Decloak()
+    {
+        IsCloaked = false;
+        //animate
+    }
+
+    /// <returns>Whether the player is currently cloaked or not</returns>
+    public bool IsCloaking() { return IsCloaked; }
+    #endregion
+
     /// <summary>
     /// Begins dodging invincibility frames
     /// </summary>
@@ -127,9 +200,12 @@ public class PlayerStats : MonoBehaviour
 
     void Start()
     {
+        // Reset state to prevent bugs when changing levels
         EvadeEnqueued = false;
         Invincible = false;
+        IsCloaked = false;
         WasHitThisFrame = false;
+
         Health = HealthMax;
         Shield = ShieldMax;
     }
@@ -208,9 +284,21 @@ public class PlayerStats : MonoBehaviour
             }
         }
         #endregion
+
+        #region Cloaking
+        if ( IsCloaked )
+        {
+            Energy = Mathf.Max( Energy - CloakDrainPerSecond * Time.deltaTime * TimeScale.timeScale, 0.0f );
+            if ( Energy <= 0.0f )
+            {
+                IsCloaked = false;
+            }
+        }
+        #endregion
         #endregion
 
         // Cheat codes
+        // TODO: remove
         if (Input.GetKeyDown(KeyCode.M))
         {
             if (AquiredMagGrip)

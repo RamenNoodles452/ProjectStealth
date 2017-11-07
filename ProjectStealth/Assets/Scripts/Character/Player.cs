@@ -48,9 +48,27 @@ public class Player : SimpleCharacterCore
             base.Update();
 
             //Evade
-            if (InputManager.EvadeInputInst)
+            if ( InputManager.EvadeInputInst )
             {
                 playerStats.Evade();
+            }
+
+            //Shoot
+            if ( InputManager.ShootInputInst )
+            {
+                playerStats.Shoot();
+            }
+
+            //Attack
+            if ( InputManager.AttackInputInst )
+            {
+                playerStats.Attack();
+            }
+
+            //Assassinate
+            if ( InputManager.AssassinateInputInst )
+            {
+                playerStats.Assassinate();
             }
 
             // base mag grip checks
@@ -108,6 +126,9 @@ public class Player : SimpleCharacterCore
         return new Vector2( this.gameObject.transform.position.x + collider.size.x / 2.0f, this.gameObject.transform.position.y + collider.size.y / 2.0f );
     }
 
+    /// <returns>Whether the player is cloaked or not</returns>
+    public bool IsCloaking() { return playerStats.IsCloaking(); }
+
     /// <summary>
     /// Hits the player
     /// </summary>
@@ -117,6 +138,10 @@ public class Player : SimpleCharacterCore
         playerStats.Hit( damage );
     }
 
+
+    /// <summary>
+    /// Kills the player
+    /// </summary>
     public void Kill()
     {
         //this is for things like dropping off a cliff, not damage-based death

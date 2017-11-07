@@ -33,6 +33,15 @@ public abstract class IInputManager : MonoBehaviour
     public bool EvadeInput;
     public bool EvadeInputInst;
 
+    public bool AttackInput;
+    public bool AttackInputInst;
+
+    public bool AssassinateInput;
+    public bool AssassinateInputInst;
+
+    public bool ShootInput;
+    public bool ShootInputInst;
+
     protected float RunAxis;
     public bool RunInput;
     public bool RunInputDownInst;
