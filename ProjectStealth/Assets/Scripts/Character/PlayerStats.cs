@@ -18,11 +18,16 @@ public class PlayerStats : MonoBehaviour
     private float ShieldRegenerationTime = 4.0f; // 25% per second
     #endregion
 
+    public float Energy = 100.0f;
+
     #region Evade
+    private bool EvadeEnqueued = false;
+    public float EvadeCost = 20.0f;
+
     private bool IsEvading = false;
 
     private bool isEvadeWindingUp = false;
-    private float EvadeWindupTime = 0.15f;
+    private float EvadeWindupTime = 0.10f;
     private float EvadeWindupCounter = 0.0f;
 
     private bool Invincible = false;
@@ -30,7 +35,7 @@ public class PlayerStats : MonoBehaviour
     private float InvincibilityCounter = 0.0f;
 
     private bool isEvadeRecovering = false;
-    private float EvadeRecoveryTime = 0.15f;
+    private float EvadeRecoveryTime = 0.10f;
     private float EvadeRecoveryCounter = 0.15f;
     #endregion
 
@@ -75,7 +80,22 @@ public class PlayerStats : MonoBehaviour
     /// </summary>
     public void Evade()
     {
-        if ( IsEvading ) { return; } // no grace period / enqueue
+        if ( IsEvading )
+        {
+            // enqueue if within grace period
+            if ( isEvadeRecovering )
+            {
+                EvadeEnqueued = true;
+            }
+            else if ( Invincible )
+            {
+                if ( InvincibilityTime - InvincibilityCounter <= 0.1f ) { EvadeEnqueued = true; }
+            }
+
+            return;
+        }
+
+        if ( Energy <= EvadeCost ) { return; } // insufficient resources. play sound?
 
         // check if stuck in a non-cancellable animation
 
@@ -86,6 +106,8 @@ public class PlayerStats : MonoBehaviour
         InvincibilityCounter = 0.0f;
         isEvadeRecovering = false;
         EvadeRecoveryCounter = 0.0f;
+
+        Energy -= EvadeCost;
 
         // differences for aerial evasion / ground evasion?
         // animate
@@ -105,6 +127,7 @@ public class PlayerStats : MonoBehaviour
 
     void Start()
     {
+        EvadeEnqueued = false;
         Invincible = false;
         WasHitThisFrame = false;
         Health = HealthMax;
@@ -176,6 +199,12 @@ public class PlayerStats : MonoBehaviour
             {
                 isEvadeRecovering = false;
                 IsEvading = false;
+
+                if ( EvadeEnqueued )
+                {
+                    EvadeEnqueued = false;
+                    Evade();
+                }
             }
         }
         #endregion

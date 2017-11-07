@@ -32,7 +32,7 @@ public class PlayerFocalPoint: MonoBehaviour
             }
         }
         else if (charStats.CurrentMasterState == CharEnums.MasterState.defaultState && charStats.FacingDirection == -1 || 
-            charStats.CurrentMasterState == CharEnums.MasterState.climbState && charStats.FacingDirection == 1)
+                 charStats.CurrentMasterState == CharEnums.MasterState.climbState && charStats.FacingDirection == 1)
         {
             if (focalPointSlider > 0.0f)
             {
