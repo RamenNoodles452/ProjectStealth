@@ -11,7 +11,7 @@ public class KillBox : MonoBehaviour
 	// Use this for initialization
 	void Start ()
     {
-        player = GameObject.Find("PlayerCharacter").GetComponent<Player>(); //bad
+        player = Referencer.Instance.player; //GameObject.Find("PlayerCharacter").GetComponent<Player>(); //bad
         boundBox = this.gameObject.GetComponent<BoxCollider2D>();
 	}
 	
@@ -39,7 +39,7 @@ public class KillBox : MonoBehaviour
         else
         {
             Debug.Log( "Player went outside the map." );
-            //player.Kill(); //may need to specify animation
+            player.Kill(); //may need to specify animation
         }
 	}
 }

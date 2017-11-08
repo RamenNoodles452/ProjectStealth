@@ -22,7 +22,7 @@ public class UIScript : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        player = GameObject.Find("PlayerCharacter").GetComponent<Player>();
+        player = Referencer.Instance.player; //GameObject.Find("PlayerCharacter").GetComponent<Player>(); //bad
     }
 
     // Update is called once per frame

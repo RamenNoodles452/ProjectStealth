@@ -10,6 +10,11 @@ public class CameraMovement : MonoBehaviour
 
     private BoxCollider2D boundingBox;
 
+    private void Awake()
+    {
+        FocalTarget = GameObject.Find("CameraFocalPoint").transform;
+    }
+
     // Use this for initialization
     void Start ()
     {
@@ -72,5 +77,10 @@ public class CameraMovement : MonoBehaviour
             transform.position = Vector3.SmoothDamp( transform.position, destination, ref velocity, DampTime );
         }
         
+    }
+
+    public void SnapToFocalPoint()
+    {
+        transform.position = FocalTarget.position;
     }
 }

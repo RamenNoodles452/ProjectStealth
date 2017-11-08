@@ -3,13 +3,13 @@ using System.Collections;
 
 public class PlayerStats : MonoBehaviour
 {
-    // random values
+    #region vars
     public float Health;
     public float HealthMax = 1.0f;
 
-    #region shield
-    public float Shield;
-    public float ShieldMax = 10.0f;
+    #region Shield
+    private float Shield;
+    private float ShieldMax = 100.0f;
 
     private bool WasHitThisFrame;
     private bool IsRegenerating;
@@ -18,8 +18,14 @@ public class PlayerStats : MonoBehaviour
     private float ShieldRegenerationTime = 4.0f; // 25% per second
     #endregion
 
-    public float Energy = 100.0f;
-    public float EnergyMax = 100.0f;
+    #region Energy
+    private bool IsEnergyRegenerating;
+    private float Energy = 100.0f;
+    private float EnergyMax = 100.0f;
+    //private float EnergyRegenerationDelay = 0.0f;
+    //private float EnergyDelayCounter = 0.0f;
+    private float EnergyRegenerationTime = 4.0f; // 25% per second
+    #endregion
 
     #region Evade
     private bool EvadeEnqueued = false;
@@ -40,14 +46,20 @@ public class PlayerStats : MonoBehaviour
     private float EvadeRecoveryCounter = 0.15f;
     #endregion
 
-    #region cloak
+    #region Cloak
     private bool IsCloaked = false;
-    private const float CloakCost = 5.0f;
-    private const float CloakDrainPerSecond = 10.0f; //9.5s
+    private const float CloakCost = 35.0f;
+    private const float CloakDrainPerSecond = 6.5f; //10s
+    //TODO: may need to put a CD on cloak to prevent spamming if regen makes even huge cost spammable.
+    // Just change input mapping to require a couple seconds of sneaking in place.
     #endregion
 
     // progress values
     public bool AquiredMagGrip;
+
+    // checkpointing
+    public Vector2 checkpoint;
+    #endregion
 
     #region stat accessors
     // I don't like having accessors phony encapsulation, but we'll keep things together
@@ -78,6 +90,16 @@ public class PlayerStats : MonoBehaviour
     #endregion
 
     /// <summary>
+    /// Sets location to respawn at
+    /// </summary>
+    /// <param name="coordinates">coordinates</param>
+    public void SetCheckpoint( Vector2 coordinates )
+    {
+        checkpoint = coordinates;
+        Debug.Log( "Checkpoint!: " + coordinates );
+    }
+
+    /// <summary>
     /// Does damage to the player's health / shields
     /// </summary>
     /// <param name="damage">the amount of damage</param>
@@ -104,12 +126,60 @@ public class PlayerStats : MonoBehaviour
         {
             Health = Mathf.Max( Health - damage, 0.0f );
             if ( Health <= 0.0f )
-            { 
+            {
                 // kill
+                Respawn(); //TODO: put an ani and delay on this
             }
         }
     }
 
+    /// <summary>
+    /// Respawns the player at the last checkpoint. Also, resets the level.
+    /// </summary>
+    public void Respawn()
+    {
+        // TODO: reach into gamestate and force reset enemies.
+
+        // Teleport to checkpoint
+        // value type
+        /*if ( checkpoint == null )
+        {
+            // find and set a default checkpoint?
+            Debug.LogError( "Player died without a checkpoint set!" );
+        }
+        else*/
+        //{
+        this.gameObject.transform.position = new Vector3( checkpoint.x, checkpoint.y, this.gameObject.transform.position.z );
+        //}
+
+        // Reset stats
+        ResetState();
+    }
+
+    /// <summary>
+    /// Reset state to prevent bugs when changing levels / respawning (may need to split into 2)
+    /// Also refill resources
+    /// </summary>
+    private void ResetState()
+    {
+        EvadeEnqueued = false;
+        Invincible = false;
+        IsCloaked = false;
+        WasHitThisFrame = false;
+
+        Health = HealthMax;
+        Shield = ShieldMax;
+
+        // TODO: interrupt everything, stop animations, reset all that
+
+        // reset movement
+        CharacterStats charStats = this.gameObject.GetComponent<CharacterStats>();
+        charStats.Velocity = new Vector2( 0.0f, 0.0f );
+    }
+
+    /// <summary>
+    /// Fire weapon
+    /// </summary>
     public void Shoot()
     {
         if ( isEvading ) { return; } // no shooting mid-evade
@@ -121,6 +191,9 @@ public class PlayerStats : MonoBehaviour
         if ( IsCloaked ) { IsCloaked = false; } // attacking breaks stealth
     }
 
+    /// <summary>
+    /// Light, fast attack combo
+    /// </summary>
     public void Attack()
     {
         if ( isEvading ) { return; } // no attacking mid-evade
@@ -132,6 +205,9 @@ public class PlayerStats : MonoBehaviour
         //tag enemies for auto aim
     }
 
+    /// <summary>
+    /// Heavy attack / insta kill
+    /// </summary>
     public void Assassinate()
     {
         if ( isEvading ) { return; } // no assassinating mid-evade
@@ -206,6 +282,10 @@ public class PlayerStats : MonoBehaviour
         {
             Energy = Energy - CloakCost;
         }
+        else
+        {
+            return;
+        }
 
         IsCloaked = true;
         //animate
@@ -233,18 +313,17 @@ public class PlayerStats : MonoBehaviour
         InvincibilityCounter = 0.0f;
     }
 
+    /// <summary>
+    /// Initialization upon level entry
+    /// </summary>
     void Start()
     {
-        // Reset state to prevent bugs when changing levels
-        EvadeEnqueued = false;
-        Invincible = false;
-        IsCloaked = false;
-        WasHitThisFrame = false;
-
-        Health = HealthMax;
-        Shield = ShieldMax;
+        ResetState();
     }
 
+    /// <summary>
+    /// Timer stuff that gets checked every frame
+    /// </summary>
     void Update()
     {
         #region timers
@@ -330,6 +409,18 @@ public class PlayerStats : MonoBehaviour
             }
         }
         #endregion
+
+        #region Energy
+        IsEnergyRegenerating = true;
+
+        if ( IsCloaked || isEvading ) { IsEnergyRegenerating = false; }
+        //if ( IsShooting || IsAttacking || IsAssassinating ) { IsEnergyRegenerating = false; }
+
+        if ( IsEnergyRegenerating )
+        {
+            Energy = Mathf.Min( Energy + ( EnergyMax / EnergyRegenerationTime ) * Time.deltaTime * TimeScale.timeScale, EnergyMax );
+        }
+        #endregion
         #endregion
 
         // Cheat codes
@@ -337,9 +428,13 @@ public class PlayerStats : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.M))
         {
             if (AquiredMagGrip)
+            {
                 AquiredMagGrip = false;
+            }
             else
+            { 
                 AquiredMagGrip = true;
+            }
         }
     }
 	

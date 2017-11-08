@@ -4,12 +4,26 @@ using System;
 
 public class Player : SimpleCharacterCore
 {
+    #region vars
     // Player Modules
-	private PlayerStats playerStats;
+    private PlayerStats playerStats;
     private MagGripUpgrade magGrip;
+    #endregion
 
     void Awake ()
 	{
+        if ( Referencer.Instance == null )
+        {
+            DontDestroyOnLoad(this.gameObject); // Persist across scene changes
+        }
+        else if (Referencer.Instance.player != this && Referencer.Instance.player != null)
+        {
+            Destroy( this.gameObject ); // NO CLONES!
+        }
+        else
+        { 
+            DontDestroyOnLoad(this.gameObject); // Persist across scene changes
+        }
 	}
 
 	public override void Start ()
@@ -151,6 +165,15 @@ public class Player : SimpleCharacterCore
     public float GetEnergyMax() { return playerStats.GetEnergyMax(); }
 
     /// <summary>
+    /// Saves checkpoint location to respawn at.
+    /// </summary>
+    /// <param name="coordinates">Coordinates</param>
+    public void SetCheckpoint( Vector2 coordinates )
+    {
+        playerStats.SetCheckpoint( coordinates );
+    }
+
+    /// <summary>
     /// Hits the player
     /// </summary>
     /// <param name="damage">The amount of damage</param>
@@ -165,6 +188,8 @@ public class Player : SimpleCharacterCore
     /// </summary>
     public void Kill()
     {
-        //this is for things like dropping off a cliff, not damage-based death
+        //this is for things like dropping off a cliff, not damage-based death (that's handled in PlayerStats)
+        //TODO: put an ani and delay on this
+        playerStats.Respawn();
     }
 }
