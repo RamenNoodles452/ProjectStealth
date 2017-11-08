@@ -71,6 +71,12 @@ public class Player : SimpleCharacterCore
                 playerStats.Assassinate();
             }
 
+            //Cloak
+            if ( InputManager.CloakInputInst )
+            {
+                playerStats.Cloak();
+            }
+
             // base mag grip checks
             if (playerStats.AquiredMagGrip)
             {
@@ -142,7 +148,7 @@ public class Player : SimpleCharacterCore
     public float GetEnergy() { return playerStats.GetEnergy(); }
 
     /// <returns>The player's maximum amount of energy</returns>
-    public float GetEnergyMax() { return playerStats.GetEnergy(); }
+    public float GetEnergyMax() { return playerStats.GetEnergyMax(); }
 
     /// <summary>
     /// Hits the player

@@ -55,17 +55,20 @@ public class UserInputManager : IInputManager
             if ( Input.GetButtonDown("Attack") ) { AttackInputInst = true; }
             else { AttackInputInst = false; }
 
-            //defunct: needs input setup
             if ( Input.GetButton("Assassinate") ) { AssassinateInput = true; }
             else { AssassinateInput = false; }
             if ( Input.GetButtonDown("Assassinate") ) { AssassinateInputInst = true; }
             else { AssassinateInputInst = false; }
 
-            //defunct: needs input setup
             if ( Input.GetButton("Shoot") ) { ShootInput = true; }
             else { ShootInput = false; }
             if ( Input.GetButtonDown("Shoot") ) { ShootInputInst = true; }
             else { ShootInputInst = false; }
+
+            if (Input.GetButton("Cloak")) { CloakInput = true; }
+            else { CloakInput = false; }
+            if (Input.GetButtonDown("Cloak")) { CloakInputInst = true; }
+            else { CloakInputInst = false; }
 
             if ( Input.GetButton("Evade") ) { EvadeInput = true; }
             else { EvadeInput = false; }

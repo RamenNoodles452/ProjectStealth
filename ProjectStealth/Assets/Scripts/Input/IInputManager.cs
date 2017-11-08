@@ -42,6 +42,9 @@ public abstract class IInputManager : MonoBehaviour
     public bool ShootInput;
     public bool ShootInputInst;
 
+    public bool CloakInput;
+    public bool CloakInputInst;
+
     protected float RunAxis;
     public bool RunInput;
     public bool RunInputDownInst;
@@ -49,4 +52,5 @@ public abstract class IInputManager : MonoBehaviour
 
     public bool InteractInput;
     public bool InteractInputInst;
+
 }

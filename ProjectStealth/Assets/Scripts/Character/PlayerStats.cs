@@ -197,7 +197,7 @@ public class PlayerStats : MonoBehaviour
     /// </summary>
     public void Cloak()
     {
-        if ( IsCloaked ) { return; }
+        if ( IsCloaked ) { return; } // Decloak?
 
         // check if unlocked
         // animation lock checks?
