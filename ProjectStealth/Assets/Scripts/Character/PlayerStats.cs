@@ -19,12 +19,13 @@ public class PlayerStats : MonoBehaviour
     #endregion
 
     public float Energy = 100.0f;
+    public float EnergyMax = 100.0f;
 
     #region Evade
     private bool EvadeEnqueued = false;
     public float EvadeCost = 20.0f;
 
-    private bool IsEvading = false;
+    private bool isEvading = false;
 
     private bool isEvadeWindingUp = false;
     private float EvadeWindupTime = 0.10f;
@@ -47,6 +48,34 @@ public class PlayerStats : MonoBehaviour
 
     // progress values
     public bool AquiredMagGrip;
+
+    #region stat accessors
+    // I don't like having accessors phony encapsulation, but we'll keep things together
+
+    /// <returns>The player's current amount of shields</returns>
+    public float GetShields()
+    {
+        return Shield;
+    }
+
+    /// <returns>The player's maximum amount of shields</returns>
+    public float GetShieldsMax()
+    {
+        return ShieldMax;
+    }
+
+    /// <returns>The player's current amount of energy</returns>
+    public float GetEnergy()
+    {
+        return Energy;
+    }
+
+    /// <returns>The player's maximum amount of energy</returns>
+    public float GetEnergyMax()
+    {
+        return EnergyMax;
+    }
+    #endregion
 
     /// <summary>
     /// Does damage to the player's health / shields
@@ -83,7 +112,7 @@ public class PlayerStats : MonoBehaviour
 
     public void Shoot()
     {
-        if ( IsEvading ) { return; } // no shooting mid-evade
+        if ( isEvading ) { return; } // no shooting mid-evade
         //animation lock checks?
 
         //make noise?
@@ -94,7 +123,7 @@ public class PlayerStats : MonoBehaviour
 
     public void Attack()
     {
-        if ( IsEvading ) { return; } // no attacking mid-evade
+        if ( isEvading ) { return; } // no attacking mid-evade
         //animation lock checks?
 
         if ( IsCloaked ) { IsCloaked = false; } // attacking breaks stealth
@@ -105,7 +134,7 @@ public class PlayerStats : MonoBehaviour
 
     public void Assassinate()
     {
-        if ( IsEvading ) { return; } // no assassinating mid-evade
+        if ( isEvading ) { return; } // no assassinating mid-evade
         //animation lock checks?
 
         //need to be positioned
@@ -120,7 +149,7 @@ public class PlayerStats : MonoBehaviour
     /// </summary>
     public void Evade()
     {
-        if ( IsEvading )
+        if ( isEvading )
         {
             // enqueue if within grace period
             if ( isEvadeRecovering )
@@ -139,7 +168,7 @@ public class PlayerStats : MonoBehaviour
 
         // check if stuck in a non-cancellable animation
 
-        IsEvading = true;
+        isEvading = true;
         isEvadeWindingUp = true;
         EvadeWindupCounter = 0.0f;
         Invincible = false;
@@ -154,6 +183,12 @@ public class PlayerStats : MonoBehaviour
         // movement? collision mask changes?
 
         //return true/false? based on abort / already evading / stuck in recovery / resource insuffiency / success
+    }
+
+    /// <returns>Whether the player is evading or not</returns>
+    public bool IsEvading()
+    {
+        return isEvading;
     }
 
     #region Cloak
@@ -274,7 +309,7 @@ public class PlayerStats : MonoBehaviour
             if ( EvadeRecoveryCounter >= EvadeRecoveryTime )
             {
                 isEvadeRecovering = false;
-                IsEvading = false;
+                isEvading = false;
 
                 if ( EvadeEnqueued )
                 {

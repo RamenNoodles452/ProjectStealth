@@ -129,6 +129,21 @@ public class Player : SimpleCharacterCore
     /// <returns>Whether the player is cloaked or not</returns>
     public bool IsCloaking() { return playerStats.IsCloaking(); }
 
+    /// <returns>Whether the player is evading or not</returns>
+    public bool IsEvading() { return playerStats.IsEvading(); }
+
+    /// <returns>The player's current amount of shields</returns>
+    public float GetShields() {  return playerStats.GetShields(); }
+
+    /// <returns>The player's maximum amount of shields</returns>
+    public float GetShieldsMax() {  return playerStats.GetShieldsMax(); }
+
+    /// <returns>The player's current amount of energy</returns>
+    public float GetEnergy() { return playerStats.GetEnergy(); }
+
+    /// <returns>The player's maximum amount of energy</returns>
+    public float GetEnergyMax() { return playerStats.GetEnergy(); }
+
     /// <summary>
     /// Hits the player
     /// </summary>
