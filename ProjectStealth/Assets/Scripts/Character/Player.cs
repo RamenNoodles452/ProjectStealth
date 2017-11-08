@@ -12,6 +12,8 @@ public class Player : SimpleCharacterCore
 
     void Awake ()
 	{
+        playerStats = GetComponent<PlayerStats>();
+
         if ( Referencer.Instance == null )
         {
             DontDestroyOnLoad(this.gameObject); // Persist across scene changes
@@ -36,7 +38,6 @@ public class Player : SimpleCharacterCore
         RUN_SPEED = 4.5f;
         charStats.CurrentMoveState = CharEnums.MoveState.isSneaking;
 
-		playerStats = GetComponent<PlayerStats>();
         magGrip = GetComponent<MagGripUpgrade>();
 	}
 
@@ -170,6 +171,11 @@ public class Player : SimpleCharacterCore
     /// <param name="coordinates">Coordinates</param>
     public void SetCheckpoint( Vector2 coordinates )
     {
+        if ( playerStats == null )
+        {
+            Debug.Log( "Player stats accessed before available." );
+            return;
+        }
         playerStats.SetCheckpoint( coordinates );
     }
 

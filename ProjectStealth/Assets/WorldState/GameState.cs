@@ -67,7 +67,8 @@ public class GameState : MonoBehaviour
         if ( Referencer.Instance.player == null ) { return; } // initial load (causes invalid respawn)
         if ( warpPosition == Vector3.zero)                    // initial load
         {
-            Referencer.Instance.player.SetCheckpoint( new Vector2( Referencer.Instance.player.gameObject.transform.position.x, Referencer.Instance.player.gameObject.transform.position.y ) );
+            Vector2 checkpointCoordinates = new Vector2( Referencer.Instance.player.gameObject.transform.position.x, Referencer.Instance.player.gameObject.transform.position.y );
+            Referencer.Instance.player.SetCheckpoint( checkpointCoordinates );
         }
         else
         { 
