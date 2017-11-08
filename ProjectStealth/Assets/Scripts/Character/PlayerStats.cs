@@ -326,6 +326,12 @@ public class PlayerStats : MonoBehaviour
     /// </summary>
     void Update()
     {
+        // Death
+        if ( Health <= 0.0f )
+        {
+            Respawn(); //TODO: if this takes >1 frame, need state tracking.
+        }
+
         #region timers
         #region shield
         // Shield regeneration
