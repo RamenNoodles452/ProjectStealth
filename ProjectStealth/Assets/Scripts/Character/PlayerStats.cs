@@ -192,8 +192,8 @@ public class PlayerStats : MonoBehaviour
         //use silencer meter / shooting when cloaked makes no noise
         GameObject noiseObj = GameObject.Instantiate( NoisePrefab, this.gameObject.transform.position, Quaternion.identity );
         Noise noise = noiseObj.GetComponent<Noise>();
-        noise.lifetime = 0.05f; // seconds
-        noise.radius = 100.0f;
+        noise.lifetime = 0.25f; // seconds
+        noise.radius = 200.0f;
 
         if ( IsCloaked ) { IsCloaked = false; } // attacking breaks stealth
     }
