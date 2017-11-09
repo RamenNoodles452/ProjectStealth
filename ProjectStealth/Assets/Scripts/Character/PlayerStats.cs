@@ -59,6 +59,9 @@ public class PlayerStats : MonoBehaviour
 
     // checkpointing
     public Vector2 checkpoint;
+
+    // Noise Prefab: Set in Editor
+    public GameObject NoisePrefab;
     #endregion
 
     #region stat accessors
@@ -187,6 +190,10 @@ public class PlayerStats : MonoBehaviour
 
         //make noise?
         //use silencer meter / shooting when cloaked makes no noise
+        GameObject noiseObj = GameObject.Instantiate( NoisePrefab, this.gameObject.transform.position, Quaternion.identity );
+        Noise noise = noiseObj.GetComponent<Noise>();
+        noise.lifetime = 0.05f; // seconds
+        noise.radius = 100.0f;
 
         if ( IsCloaked ) { IsCloaked = false; } // attacking breaks stealth
     }

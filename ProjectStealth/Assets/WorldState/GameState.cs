@@ -53,7 +53,8 @@ public class GameState : MonoBehaviour
     {
         warpPosition = new Vector3( warpCoordinates.x, warpCoordinates.y, 0.0f );
         SceneManager.LoadScene(levelName); // TODO: check that levelname is not the same as current level?
-        Referencer.Instance.RemoveAllEnemies();
+
+        Referencer.Instance.PrepareToChangeScenes(); // Destroy references about to be invalidated
     }
 
     /// <summary>
@@ -81,6 +82,5 @@ public class GameState : MonoBehaviour
                 cameraMovement.SnapToFocalPoint();
             }
         }
-        //TODO: snap main camera + set focus point
     }
 }
