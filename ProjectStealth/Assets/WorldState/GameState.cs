@@ -11,6 +11,8 @@ public class GameState : MonoBehaviour
     //TODO: insantiate the player object within GameState
     //public CharacterStatus PlayerState;
     private Vector3 warpPosition;
+
+    public bool IsRedAlert = false;
     #endregion
 
     void Awake ()

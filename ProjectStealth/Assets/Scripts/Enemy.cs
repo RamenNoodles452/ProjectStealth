@@ -44,6 +44,7 @@ public class Enemy : MonoBehaviour
                 // Detected!
                 // TODO: if available, set investigation mode
                 Debug.Log( "Sound detected!" );
+                GameState.Instance.IsRedAlert = true; // test
             }
         }
     }
