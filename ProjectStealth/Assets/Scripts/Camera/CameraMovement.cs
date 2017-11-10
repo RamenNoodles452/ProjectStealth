@@ -79,6 +79,9 @@ public class CameraMovement : MonoBehaviour
         
     }
 
+    /// <summary>
+    /// Instantly centers the camera on the focus target
+    /// </summary>
     public void SnapToFocalPoint()
     {
         transform.position = FocalTarget.position;

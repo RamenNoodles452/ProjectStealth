@@ -10,8 +10,8 @@ public class Referencer : MonoBehaviour
     public static Referencer Instance;
 
     public Player player;
-    //TODO: enemies: register on creation
 
+    public List<GameObject> enemies = new List<GameObject>();
     public List<Noise> noises = new List<Noise>();
     #endregion
 
@@ -41,6 +41,9 @@ public class Referencer : MonoBehaviour
         player = GameObject.Find("PlayerCharacter").GetComponent<Player>();
     }
 
+    /// <summary>
+    /// Should be called before unloading a scene
+    /// </summary>
     public void PrepareToChangeScenes()
     {
         RemoveAllEnemies();
@@ -51,32 +54,38 @@ public class Referencer : MonoBehaviour
     /// Removes all references to enemies.
     /// To be called before loading a new scene.
     /// </summary>
-    public void RemoveAllEnemies()
+    private void RemoveAllEnemies()
     {
-        //TODO:
+        enemies.RemoveAll( AllEnemies );
     }
 
-    private static bool AllEnemies( GameObject enemy )
-    {
-        return true;
-    }
+    /// <summary>
+    /// Search matching predicate function for removing all enemies
+    /// </summary>
+    /// <param name="enemy"></param>
+    /// <returns>True, always</returns>
+    private static bool AllEnemies( GameObject enemy ) { return true; }
 
     /// <summary>
     /// Adds a reference to an enemy.
     /// To be called by each enemy on awake when a scene is loaded.
     /// </summary>
     /// <param name="enemy">The enemy to cache a reference to</param>
-    public void AddEnemy(GameObject enemy)
+    public void RegisterEnemy(GameObject enemy)
     {
-        //TODO:
+        enemies.Add( enemy );
     }
 
     public void RemoveEnemy( GameObject enemy )
     {
-        //TODO:
+        enemies.Remove( enemy );
     }
 
-    public void RemoveAllNoises()
+    /// <summary>
+    /// Removes all references to noises.
+    /// To be called before loading a new scene.
+    /// </summary>
+    private void RemoveAllNoises()
     {
         noises.RemoveAll( AllNoise );
     }
@@ -86,12 +95,9 @@ public class Referencer : MonoBehaviour
     /// </summary>
     /// <param name="noise"></param>
     /// <returns>True, always</returns>
-    private static bool AllNoise( Noise noise )
-    {
-        return true;
-    }
+    private static bool AllNoise( Noise noise ) { return true; }
 
-    public void AddNoise( Noise noise )
+    public void RegisterNoise( Noise noise )
     {
         //TODO: return true/false?
         noises.Add( noise );

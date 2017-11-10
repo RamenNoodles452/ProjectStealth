@@ -22,7 +22,7 @@ public class Enemy : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        Referencer.Instance.AddEnemy( this.gameObject );
+        Referencer.Instance.RegisterEnemy( this.gameObject );
     }
 
     // Update is called once per frame
@@ -30,10 +30,13 @@ public class Enemy : MonoBehaviour
     {
 
         // if you're not already on alert...
-        NoiseCheck();
+        Listen();
     }
 
-    private void NoiseCheck()
+    /// <summary>
+    /// Detect noise caused by the player
+    /// </summary>
+    private void Listen()
     {
         if ( ! canHear ) { return; }
 
