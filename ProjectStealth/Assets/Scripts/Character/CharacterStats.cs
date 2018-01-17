@@ -29,7 +29,7 @@ public class CharacterStats : MonoBehaviour
 
 	public bool OnTheGround = false;
     [HideInInspector]
-    public bool IsJumping = false;
+    public bool IsJumping = false; //this is specifically for applying SimpleCharacterCore.JUMP_VERTICAL_SPEED to the character. is set to false once the character stops ascending
     [HideInInspector]
     public bool JumpTurned = false;
     [HideInInspector]
@@ -38,6 +38,9 @@ public class CharacterStats : MonoBehaviour
     // Taking cover vars
     public Collider2D IsTouchingVaultObstacle = null;
     public bool IsTakingCover = false;
+
+    // Crouching vars
+    public bool IsCrouching = false;
 
     // bezier curve vars for getting up ledges and jumping over cover
     [HideInInspector]
@@ -63,5 +66,17 @@ public class CharacterStats : MonoBehaviour
     {
         IsJumping = false;
         JumpTurned = false;
+    }
+
+    public void CrouchingHitBox()
+    {
+        CharCollider.size = CROUCHING_COLLIDER_SIZE;
+        CharCollider.offset = CROUCHING_COLLIDER_OFFSET;
+    }
+
+    public void StandingHitBox()
+    {
+        CharCollider.size = STANDING_COLLIDER_SIZE;
+        CharCollider.offset = STANDING_COLLIDER_OFFSET;
     }
 }

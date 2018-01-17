@@ -6,6 +6,7 @@ public class MagGripUpgrade : MonoBehaviour
     private SpriteRenderer spriteRenderer;
     private IInputManager inputManager;
     private GenericMovementLib movLib;
+    private CharacterAnimationLogic charAnims;
     
 
 	//this allows us to reference player stuff like their movement state
@@ -44,7 +45,9 @@ public class MagGripUpgrade : MonoBehaviour
         charStats = GetComponent<CharacterStats>();
         inputManager = GetComponent<IInputManager>();
         movLib = GetComponent<GenericMovementLib>();
-	}
+        charAnims = GetComponent<CharacterAnimationLogic>();
+
+    }
 	
 	// Update is called once per frame
 	void Update() 
@@ -170,6 +173,7 @@ public class MagGripUpgrade : MonoBehaviour
                 charStats.IsJumping = true;
                 charStats.JumpInputTime = 0.0f;
                 charStats.FacingDirection = -charStats.FacingDirection;
+                charAnims.JumpTrigger();
                 if (charStats.FacingDirection == 1)
                     charStats.CharacterAccel = JUMP_ACCEL;
                 else

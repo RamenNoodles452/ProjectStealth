@@ -9,7 +9,7 @@ public class TakeCoverAction : MonoBehaviour
     /// If an obstacle has the variable "IsCover" in the CollisionType script, you can vault over it
     /// 
     /// CharacterStats Vars:
-    /// IsTakingCOver
+    /// IsTakingCover
     /// </summary>
 
     private CharacterStats charStats;
@@ -39,7 +39,7 @@ public class TakeCoverAction : MonoBehaviour
                 if (charStats.IsTakingCover == false)
                 {
                     charStats.IsTakingCover = true;
-                    UpdateCollisions();
+                    charStats.CrouchingHitBox();
                 }
             }
         }
@@ -49,26 +49,8 @@ public class TakeCoverAction : MonoBehaviour
             if (charStats.IsTakingCover)
             {
                 charStats.IsTakingCover = false;
-                UpdateCollisions();
+                charStats.StandingHitBox();
             }
         }
-    }
-
-    /// <summary>
-    /// When taking cover, the collider will be cut in half to reflect the crouching position
-    /// </summary>
-    void UpdateCollisions()
-    {
-        if (charStats.IsTakingCover)
-        {
-            charStats.CharCollider.size = charStats.CROUCHING_COLLIDER_SIZE;
-            charStats.CharCollider.offset = charStats.CROUCHING_COLLIDER_OFFSET;
-        }
-        else
-        {
-            charStats.CharCollider.size = charStats.STANDING_COLLIDER_SIZE;
-            charStats.CharCollider.offset = charStats.STANDING_COLLIDER_OFFSET;
-        }
-
     }
 }
