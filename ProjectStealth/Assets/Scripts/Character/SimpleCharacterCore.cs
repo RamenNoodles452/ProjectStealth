@@ -4,6 +4,7 @@ using System.Collections;
 public class SimpleCharacterCore : MonoBehaviour
 {
     protected CharacterStats charStats;
+    protected CharacterAnimationLogic charAnims;
 
     protected int previousFacingDirection = 1;
     private SpriteRenderer spriteRenderer;
@@ -50,6 +51,7 @@ public class SimpleCharacterCore : MonoBehaviour
     {
 		charStats = GetComponent<CharacterStats>();
         InputManager = GetComponent<IInputManager>();
+        charAnims = GetComponent<CharacterAnimationLogic>();
 
         // character sprite is now a child object. If a chracter sprite has multiple child sprite tho, this might break
         spriteRenderer = GetComponent<SpriteRenderer>();
@@ -107,46 +109,53 @@ public class SimpleCharacterCore : MonoBehaviour
     {
         if(charStats.OnTheGround)
         {
-            //movement stuff
-            if (charStats.CurrentMoveState == CharEnums.MoveState.isWalking)
-                charStats.Velocity.x = charStats.WALK_SPEED * InputManager.HorizontalAxis;
-            else if (charStats.CurrentMoveState == CharEnums.MoveState.isSneaking)
+            if (charStats.IsCrouching)
             {
-                // if current speed is greater than sneak speed, then decel to sneak speed.
-                if(Mathf.Abs(charStats.Velocity.x) > charStats.SNEAK_SPEED)
-                {
-                    if (charStats.Velocity.x > 0.0f)
-                        charStats.Velocity.x = charStats.Velocity.x - DRAG * Time.deltaTime * TimeScale.timeScale;
-                    else if (charStats.Velocity.x < 0.0f)
-                        charStats.Velocity.x = charStats.Velocity.x + DRAG * Time.deltaTime * TimeScale.timeScale;
-                }
-                else
-                {
-                    charStats.Velocity.x = charStats.SNEAK_SPEED * InputManager.HorizontalAxis;
-                }
+                charStats.Velocity.x = 0.0f;
             }
-            else if (charStats.CurrentMoveState == CharEnums.MoveState.isRunning)
-            {   
-                //smooth damp to 0 if there's no directional input for running or if you're trying to run the opposite direction
-                if (charStats.CharacterAccel == 0.0f || (charStats.CharacterAccel < 0.0f && charStats.Velocity.x > 0.0f) || (charStats.CharacterAccel > 0.0f && charStats.Velocity.x < 0.0f))
+            else
+            {
+                //movement stuff
+                if (charStats.CurrentMoveState == CharEnums.MoveState.isWalking)
+                    charStats.Velocity.x = charStats.WALK_SPEED * InputManager.HorizontalAxis;
+                else if (charStats.CurrentMoveState == CharEnums.MoveState.isSneaking)
                 {
+                    // if current speed is greater than sneak speed, then decel to sneak speed.
                     if (Mathf.Abs(charStats.Velocity.x) > charStats.SNEAK_SPEED)
                     {
-                        //print("SKID BOIS");
                         if (charStats.Velocity.x > 0.0f)
                             charStats.Velocity.x = charStats.Velocity.x - DRAG * Time.deltaTime * TimeScale.timeScale;
-                        else if(charStats.Velocity.x < 0.0f)
+                        else if (charStats.Velocity.x < 0.0f)
                             charStats.Velocity.x = charStats.Velocity.x + DRAG * Time.deltaTime * TimeScale.timeScale;
                     }
                     else
                     {
-                        charStats.Velocity.x = 0.0f;
+                        charStats.Velocity.x = charStats.SNEAK_SPEED * InputManager.HorizontalAxis;
                     }
                 }
-                else
-                    charStats.Velocity.x = charStats.Velocity.x + charStats.CharacterAccel * Time.deltaTime * TimeScale.timeScale;
+                else if (charStats.CurrentMoveState == CharEnums.MoveState.isRunning)
+                {
+                    //smooth damp to 0 if there's no directional input for running or if you're trying to run the opposite direction
+                    if (charStats.CharacterAccel == 0.0f || (charStats.CharacterAccel < 0.0f && charStats.Velocity.x > 0.0f) || (charStats.CharacterAccel > 0.0f && charStats.Velocity.x < 0.0f))
+                    {
+                        if (Mathf.Abs(charStats.Velocity.x) > charStats.SNEAK_SPEED)
+                        {
+                            //print("SKID BOIS");
+                            if (charStats.Velocity.x > 0.0f)
+                                charStats.Velocity.x = charStats.Velocity.x - DRAG * Time.deltaTime * TimeScale.timeScale;
+                            else if (charStats.Velocity.x < 0.0f)
+                                charStats.Velocity.x = charStats.Velocity.x + DRAG * Time.deltaTime * TimeScale.timeScale;
+                        }
+                        else
+                        {
+                            charStats.Velocity.x = 0.0f;
+                        }
+                    }
+                    else
+                        charStats.Velocity.x = charStats.Velocity.x + charStats.CharacterAccel * Time.deltaTime * TimeScale.timeScale;
 
-                charStats.Velocity.x = Mathf.Clamp(charStats.Velocity.x, -charStats.RUN_SPEED, charStats.RUN_SPEED);
+                    charStats.Velocity.x = Mathf.Clamp(charStats.Velocity.x, -charStats.RUN_SPEED, charStats.RUN_SPEED);
+                }
             }
         }
         else
@@ -214,6 +223,7 @@ public class SimpleCharacterCore : MonoBehaviour
             else
             {
                 charStats.IsJumping = false;
+                charAnims.FallTrigger();
             }
         }
 
@@ -221,6 +231,7 @@ public class SimpleCharacterCore : MonoBehaviour
         if (charStats.JumpTurned && charStats.Velocity.y > 0.0f)
         {
             charStats.IsJumping = false;
+            charAnims.FallTrigger();
         }
 
         charStats.Velocity.y = Mathf.Clamp(charStats.Velocity.y, -MAX_VERTICAL_SPEED, MAX_VERTICAL_SPEED);
@@ -531,12 +542,14 @@ public class SimpleCharacterCore : MonoBehaviour
             {
                 //trigger fallthrough
                 fallthrough = true;
+                charAnims.FallTrigger();
             }
             else
             {
                 charStats.IsJumping = true;
                 jumpGracePeriod = false;
                 charStats.JumpInputTime = 0.0f;
+                charAnims.JumpTrigger();
             }
         }
     }
