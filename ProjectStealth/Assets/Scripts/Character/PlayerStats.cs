@@ -44,6 +44,12 @@ public class PlayerStats : MonoBehaviour
     private bool isEvadeRecovering = false;
     private float EvadeRecoveryTime = 0.10f;
     private float EvadeRecoveryCounter = 0.15f;
+
+	//TODO: evade speed in direction, backstep from neutral (2 states here) chord with direction
+	// aerial 4 directional dodge movement (no iframes)
+	// sliders for total time, windup time, i frames (not for aerial), recovery time / skip for enqueued windup, speed in pixels per second.
+	// disable normal movement when dodging
+	// don't collide with enemies while dodging
     #endregion
 
     #region Cloak
@@ -52,6 +58,14 @@ public class PlayerStats : MonoBehaviour
     private const float CloakDrainPerSecond = 6.5f; //10s
     //TODO: may need to put a CD on cloak to prevent spamming if regen makes even huge cost spammable.
     // Just change input mapping to require a couple seconds of sneaking in place.
+    #endregion
+
+    #region silencer
+    // Not sure if this should be consolidated with stealth / UI needs simplification here....
+    // Potentially concerning
+    private float silencer = 0.0f;
+    private float silencerMax = 3.0f;
+    private float silencerRegen = 1.0f;
     #endregion
 
     // progress values
@@ -190,12 +204,24 @@ public class PlayerStats : MonoBehaviour
 
         //make noise?
         //use silencer meter / shooting when cloaked makes no noise
-        GameObject noiseObj = GameObject.Instantiate( NoisePrefab, this.gameObject.transform.position, Quaternion.identity );
-        Noise noise = noiseObj.GetComponent<Noise>();
-        noise.lifetime = 0.25f; // seconds
-        noise.radius = 200.0f;
+        if ( silencer >= 1.0f )
+        {
+            // Suppressed shot
+            silencer -= 1.0f;
+        }
+        else
+        { 
+            // Go loud
+            GameObject noiseObj = GameObject.Instantiate( NoisePrefab, this.gameObject.transform.position, Quaternion.identity );
+            Noise noise = noiseObj.GetComponent<Noise>();
+            noise.lifetime = 0.25f; // seconds
+            noise.radius = 200.0f;
+        }
 
-        if ( IsCloaked ) { IsCloaked = false; } // attacking breaks stealth
+        if ( IsCloaked ) { IsCloaked = false; } // attacking breaks stealth (even silenced?)
+
+        // Actually fire bullets
+        // Start with closest tagged enemies (if any)?
     }
 
     /// <summary>
@@ -421,6 +447,10 @@ public class PlayerStats : MonoBehaviour
                 IsCloaked = false;
             }
         }
+        #endregion
+
+        #region Silencer
+        silencer = Mathf.Min( silencer + silencerRegen * Time.deltaTime * TimeScale.timeScale, silencerMax );
         #endregion
 
         #region Energy
