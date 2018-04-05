@@ -76,6 +76,9 @@ public class PlayerStats : MonoBehaviour
 
     // Noise Prefab: Set in Editor
     public GameObject NoisePrefab;
+
+	private CharacterStats charStats;
+	private float walkAnimationTimer;
     #endregion
 
     #region stat accessors
@@ -105,6 +108,14 @@ public class PlayerStats : MonoBehaviour
         return EnergyMax;
     }
     #endregion
+
+	/// <summary>
+	/// Sets the animation timer for noise generation when the player starts walking
+	/// </summary>
+	public void StartWalking()
+	{
+		walkAnimationTimer = 0.15f;
+	}
 
     /// <summary>
     /// Sets location to respawn at
@@ -190,7 +201,7 @@ public class PlayerStats : MonoBehaviour
         // TODO: interrupt everything, stop animations, reset all that
 
         // reset movement
-        CharacterStats charStats = this.gameObject.GetComponent<CharacterStats>();
+        charStats = this.gameObject.GetComponent<CharacterStats>();
         charStats.Velocity = new Vector2( 0.0f, 0.0f );
     }
 
@@ -464,6 +475,29 @@ public class PlayerStats : MonoBehaviour
             Energy = Mathf.Min( Energy + ( EnergyMax / EnergyRegenerationTime ) * Time.deltaTime * TimeScale.timeScale, EnergyMax );
         }
         #endregion
+
+		#region Walking
+		if ( charStats.CurrentMoveState == CharEnums.MoveState.isWalking || charStats.CurrentMoveState == CharEnums.MoveState.isRunning )
+		{
+			walkAnimationTimer += Time.deltaTime; // t_scale SHOULD be respected?
+			if ( walkAnimationTimer >= 0.35f )
+			{
+				walkAnimationTimer -= 0.35f;
+				// make noise
+				GameObject noiseObj = GameObject.Instantiate( NoisePrefab, this.gameObject.transform.position + new Vector3( 0.0f, -20.0f, 0.0f ), Quaternion.identity );
+				Noise noise = noiseObj.GetComponent<Noise>();
+				noise.lifetime = 0.2f; // seconds
+				if ( charStats.CurrentMoveState == CharEnums.MoveState.isWalking )
+				{
+				  noise.radius = 25.0f;
+				}
+				else if ( charStats.CurrentMoveState == CharEnums.MoveState.isRunning )
+				{
+					noise.radius = 50.0f;
+				}
+			}
+		}
+		#endregion
         #endregion
 
         // Cheat codes

@@ -512,8 +512,12 @@ public class SimpleCharacterCore : MonoBehaviour
         {
             // if the character comes to a full stop, let them start the run again
             // This also works when turning around
-            if (charStats.Velocity.x == 0.0f)
-                startRun = true;
+			if (charStats.Velocity.x == 0.0f) 
+			{
+				startRun = true;
+				PlayerStats playerStats = GetComponent<PlayerStats> ();
+				playerStats.StartWalking ();
+			}
 
             // running automatically starts at the sneaking speed and accelerates from there
             if (startRun == true && InputManager.HorizontalAxis > 0 && Mathf.Abs(charStats.Velocity.x) < charStats.SNEAK_SPEED)
