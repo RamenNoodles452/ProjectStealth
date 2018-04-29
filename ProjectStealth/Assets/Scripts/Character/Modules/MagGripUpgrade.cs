@@ -189,6 +189,7 @@ public class MagGripUpgrade : MonoBehaviour
                 if (grabCollider.bounds.min.y == charStats.CharCollider.bounds.min.y)
                 {
                     StopClimbing();
+                    charAnims.DropFromWallTrigger();
                 }
                 // if we're looking above
                 else if (grabCollider.bounds.max.y == charStats.CharCollider.bounds.max.y)
@@ -232,6 +233,11 @@ public class MagGripUpgrade : MonoBehaviour
         charStats.CurrentMasterState = CharEnums.MasterState.defaultState;
     }
 
+    /// <summary>
+    /// This function sets up the BZR curve that actually moves the character around ledge corners
+    /// </summary>
+    /// <param name="startingState"></param>
+    /// <param name="climbObject"></param>
     void SetupLedgeClimb(ClimbState startingState, Collider2D climbObject = null)
     {
         grabCollider = climbObject;
@@ -248,17 +254,18 @@ public class MagGripUpgrade : MonoBehaviour
         {
             if (charStats.FacingDirection == 1)
             {
-                charStats.BzrEndPosition = new Vector2(climbObject.bounds.max.x - charStats.CharCollider.offset.x + charStats.CharCollider.bounds.extents.x + 0.01f, climbObject.bounds.max.y - charStats.CharCollider.offset.y - charStats.CharCollider.bounds.extents.y);
+                charStats.BzrEndPosition = new Vector2(climbObject.bounds.max.x - charStats.CharCollider.offset.x + charStats.CharCollider.bounds.extents.x + 0.01f, climbObject.bounds.max.y - charStats.CharCollider.offset.y - charStats.STANDING_COLLIDER_SIZE.y);
                 charStats.BzrCurvePosition = new Vector2(charStats.CharCollider.bounds.center.x + charStats.CharCollider.bounds.extents.x * 2, charStats.CharCollider.bounds.center.y + charStats.CharCollider.size.y);
             }
             else
             {
-                charStats.BzrEndPosition = new Vector2(climbObject.bounds.min.x - charStats.CharCollider.offset.x - charStats.CharCollider.bounds.extents.x - 0.01f, climbObject.bounds.max.y - charStats.CharCollider.offset.y - charStats.CharCollider.bounds.extents.y);
+                charStats.BzrEndPosition = new Vector2(climbObject.bounds.min.x - charStats.CharCollider.offset.x - charStats.CharCollider.bounds.extents.x - 0.01f, climbObject.bounds.max.y - charStats.CharCollider.offset.y - charStats.STANDING_COLLIDER_SIZE.y);
                 charStats.BzrCurvePosition = new Vector2(charStats.CharCollider.bounds.center.x - charStats.CharCollider.bounds.extents.x * 2, charStats.CharCollider.bounds.center.y + charStats.CharCollider.size.y);
             }
             transitioningToState = ClimbState.wallClimb;
             charStats.FacingDirection = -charStats.FacingDirection;
             playerScript.SetFacing();
+            charAnims.WallClimbTrigger();
         }
         else if (startingState == ClimbState.wallClimb)
         {
@@ -273,6 +280,7 @@ public class MagGripUpgrade : MonoBehaviour
                 charStats.BzrCurvePosition = new Vector2(charStats.CharCollider.bounds.center.x + charStats.CharCollider.bounds.extents.x, charStats.CharCollider.bounds.center.y + charStats.CharCollider.size.y * 2);
             }
             transitioningToState = ClimbState.notClimb;
+            charAnims.WallClimbUpTrigger();
         }
         ledgeClimb = true;
     }
@@ -371,6 +379,9 @@ public class MagGripUpgrade : MonoBehaviour
                             charStats.Velocity.x = 0.0f;
                             // assign the grabCollider now that the grab is actually happening
                             grabCollider = collisionObject.GetComponent<Collider2D>();
+
+                            //trigger the signal to start the wall climb animation
+                            charAnims.WallClimbTrigger();
                         }
                     }
                 }

@@ -67,5 +67,40 @@ public class CharacterAnimationLogic : MonoBehaviour
     {
         Anim.SetTrigger("jump_descend");
     }
+
+    public void WallClimbTrigger()
+    {
+        Anim.SetTrigger("wall_grab_trigger");
+    }
+
+    // TODO: hook up wall climb anim
+    public void WallAscend()
+    {
+        if (charStats.CurrentMasterState == CharEnums.MasterState.climbState && charStats.Velocity.y > 0)
+        {
+            Anim.SetBool("wall_ascend", true);
+        }
+        else
+        {
+            Anim.SetBool("wall_ascend", false);
+        }
+    }
+    //TODO: make a wall slide animation
+    public void WallDescend()
+    {
+
+    }
+
+    //triggers when a character dropps from a wall by moving down to the end of the wall and pressing down + jump
+    public void DropFromWallTrigger()
+    {
+       Anim.SetTrigger("drop_from_wall");
+    }
+
+    //triggers when a character climbs up from a wall
+    public void WallClimbUpTrigger()
+    {
+        Anim.SetTrigger("wall_to_ground");
+    }
 }
 
