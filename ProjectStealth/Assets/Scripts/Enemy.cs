@@ -7,7 +7,7 @@ using UnityEngine;
 public class Enemy : MonoBehaviour
 {
     #region vars
-    private bool canHear = true;
+    private bool can_hear = true;
     private float listening_radius = 0.0f;
 
     // snooze, vigilance, investigate, alert, combat
@@ -73,7 +73,7 @@ public class Enemy : MonoBehaviour
     /// </summary>
     private void Listen()
     {
-        if ( ! canHear ) { return; }
+        if ( ! can_hear ) { return; }
 
         foreach ( Noise noise in Referencer.instance.noises )
         {

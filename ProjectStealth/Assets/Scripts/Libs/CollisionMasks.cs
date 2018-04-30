@@ -24,8 +24,8 @@ public static class CollisionMasks
     private static int character_layer = 10;
     public static int character_mask = 1 << character_layer;
 
-    public static int AllCollisionMask = geo_mask | object_mask | character_mask | jump_through_mask;
-    public static int UpwardsCollisionMask = geo_mask | object_mask | character_mask;
-    public static int WallGrabMask = geo_mask;
+    public static int all_collision_mask = geo_mask | object_mask | character_mask | jump_through_mask;
+    public static int upwards_collision_mask = geo_mask | object_mask | character_mask;
+    public static int wall_grab_mask = geo_mask;
 }
 

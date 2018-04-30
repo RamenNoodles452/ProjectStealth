@@ -292,7 +292,7 @@ public class SimpleCharacterCore : MonoBehaviour
                     rightHitOrigin = new Vector2(char_stats.char_collider.bounds.max.x - 0.1f, char_stats.char_collider.bounds.center.y - 5f);
 				}
             }
-            RaycastHit2D rightHit = Physics2D.BoxCast(rightHitOrigin, horizontalBoxSize, 0.0f, Vector2.right, 50.0f, CollisionMasks.UpwardsCollisionMask);
+            RaycastHit2D rightHit = Physics2D.BoxCast(rightHitOrigin, horizontalBoxSize, 0.0f, Vector2.right, 50.0f, CollisionMasks.upwards_collision_mask);
             if (rightHit.collider != null)
             {
                 float rightHitDist = rightHit.distance - 0.05f;
@@ -340,7 +340,7 @@ public class SimpleCharacterCore : MonoBehaviour
 					leftHitOrigin = new Vector2 (char_stats.char_collider.bounds.min.x + 0.1f, char_stats.char_collider.bounds.center.y - 5f);
 				}
             }
-            RaycastHit2D leftHit = Physics2D.BoxCast(leftHitOrigin, horizontalBoxSize, 0.0f, Vector2.left, 50.0f, CollisionMasks.UpwardsCollisionMask);
+            RaycastHit2D leftHit = Physics2D.BoxCast(leftHitOrigin, horizontalBoxSize, 0.0f, Vector2.left, 50.0f, CollisionMasks.upwards_collision_mask);
             if (leftHit.collider != null)
             {
                 float leftHitDist = leftHit.distance - 0.05f;
@@ -379,7 +379,7 @@ public class SimpleCharacterCore : MonoBehaviour
 
         // raycast to hit the ceiling
         Vector2 upHitOrigin = new Vector2(char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.max.y - 0.1f);
-        RaycastHit2D upHit = Physics2D.BoxCast(upHitOrigin, verticalBoxSize, 0.0f, Vector2.up, 50.0f, CollisionMasks.UpwardsCollisionMask);
+        RaycastHit2D upHit = Physics2D.BoxCast(upHitOrigin, verticalBoxSize, 0.0f, Vector2.up, 50.0f, CollisionMasks.upwards_collision_mask);
         if (upHit.collider != null)
         {
             float hitDist = upHit.distance - 0.05f;
@@ -399,7 +399,7 @@ public class SimpleCharacterCore : MonoBehaviour
 
         // raycast to find the floor
         Vector2 downHitOrigin = new Vector2(char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.min.y + 0.1f);
-        RaycastHit2D downHit = Physics2D.BoxCast(downHitOrigin, verticalBoxSize, 0.0f, Vector2.down, 50.0f, CollisionMasks.AllCollisionMask);
+        RaycastHit2D downHit = Physics2D.BoxCast(downHitOrigin, verticalBoxSize, 0.0f, Vector2.down, 50.0f, CollisionMasks.all_collision_mask);
         if (downHit.collider != null)
         {
             float downHitColliderLeft = downHit.collider.bounds.min.x;

@@ -149,7 +149,7 @@ public class MagGripUpgrade : MonoBehaviour
     void ClimbVerticalEdgeDetect()
     {
         // raycast to find the climbing object
-		RaycastHit2D hit = Physics2D.Raycast(char_stats.char_collider.bounds.center, new Vector2(char_stats.GetFacingXComponent(), 0), char_stats.char_collider.bounds.size.x, CollisionMasks.WallGrabMask);
+		RaycastHit2D hit = Physics2D.Raycast(char_stats.char_collider.bounds.center, new Vector2(char_stats.GetFacingXComponent(), 0), char_stats.char_collider.bounds.size.x, CollisionMasks.wall_grab_mask);
         if (hit.collider != null)
         {
             float colliderTop = hit.collider.bounds.max.y;
@@ -219,7 +219,7 @@ public class MagGripUpgrade : MonoBehaviour
                 if (grab_collider.bounds.min.y == char_stats.char_collider.bounds.min.y)
                 {
                     StopClimbing();
-                    charAnims.DropFromWallTrigger();
+                    char_anims.DropFromWallTrigger();
                 }
                 // if we're looking above
                 else if (grab_collider.bounds.max.y == char_stats.char_collider.bounds.max.y)
@@ -329,7 +329,7 @@ public class MagGripUpgrade : MonoBehaviour
         // This is kinda inefficient as it is redundant code from the collision detection...
         Vector2 verticalBoxSize = new Vector2(char_stats.char_collider.bounds.size.x - 0.1f, 0.1f);
         Vector2 downHitOrigin = new Vector2(char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.center.y - char_stats.char_collider.bounds.extents.y + 0.1f);
-        RaycastHit2D downHit = Physics2D.BoxCast(downHitOrigin, verticalBoxSize, 0.0f, Vector2.down, 25.0f, CollisionMasks.AllCollisionMask);
+        RaycastHit2D downHit = Physics2D.BoxCast(downHitOrigin, verticalBoxSize, 0.0f, Vector2.down, 25.0f, CollisionMasks.all_collision_mask);
         if (downHit.collider != null)
         {
             //check the ledge to see if it's tall enough to grab onto
@@ -416,7 +416,7 @@ public class MagGripUpgrade : MonoBehaviour
                             // assign the grab_collider now that the grab is actually happening
                             grab_collider = collisionObject.GetComponent<Collider2D>();
                             //trigger the signal to start the wall climb animation
-                            charAnims.WallClimbTrigger();
+                            char_anims.WallClimbTrigger();
                         }
                     }
                 }
