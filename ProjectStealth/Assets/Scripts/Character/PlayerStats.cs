@@ -4,46 +4,46 @@ using System.Collections;
 public class PlayerStats : MonoBehaviour
 {
     #region vars
-    public float Health;
-    public float HealthMax = 1.0f;
+    public float health;
+    public float health_max = 1.0f;
 
     #region Shield
-    private float Shield;
-    private float ShieldMax = 100.0f;
+    private float shield;
+    private float shield_max = 100.0f;
 
-    private bool WasHitThisFrame;
-    private bool IsRegenerating;
-    private float ShieldRegenerationDelay = 2.0f;
-    private float ShieldDelayCounter = 0.0f;
-    private float ShieldRegenerationTime = 4.0f; // 25% per second
+    private bool was_hit_this_frame;
+    private bool is_regenerating;
+    private float SHIELD_REGENERATION_DELAY = 2.0f;
+    private float shield_delay_counter = 0.0f;
+    private float shield_regeneration_time = 4.0f; // 25% per second
     #endregion
 
     #region Energy
-    private bool IsEnergyRegenerating;
-    private float Energy = 100.0f;
-    private float EnergyMax = 100.0f;
+    private bool is_energy_regenerating;
+    private float energy = 100.0f;
+    private float energy_max = 100.0f;
     //private float EnergyRegenerationDelay = 0.0f;
     //private float EnergyDelayCounter = 0.0f;
-    private float EnergyRegenerationTime = 4.0f; // 25% per second
+    private float energy_regeneration_time = 4.0f; // 25% per second
     #endregion
 
     #region Evade
-    private bool EvadeEnqueued = false;
-    public float EvadeCost = 20.0f;
+    private bool evade_enqueued = false;
+    public float EVADE_COST = 20.0f;
 
-    private bool isEvading = false;
+    private bool is_evading = false;
 
-    private bool isEvadeWindingUp = false;
-    private float EvadeWindupTime = 0.10f;
-    private float EvadeWindupCounter = 0.0f;
+    private bool is_evade_winding_up = false;
+    private float EVADE_WINDUP_TIME = 0.10f;
+    private float evade_windup_counter = 0.0f;
 
-    private bool Invincible = false;
-    private float InvincibilityTime = 0.65f;
-    private float InvincibilityCounter = 0.0f;
+    private bool invincible = false;
+    private float INVINCIBILITY_TIME = 0.65f;
+    private float invincibility_counter = 0.0f;
 
-    private bool isEvadeRecovering = false;
-    private float EvadeRecoveryTime = 0.10f;
-    private float EvadeRecoveryCounter = 0.15f;
+    private bool is_evade_recovering = false;
+    private float EVADE_RECOVERY_TIME = 0.10f;
+    private float evade_recovery_counter = 0.15f;
 
 	//TODO: evade speed in direction, backstep from neutral (2 states here) chord with direction
 	// aerial 4 directional dodge movement (no iframes)
@@ -53,9 +53,9 @@ public class PlayerStats : MonoBehaviour
     #endregion
 
     #region Cloak
-    private bool IsCloaked = false;
-    private const float CloakCost = 35.0f;
-    private const float CloakDrainPerSecond = 6.5f; //10s
+    private bool is_cloaked = false;
+    private const float CLOAK_COST = 35.0f;
+    private const float CLOAK_DRAIN_PER_SECOND = 6.5f; //10s
     //TODO: may need to put a CD on cloak to prevent spamming if regen makes even huge cost spammable.
     // Just change input mapping to require a couple seconds of sneaking in place.
     #endregion
@@ -64,21 +64,21 @@ public class PlayerStats : MonoBehaviour
     // Not sure if this should be consolidated with stealth / UI needs simplification here....
     // Potentially concerning
     private float silencer = 0.0f;
-    private float silencerMax = 3.0f;
-    private float silencerRegen = 1.0f;
+    private float silencer_max = 3.0f;
+    private float silencer_regen = 1.0f;
     #endregion
 
     // progress values
-    public bool AquiredMagGrip;
+    public bool acquired_mag_grip;
 
     // checkpointing
     public Vector2 checkpoint;
 
     // Noise Prefab: Set in Editor
-    public GameObject NoisePrefab;
+    public GameObject noise_prefab;
 
-	private CharacterStats charStats;
-	private float walkAnimationTimer;
+	private CharacterStats char_stats;
+	private float walk_animation_timer;
     #endregion
 
     #region stat accessors
@@ -87,25 +87,25 @@ public class PlayerStats : MonoBehaviour
     /// <returns>The player's current amount of shields</returns>
     public float GetShields()
     {
-        return Shield;
+        return shield;
     }
 
     /// <returns>The player's maximum amount of shields</returns>
     public float GetShieldsMax()
     {
-        return ShieldMax;
+        return shield_max;
     }
 
     /// <returns>The player's current amount of energy</returns>
     public float GetEnergy()
     {
-        return Energy;
+        return energy;
     }
 
     /// <returns>The player's maximum amount of energy</returns>
     public float GetEnergyMax()
     {
-        return EnergyMax;
+        return energy_max;
     }
     #endregion
 
@@ -114,7 +114,7 @@ public class PlayerStats : MonoBehaviour
 	/// </summary>
 	public void StartWalking()
 	{
-		walkAnimationTimer = 0.15f;
+		walk_animation_timer = 0.15f;
 	}
 
     /// <summary>
@@ -133,27 +133,27 @@ public class PlayerStats : MonoBehaviour
     /// <param name="damage">the amount of damage</param>
     public void Hit( float damage )
     {
-        if ( Invincible )
+        if ( invincible )
         {
             return;
         }
 
         // Interrupt shield recharge
-        WasHitThisFrame = true;
+        was_hit_this_frame = true;
 
         // Deal damage
-        if ( Shield > 0.0f )
+        if ( shield > 0.0f )
         {
-            Shield = Mathf.Max( Shield - damage, 0.0f );
-            if ( Shield <= 0.0f )
+            shield = Mathf.Max( shield - damage, 0.0f );
+            if ( shield <= 0.0f )
             {
                 // shield break
             }
         }
         else
         {
-            Health = Mathf.Max( Health - damage, 0.0f );
-            if ( Health <= 0.0f )
+            health = Mathf.Max( health - damage, 0.0f );
+            if ( health <= 0.0f )
             {
                 // kill
                 Respawn(); //TODO: put an ani and delay on this
@@ -190,19 +190,19 @@ public class PlayerStats : MonoBehaviour
     /// </summary>
     private void ResetState()
     {
-        EvadeEnqueued = false;
-        Invincible = false;
-        IsCloaked = false;
-        WasHitThisFrame = false;
+        evade_enqueued = false;
+        invincible = false;
+        is_cloaked = false;
+        was_hit_this_frame = false;
 
-        Health = HealthMax;
-        Shield = ShieldMax;
+        health = health_max;
+        shield = shield_max;
 
         // TODO: interrupt everything, stop animations, reset all that
 
         // reset movement
-        charStats = this.gameObject.GetComponent<CharacterStats>();
-        charStats.Velocity = new Vector2( 0.0f, 0.0f );
+        char_stats = this.gameObject.GetComponent<CharacterStats>();
+        char_stats.velocity = new Vector2( 0.0f, 0.0f );
     }
 
     /// <summary>
@@ -210,7 +210,7 @@ public class PlayerStats : MonoBehaviour
     /// </summary>
     public void Shoot()
     {
-        if ( isEvading ) { return; } // no shooting mid-evade
+        if ( is_evading ) { return; } // no shooting mid-evade
         //animation lock checks?
 
         //make noise?
@@ -223,13 +223,13 @@ public class PlayerStats : MonoBehaviour
         else
         { 
             // Go loud
-            GameObject noiseObj = GameObject.Instantiate( NoisePrefab, this.gameObject.transform.position, Quaternion.identity );
-            Noise noise = noiseObj.GetComponent<Noise>();
+            GameObject noise_obj = GameObject.Instantiate( noise_prefab, this.gameObject.transform.position, Quaternion.identity );
+            Noise noise = noise_obj.GetComponent<Noise>();
             noise.lifetime = 0.25f; // seconds
             noise.radius = 200.0f;
         }
 
-        if ( IsCloaked ) { IsCloaked = false; } // attacking breaks stealth (even silenced?)
+        if ( is_cloaked ) { is_cloaked = false; } // attacking breaks stealth (even silenced?)
 
         // Actually fire bullets
         // Start with closest tagged enemies (if any)?
@@ -240,10 +240,10 @@ public class PlayerStats : MonoBehaviour
     /// </summary>
     public void Attack()
     {
-        if ( isEvading ) { return; } // no attacking mid-evade
+        if ( is_evading ) { return; } // no attacking mid-evade
         //animation lock checks?
 
-        if ( IsCloaked ) { IsCloaked = false; } // attacking breaks stealth
+        if ( is_cloaked ) { is_cloaked = false; } // attacking breaks stealth
 
         //enqueueing? + comboing
         //tag enemies for auto aim
@@ -254,12 +254,12 @@ public class PlayerStats : MonoBehaviour
     /// </summary>
     public void Assassinate()
     {
-        if ( isEvading ) { return; } // no assassinating mid-evade
+        if ( is_evading ) { return; } // no assassinating mid-evade
         //animation lock checks?
 
         //need to be positioned
         //look at enemy positions
-        if ( IsCloaked ) { IsCloaked = false; } // attacking breaks stealth
+        if ( is_cloaked ) { is_cloaked = false; } // attacking breaks stealth
 
         //enqueueing?
     }
@@ -269,34 +269,34 @@ public class PlayerStats : MonoBehaviour
     /// </summary>
     public void Evade()
     {
-        if ( isEvading )
+        if ( is_evading )
         {
             // enqueue if within grace period
-            if ( isEvadeRecovering )
+            if ( is_evade_recovering )
             {
-                EvadeEnqueued = true;
+                evade_enqueued = true;
             }
-            else if ( Invincible )
+            else if ( invincible )
             {
-                if ( InvincibilityTime - InvincibilityCounter <= 0.1f ) { EvadeEnqueued = true; }
+                if ( INVINCIBILITY_TIME - invincibility_counter <= 0.1f ) { evade_enqueued = true; }
             }
 
             return;
         }
 
-        if ( Energy <= EvadeCost ) { return; } // insufficient resources. play sound?
+        if ( energy < EVADE_COST ) { return; } // insufficient resources. play sound?
 
         // check if stuck in a non-cancellable animation
 
-        isEvading = true;
-        isEvadeWindingUp = true;
-        EvadeWindupCounter = 0.0f;
-        Invincible = false;
-        InvincibilityCounter = 0.0f;
-        isEvadeRecovering = false;
-        EvadeRecoveryCounter = 0.0f;
+        is_evading = true;
+        is_evade_winding_up = true;
+        evade_windup_counter = 0.0f;
+        invincible = false;
+        invincibility_counter = 0.0f;
+        is_evade_recovering = false;
+        evade_recovery_counter = 0.0f;
 
-        Energy -= EvadeCost;
+        energy -= EVADE_COST;
 
         // differences for aerial evasion / ground evasion?
         // animate
@@ -308,7 +308,7 @@ public class PlayerStats : MonoBehaviour
     /// <returns>Whether the player is evading or not</returns>
     public bool IsEvading()
     {
-        return isEvading;
+        return is_evading;
     }
 
     #region Cloak
@@ -317,21 +317,21 @@ public class PlayerStats : MonoBehaviour
     /// </summary>
     public void Cloak()
     {
-        if ( IsCloaked ) { return; } // Decloak?
+        if ( is_cloaked ) { return; } // Decloak?
 
         // check if unlocked
         // animation lock checks?
 
-        if ( Energy >= CloakCost )
+        if ( energy >= CLOAK_COST )
         {
-            Energy = Energy - CloakCost;
+            energy = energy - CLOAK_COST;
         }
         else
         {
             return;
         }
 
-        IsCloaked = true;
+        is_cloaked = true;
         //animate
     }
 
@@ -340,12 +340,12 @@ public class PlayerStats : MonoBehaviour
     /// </summary>
     public void Decloak()
     {
-        IsCloaked = false;
+        is_cloaked = false;
         //animate
     }
 
     /// <returns>Whether the player is currently cloaked or not</returns>
-    public bool IsCloaking() { return IsCloaked; }
+    public bool IsCloaking() { return is_cloaked; }
     #endregion
 
     /// <summary>
@@ -353,8 +353,8 @@ public class PlayerStats : MonoBehaviour
     /// </summary>
     private void StartIFrames()
     {
-        Invincible = true;
-        InvincibilityCounter = 0.0f;
+        invincible = true;
+        invincibility_counter = 0.0f;
     }
 
     /// <summary>
@@ -371,7 +371,7 @@ public class PlayerStats : MonoBehaviour
     void Update()
     {
         // Death
-        if ( Health <= 0.0f )
+        if ( health <= 0.0f )
         {
             Respawn(); //TODO: if this takes >1 frame, need state tracking.
         }
@@ -379,70 +379,70 @@ public class PlayerStats : MonoBehaviour
         #region timers
         #region shield
         // Shield regeneration
-        if ( WasHitThisFrame )
+        if ( was_hit_this_frame )
         {
-            WasHitThisFrame = false;
-            IsRegenerating = false;
-            ShieldDelayCounter = 0.0f;
+            was_hit_this_frame = false;
+            is_regenerating = false;
+            shield_delay_counter = 0.0f;
         }
 
-        if ( IsRegenerating )
+        if ( is_regenerating )
         {
             // Regenerate to full
-            Shield = Mathf.Min( Shield + ( ShieldMax / ShieldRegenerationTime ) * Time.deltaTime * TimeScale.timeScale, ShieldMax );
-            if ( Shield == ShieldMax )
+            shield = Mathf.Min( shield + ( shield_max / shield_regeneration_time ) * Time.deltaTime * TimeScale.timeScale, shield_max );
+            if ( shield == shield_max )
             {
-                IsRegenerating = false;
+                is_regenerating = false;
             }
         }
-        else if ( Shield < ShieldMax )
+        else if ( shield < shield_max )
         {
             // Delay before regen begins
-            ShieldDelayCounter += Time.deltaTime * TimeScale.timeScale;
-            if ( ShieldDelayCounter >= ShieldRegenerationDelay )
+            shield_delay_counter += Time.deltaTime * TimeScale.timeScale;
+			if ( shield_delay_counter >= SHIELD_REGENERATION_DELAY )
             {
-                IsRegenerating = true;
+                is_regenerating = true;
                 // play recharge sound?
             }
         }
         #endregion
 
         #region Evade
-        if ( isEvadeWindingUp )
+		if ( is_evade_winding_up )
         {
             //Debug.Log( "Evade windup" );
-            EvadeWindupCounter += Time.deltaTime * TimeScale.timeScale;
-            if ( EvadeWindupCounter >= EvadeWindupTime )
+            evade_windup_counter += Time.deltaTime * TimeScale.timeScale;
+			if ( evade_windup_counter >= EVADE_WINDUP_TIME )
             {
-                isEvadeWindingUp = false;
+                is_evade_winding_up = false;
                 StartIFrames();
             }
         }
 
         // I frames
-        if ( Invincible )
+        if ( invincible )
         {
             //Debug.Log("Evade");
-            InvincibilityCounter += Time.deltaTime * TimeScale.timeScale;
-            if ( InvincibilityCounter >= InvincibilityTime )
+            invincibility_counter += Time.deltaTime * TimeScale.timeScale;
+            if ( invincibility_counter >= INVINCIBILITY_TIME )
             {
-                Invincible = false;
-                isEvadeRecovering = true;
+                invincible = false;
+                is_evade_recovering = true;
             }
         }
 
-        if ( isEvadeRecovering )
+        if ( is_evade_recovering )
         {
             //Debug.Log("Evade recovery");
-            EvadeRecoveryCounter += Time.deltaTime * TimeScale.timeScale;
-            if ( EvadeRecoveryCounter >= EvadeRecoveryTime )
+            evade_recovery_counter += Time.deltaTime * TimeScale.timeScale;
+			if ( evade_recovery_counter >= EVADE_RECOVERY_TIME )
             {
-                isEvadeRecovering = false;
-                isEvading = false;
+                is_evade_recovering = false;
+                is_evading = false;
 
-                if ( EvadeEnqueued )
+                if ( evade_enqueued )
                 {
-                    EvadeEnqueued = false;
+                    evade_enqueued = false;
                     Evade();
                 }
             }
@@ -450,48 +450,49 @@ public class PlayerStats : MonoBehaviour
         #endregion
 
         #region Cloaking
-        if ( IsCloaked )
+        if ( is_cloaked )
         {
-            Energy = Mathf.Max( Energy - CloakDrainPerSecond * Time.deltaTime * TimeScale.timeScale, 0.0f );
-            if ( Energy <= 0.0f )
+			energy = Mathf.Max( energy - CLOAK_DRAIN_PER_SECOND * Time.deltaTime * TimeScale.timeScale, 0.0f );
+            if ( energy <= 0.0f )
             {
-                IsCloaked = false;
+                is_cloaked = false;
             }
         }
         #endregion
 
         #region Silencer
-        silencer = Mathf.Min( silencer + silencerRegen * Time.deltaTime * TimeScale.timeScale, silencerMax );
+        silencer = Mathf.Min( silencer + silencer_regen * Time.deltaTime * TimeScale.timeScale, silencer_max );
         #endregion
 
         #region Energy
-        IsEnergyRegenerating = true;
+        is_energy_regenerating = true;
 
-        if ( IsCloaked || isEvading ) { IsEnergyRegenerating = false; }
+        if ( is_cloaked || is_evading ) { is_energy_regenerating = false; }
         //if ( IsShooting || IsAttacking || IsAssassinating ) { IsEnergyRegenerating = false; }
 
-        if ( IsEnergyRegenerating )
+        if ( is_energy_regenerating )
         {
-            Energy = Mathf.Min( Energy + ( EnergyMax / EnergyRegenerationTime ) * Time.deltaTime * TimeScale.timeScale, EnergyMax );
+            energy = Mathf.Min( energy + ( energy_max / energy_regeneration_time ) * Time.deltaTime * TimeScale.timeScale, energy_max );
         }
         #endregion
 
 		#region Walking
-		if ( charStats.CurrentMoveState == CharEnums.MoveState.isWalking || charStats.CurrentMoveState == CharEnums.MoveState.isRunning )
+		if ( char_stats.IsGrounded && 
+			(char_stats.current_move_state == CharEnums.MoveState.IsWalking || char_stats.current_move_state == CharEnums.MoveState.IsRunning) )
 		{
-			walkAnimationTimer += Time.deltaTime; // t_scale SHOULD be respected?
-			if ( walkAnimationTimer >= 0.35f )
+			walk_animation_timer += Time.deltaTime; // t_scale SHOULD be respected? But also need to update animation to play slower.
+			if ( walk_animation_timer >= 0.35f )
 			{
-				walkAnimationTimer -= 0.35f;
+				walk_animation_timer -= 0.35f;
 				// make noise
-				GameObject noiseObj = GameObject.Instantiate( NoisePrefab, this.gameObject.transform.position + new Vector3( 0.0f, -20.0f, 0.0f ), Quaternion.identity );
-				Noise noise = noiseObj.GetComponent<Noise>();
+				GameObject noise_obj = GameObject.Instantiate( noise_prefab, this.gameObject.transform.position + new Vector3( 0.0f, -20.0f, 0.0f ), Quaternion.identity );
+				Noise noise = noise_obj.GetComponent<Noise>();
 				noise.lifetime = 0.2f; // seconds
-				if ( charStats.CurrentMoveState == CharEnums.MoveState.isWalking )
+				if ( char_stats.current_move_state == CharEnums.MoveState.IsWalking )
 				{
 				  noise.radius = 25.0f;
 				}
-				else if ( charStats.CurrentMoveState == CharEnums.MoveState.isRunning )
+				else if ( char_stats.current_move_state == CharEnums.MoveState.IsRunning )
 				{
 					noise.radius = 50.0f;
 				}
@@ -504,13 +505,13 @@ public class PlayerStats : MonoBehaviour
         // TODO: remove
         if (Input.GetKeyDown(KeyCode.M))
         {
-            if (AquiredMagGrip)
+            if (acquired_mag_grip)
             {
-                AquiredMagGrip = false;
+                acquired_mag_grip = false;
             }
             else
             { 
-                AquiredMagGrip = true;
+                acquired_mag_grip = true;
             }
         }
     }

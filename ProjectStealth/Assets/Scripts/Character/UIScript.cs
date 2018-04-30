@@ -3,18 +3,19 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+// - GabeV
 // Player data tracking UI script
 public class UIScript : MonoBehaviour
 {
     #region vars
     private Player player;
 
-    public GameObject shieldUI;
-    public GameObject energyUI;
-    public GameObject cloakIcon;
-    public GameObject evadeIcon;
+    public GameObject shield_ui;
+    public GameObject energy_ui;
+    public GameObject cloak_icon;
+    public GameObject evade_icon;
 
-    public bool hideAll;
+    public bool hide_all;
     #endregion
 
     // TODO: should probably be non-destroyable, instantiated on load
@@ -22,31 +23,31 @@ public class UIScript : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        player = Referencer.Instance.player; //GameObject.Find("PlayerCharacter").GetComponent<Player>(); //bad
+        player = Referencer.instance.player; //GameObject.Find("PlayerCharacter").GetComponent<Player>(); //bad
     }
 
     // Update is called once per frame
     void Update()
     {
-        shieldUI.GetComponent<Text>().text = "Shields: " + (int)player.GetShields() + " / " + (int)player.GetShieldsMax();
-        energyUI.GetComponent<Text>().text = "Energy: "  + (int)player.GetEnergy() + " / " + (int)player.GetEnergyMax();
+        shield_ui.GetComponent<Text>().text = "Shields: " + (int)player.GetShields() + " / " + (int)player.GetShieldsMax();
+        energy_ui.GetComponent<Text>().text = "Energy: "  + (int)player.GetEnergy() + " / " + (int)player.GetEnergyMax();
 
         if ( player.IsCloaking() )
         {
-            cloakIcon.GetComponent<Text>().enabled = true;
+            cloak_icon.GetComponent<Text>().enabled = true;
         }
         else
         {
-            cloakIcon.GetComponent<Text>().enabled = false;
+            cloak_icon.GetComponent<Text>().enabled = false;
         }
 
         if ( player.IsEvading())
         {
-            evadeIcon.GetComponent<Text>().enabled = true;
+            evade_icon.GetComponent<Text>().enabled = true;
         }
         else
         {
-            evadeIcon.GetComponent<Text>().enabled = false;
+            evade_icon.GetComponent<Text>().enabled = false;
         }
     }
 }

@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class SuitLightPulse : MonoBehaviour 
 {
-	public Light light;
+	public Light light_reference;
 	private float timer;
 
 	// Use this for initialization
@@ -22,7 +22,7 @@ public class SuitLightPulse : MonoBehaviour
 		Color color = this.GetComponent<SpriteRenderer> ().color;
 		color.a = alpha;
 
-		light.intensity = alpha * 5.0f;
+		light_reference.intensity = alpha * 5.0f;
 
 		this.GetComponent<SpriteRenderer> ().color = color;
 	}

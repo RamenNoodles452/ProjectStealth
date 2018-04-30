@@ -9,45 +9,47 @@ public class VaultAction : MonoBehaviour
     /// This module allows a character who is sprinting to automatically vault over low obstacles
     /// Input: (While sprinting) Run into a low obstacle at full speed
     /// </summary>
-    private CharacterStats charStats;
-    private IInputManager inputManager;
-    private GenericMovementLib movLib;
+    private CharacterStats char_stats;
+    private IInputManager input_manager;
+    private GenericMovementLib mov_lib;
 
     private bool vaulting = false;
 
     void Start()
     {
-        charStats = GetComponent<CharacterStats>();
-        inputManager = GetComponent<IInputManager>();
-        movLib = GetComponent<GenericMovementLib>();
+        char_stats = GetComponent<CharacterStats>();
+        input_manager = GetComponent<IInputManager>();
+        mov_lib = GetComponent<GenericMovementLib>();
     }
 
     void Update()
     {
-        if (charStats.IsTakingCover && inputManager.InteractInputInst || charStats.IsTouchingVaultObstacle && charStats.CurrentMoveState == CharEnums.MoveState.isRunning)
+        if (char_stats.is_taking_cover && input_manager.InteractInputInst || char_stats.is_touching_vault_obstacle && char_stats.current_move_state == CharEnums.MoveState.IsRunning)
         {
-            if(charStats.CurrentMoveState == CharEnums.MoveState.isRunning)
-                charStats.CurrentMoveState = CharEnums.MoveState.isSneaking;
-            charStats.CurrentMasterState = CharEnums.MasterState.vaultState;
-            inputManager.InteractInputInst = false;
-            inputManager.InputOverride = true;
+            if(char_stats.current_move_state == CharEnums.MoveState.IsRunning)
+			{
+                char_stats.current_move_state = CharEnums.MoveState.IsSneaking;
+			}
+            char_stats.current_master_state = CharEnums.MasterState.VaultState;
+            input_manager.InteractInputInst = false;
+            input_manager.InputOverride = true;
 
             // translate body to on the ledge
-            charStats.BzrDistance = 0.0f;
-            charStats.BzrStartPosition = (Vector2)charStats.CharCollider.bounds.center - charStats.CharCollider.offset;
-            if (charStats.FacingDirection == 1)
+            char_stats.bezier_distance = 0.0f;
+            char_stats.bezier_start_position = (Vector2)char_stats.char_collider.bounds.center - char_stats.char_collider.offset;
+			if (char_stats.facing_direction == CharEnums.FacingDirection.Right)
             {
-                charStats.BzrEndPosition = new Vector2(charStats.CharCollider.bounds.center.x - charStats.CharCollider.offset.x + 
-                    charStats.IsTouchingVaultObstacle.bounds.size.x + charStats.CharCollider.size.x, 
-                    charStats.CharCollider.bounds.center.y - charStats.CharCollider.offset.y);
+                char_stats.bezier_end_position = new Vector2(char_stats.char_collider.bounds.center.x - char_stats.char_collider.offset.x + 
+					char_stats.is_touching_vault_obstacle.bounds.size.x + char_stats.char_collider.size.x, 
+                    char_stats.char_collider.bounds.center.y - char_stats.char_collider.offset.y);
             }
             else
             {
-                charStats.BzrEndPosition = new Vector2(charStats.CharCollider.bounds.center.x - charStats.CharCollider.offset.x -
-                    charStats.IsTouchingVaultObstacle.bounds.size.x - charStats.CharCollider.size.x,
-                    charStats.CharCollider.bounds.center.y - charStats.CharCollider.offset.y);
+                char_stats.bezier_end_position = new Vector2(char_stats.char_collider.bounds.center.x - char_stats.char_collider.offset.x -
+					char_stats.is_touching_vault_obstacle.bounds.size.x - char_stats.char_collider.size.x,
+                    char_stats.char_collider.bounds.center.y - char_stats.char_collider.offset.y);
             }
-            charStats.BzrCurvePosition = new Vector2(charStats.IsTouchingVaultObstacle.bounds.center.x, charStats.IsTouchingVaultObstacle.bounds.max.y + charStats.CROUCHING_COLLIDER_SIZE.y * 3);
+			char_stats.bezier_curve_position = new Vector2(char_stats.is_touching_vault_obstacle.bounds.center.x, char_stats.is_touching_vault_obstacle.bounds.max.y + char_stats.CROUCHING_COLLIDER_SIZE.y * 3);
             vaulting = true;
         }
     }
@@ -56,15 +58,17 @@ public class VaultAction : MonoBehaviour
     {
         if (vaulting)
         {
-            transform.position = movLib.BezierCurveMovement(charStats.BzrDistance, charStats.BzrStartPosition, charStats.BzrEndPosition, charStats.BzrCurvePosition);
-            if (charStats.BzrDistance < 1.0f)
-                charStats.BzrDistance = charStats.BzrDistance + Time.deltaTime * TimeScale.timeScale * 3.5f;
+            transform.position = mov_lib.BezierCurveMovement(char_stats.bezier_distance, char_stats.bezier_start_position, char_stats.bezier_end_position, char_stats.bezier_curve_position);
+            if (char_stats.bezier_distance < 1.0f)
+			{
+                char_stats.bezier_distance = char_stats.bezier_distance + Time.deltaTime * TimeScale.timeScale * 3.5f;
+			}
             else
             {
                 vaulting = false;
-                charStats.IsTouchingVaultObstacle = null;
-                inputManager.InputOverride = false;
-                charStats.CurrentMasterState = CharEnums.MasterState.defaultState;
+				char_stats.is_touching_vault_obstacle = null;
+                input_manager.InputOverride = false;
+                char_stats.current_master_state = CharEnums.MasterState.DefaultState;
             }
         }
     }

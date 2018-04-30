@@ -7,7 +7,7 @@ using UnityEngine;
 public class Referencer : MonoBehaviour
 {
     #region vars
-    public static Referencer Instance;
+    public static Referencer instance;
 
     public Player player;
 
@@ -20,12 +20,12 @@ public class Referencer : MonoBehaviour
     // Pre-initialization
     private void Awake()
     {
-        if (Instance == null)
+        if (instance == null)
         {
-            Instance = this;
+            instance = this;
             RegisterPlayer();
         }
-        else if (Instance != this)
+        else if (instance != this)
         {
             Debug.LogError("Uh oh! Someone tried to create multiple instances of the master referencer!");
         }

@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// - GabeV
+// Instantiable object to link players to a different level/scene.
 public class LevelWarp : MonoBehaviour
 {
     #region vars
-    public string levelName;
-    public Vector2 warpPosition;
+    public string level_name;
+    public Vector2 warp_position;
     #endregion
 
     // Use this for initialization
@@ -26,7 +28,7 @@ public class LevelWarp : MonoBehaviour
         if ( collision.GetComponent<Player>() != null )
         {
             Debug.Log("Move to another level!");
-            GameState.Instance.WarpToLevel( levelName, warpPosition );
+            GameState.instance.WarpToLevel( level_name, warp_position );
         }
     }
 }

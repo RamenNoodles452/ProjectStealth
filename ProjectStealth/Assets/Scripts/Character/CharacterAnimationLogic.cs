@@ -1,71 +1,79 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+// Reads in character state data from char_stats, and sets/executes animator triggers accordingly.
 public class CharacterAnimationLogic : MonoBehaviour
 {
-    public Animator Anim;
-    protected CharacterStats charStats;
+    public Animator anim;
+    protected CharacterStats char_stats;
 
     // Use this for initialization
     void Start ()
     {
-        Anim = GetComponent<Animator>();
-        charStats = GetComponent<CharacterStats>();
+        anim = GetComponent<Animator>();
+        char_stats = GetComponent<CharacterStats>();
     }
 
     // Update is called once per frame
     void Update ()
     {
-        Anim.SetBool("jumping", !charStats.OnTheGround);
+		anim.SetBool("jumping", char_stats.IsInMidair);
         CoverLogic();
         SneakingLogic();
         CrouchLogic();
-        
 	}
 
-    void SneakingLogic()
+    private void SneakingLogic()
     {
-        if (charStats.OnTheGround == true)
+		if (char_stats.IsGrounded)
         {
             
-            if (charStats.CurrentMoveState == CharEnums.MoveState.isSneaking)
+			if (char_stats.current_move_state == CharEnums.MoveState.IsSneaking)
             {
-                if (charStats.Velocity.x != 0.0f)
+                if (char_stats.velocity.x != 0.0f)
                 {
-                    Anim.SetBool("sneaking", true);
+                    anim.SetBool("sneaking", true);
                 }
                 else
                 {
-                    Anim.SetBool("sneaking", false);
+                    anim.SetBool("sneaking", false);
                 }
             }
         }
     }
 
-    void CoverLogic()
+    private void CoverLogic()
     {
-        if (charStats.IsTakingCover == false)
-            Anim.SetBool("taking_cover", false);
+		if (char_stats.is_taking_cover == false) 
+		{
+			anim.SetBool ("taking_cover", false);
+		}
         else
-            Anim.SetBool("taking_cover", true);
+		{
+            anim.SetBool("taking_cover", true);
+		}
     }
 
-    void CrouchLogic()
+    private void CrouchLogic()
     {
-        if (charStats.IsCrouching == false)
-            Anim.SetBool("crouching", false);
+		if (char_stats.is_crouching == false) 
+		{
+			anim.SetBool ("crouching", false);
+		}
         else
-            Anim.SetBool("crouching", true);
+		{
+            anim.SetBool("crouching", true);
+		}
     }
 
     public void JumpTrigger()
     {
-        Anim.SetTrigger("jump_ascend");
+        anim.SetTrigger("jump_ascend");
     }
 
     public void FallTrigger()
     {
-        Anim.SetTrigger("jump_descend");
+        anim.SetTrigger("jump_descend");
     }
 }
 

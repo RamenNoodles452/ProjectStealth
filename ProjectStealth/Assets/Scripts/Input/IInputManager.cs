@@ -2,6 +2,8 @@
 using UnityEngine.Events;
 using System.Collections;
 
+//TODO: wrap everything, rename private vars.
+
 /// <summary>
 /// The IInputManager class provides a common interface for mapping input messages to action messages.
 /// Subclasses may inherit this class an invoke action events according to need

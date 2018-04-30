@@ -6,24 +6,24 @@ public class GameState : MonoBehaviour
 {
 
     #region vars
-    public static GameState Instance; // Singleton
+    public static GameState instance; // Singleton
 
     //TODO: insantiate the player object within GameState
     //public CharacterStatus PlayerState;
-    private Vector3 warpPosition;
+    private Vector3 warp_position;
 
-    public bool IsRedAlert = false;
+    public bool is_red_alert = false;
     #endregion
 
     void Awake ()
     {
-        if ( Instance == null )
+        if ( instance == null )
         {
             //Debug.Log("Creating a new instance of the GameState");
             DontDestroyOnLoad( this.gameObject ); // Persist across Scenes
-            Instance = this;
+            instance = this;
         }
-		else if ( Instance != this )
+		else if ( instance != this )
         {
             Debug.LogWarning("Attempted to create two GameState instances - destroying");
             Destroy(gameObject);
@@ -51,12 +51,12 @@ public class GameState : MonoBehaviour
     /// </summary>
     /// <param name="levelName">The scene name of the level</param>
     /// <param name="warpCoordinates">The x and y coordinates to place the player (centerpoint) in the new level</param>
-    public void WarpToLevel( string levelName, Vector2 warpCoordinates )
+    public void WarpToLevel( string level_name, Vector2 warp_coordinates )
     {
-        warpPosition = new Vector3( warpCoordinates.x, warpCoordinates.y, 0.0f );
-        SceneManager.LoadScene(levelName); // TODO: check that levelname is not the same as current level?
+        warp_position = new Vector3( warp_coordinates.x, warp_coordinates.y, 0.0f );
+        SceneManager.LoadScene(level_name); // TODO: check that levelname is not the same as current level?
 
-        Referencer.Instance.PrepareToChangeScenes(); // Destroy references about to be invalidated
+        Referencer.instance.PrepareToChangeScenes(); // Destroy references about to be invalidated
     }
 
     /// <summary>
@@ -66,17 +66,17 @@ public class GameState : MonoBehaviour
     /// <param name="mode"></param>
     void OnLevelLoaded( Scene scene, LoadSceneMode mode )
     {
-        if ( Referencer.Instance == null ) { return; }        // initial load (causes invalid respawn)
-        if ( Referencer.Instance.player == null ) { return; } // initial load (causes invalid respawn)
-        if ( warpPosition == Vector3.zero)                    // initial load
+        if ( Referencer.instance == null ) { return; }        // initial load (causes invalid respawn)
+        if ( Referencer.instance.player == null ) { return; } // initial load (causes invalid respawn)
+        if ( warp_position == Vector3.zero)                    // initial load
         {
-            Vector2 checkpointCoordinates = new Vector2( Referencer.Instance.player.gameObject.transform.position.x, Referencer.Instance.player.gameObject.transform.position.y );
-            Referencer.Instance.player.SetCheckpoint( checkpointCoordinates );
+            Vector2 checkpointCoordinates = new Vector2( Referencer.instance.player.gameObject.transform.position.x, Referencer.instance.player.gameObject.transform.position.y );
+            Referencer.instance.player.SetCheckpoint( checkpointCoordinates );
         }
         else
         { 
-            Referencer.Instance.player.gameObject.transform.position = warpPosition;
-            Referencer.Instance.player.SetCheckpoint( new Vector2( warpPosition.x, warpPosition.y ) );
+            Referencer.instance.player.gameObject.transform.position = warp_position;
+            Referencer.instance.player.SetCheckpoint( new Vector2( warp_position.x, warp_position.y ) );
             // snap to!
             CameraMovement cameraMovement = Camera.main.GetComponent<CameraMovement>();
             if ( cameraMovement != null )

@@ -18,7 +18,7 @@ public class Noise : MonoBehaviour
     void Start ()
     {
         position = this.gameObject.transform.position;
-        Referencer.Instance.RegisterNoise( this ); // Register, so enemies can interact with it
+        Referencer.instance.RegisterNoise( this ); // Register, so enemies can interact with it
 
         // Initialize line renderer
         LineRenderer lineRenderer = gameObject.AddComponent<LineRenderer>();
@@ -59,7 +59,7 @@ public class Noise : MonoBehaviour
     /// </summary>
     private void CleanUp()
     {
-        Referencer.Instance.RemoveNoise( this );
+        Referencer.instance.RemoveNoise( this );
         GameObject.Destroy( this.gameObject );
     }
 }

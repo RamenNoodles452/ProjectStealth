@@ -10,7 +10,7 @@ public class RedAlertOverlay : MonoBehaviour
     #region vars
     private float alpha;
     private float increment = 1.5f;
-    private bool fadeIn;
+    private bool fade_in;
     private Image image;
     #endregion
 
@@ -25,18 +25,18 @@ public class RedAlertOverlay : MonoBehaviour
 	void Update ()
     {
         // enabled check
-        if ( ! GameState.Instance.IsRedAlert ) { alpha = 0.0f; }
+        if ( ! GameState.instance.is_red_alert ) { alpha = 0.0f; }
         else
         { 
-		    if ( fadeIn )
+		    if ( fade_in )
             {
                 alpha += increment * Time.deltaTime * TimeScale.timeScale;
-                if ( alpha >= 1.0f ) { alpha = 1.0f; fadeIn = false; }
+                if ( alpha >= 1.0f ) { alpha = 1.0f; fade_in = false; }
             }
             else
             {
                 alpha -= increment * Time.deltaTime * TimeScale.timeScale;
-                if ( alpha <= 0.0f ) { alpha = 0.0f; fadeIn = true; }
+                if ( alpha <= 0.0f ) { alpha = 0.0f; fade_in = true; }
             }
         }
 

@@ -1,51 +1,51 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+// Handles wall climbing
 public class MagGripUpgrade : MonoBehaviour 
 {
-    private SpriteRenderer spriteRenderer;
-    private IInputManager inputManager;
-    private GenericMovementLib movLib;
-    private CharacterAnimationLogic charAnims;
+    private SpriteRenderer sprite_renderer;
+    private IInputManager input_manager;
+    private GenericMovementLib mov_lib;
+    private CharacterAnimationLogic char_anims;
     
-
 	//this allows us to reference player stuff like their movement state
-	Player playerScript; //AVOID CIRCULAR REFERENCING
-	PlayerStats playerStats;
-    CharacterStats charStats;
+	Player player_script; //AVOID CIRCULAR REFERENCING
+	PlayerStats player_stats;
+    CharacterStats char_stats;
 
 	private const float WALL_GRAB_DELAY = 0.15f;
-	private float wallGrabDelayTimer = 0.15f;
+	private float wall_grab_delay_timer = 0.15f;
 
     //Mag Grip variables
-    public Collider2D grabCollider = null; //private
-    public enum ClimbState { notClimb, wallClimb, ceilingClimb };
-    public ClimbState currentClimbState = ClimbState.notClimb;
-    private ClimbState transitioningToState = ClimbState.notClimb; // used when bzr curving to a new climb state
-
+	public Collider2D grab_collider; // = null; //private
+    public enum ClimbState { NotClimb, WallClimb, CeilingClimb };
+    public ClimbState current_climb_state = ClimbState.NotClimb;
+    private ClimbState transitioning_to_state = ClimbState.NotClimb; // used when bzr curving to a new climb state
 
     private const float WALL_CLIMB_SPEED = 2.0f;
     private const float WALL_SLIDE_SPEED = 3.0f;
 
+	//TODO: do something about duplicate code
     // ledge logic
-    private bool lookingOverLedge;
-    private bool againstTheLedge;
-    private bool ledgeClimb;
+    private bool is_overlooking_ledge;
+    private bool is_against_ledge;
+    private bool is_climbing_ledge;
 
     //consts
-    protected const float JUMP_ACCEL = 4.0f; //base accel for jump off the wall with no input
+    protected const float JUMP_ACCELERATION = 4.0f; //base accel for jump off the wall with no input
 
 
 	// Use this for initialization
 	void Start () 
 	{
-		playerScript = GetComponent<Player> ();
-        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-		playerStats = GetComponent<PlayerStats>();
-        charStats = GetComponent<CharacterStats>();
-        inputManager = GetComponent<IInputManager>();
-        movLib = GetComponent<GenericMovementLib>();
-        charAnims = GetComponent<CharacterAnimationLogic>();
+		player_script = GetComponent<Player> ();
+        sprite_renderer = GetComponentInChildren<SpriteRenderer>();
+		player_stats = GetComponent<PlayerStats>();
+        char_stats = GetComponent<CharacterStats>();
+        input_manager = GetComponent<IInputManager>();
+        mov_lib = GetComponent<GenericMovementLib>();
+        char_anims = GetComponent<CharacterAnimationLogic>();
 
     }
 	
@@ -53,18 +53,23 @@ public class MagGripUpgrade : MonoBehaviour
 	void Update() 
 	{
         //wall grab delay timer
-        if (wallGrabDelayTimer < WALL_GRAB_DELAY)
-            wallGrabDelayTimer = wallGrabDelayTimer + Time.deltaTime * TimeScale.timeScale;
-        else
-            wallGrabDelayTimer = WALL_GRAB_DELAY;
-        
-        if (charStats.CurrentMasterState == CharEnums.MasterState.climbState) 
+        if (wall_grab_delay_timer < WALL_GRAB_DELAY)
 		{
-            if (currentClimbState == ClimbState.wallClimb)
+            wall_grab_delay_timer = wall_grab_delay_timer + Time.deltaTime * TimeScale.timeScale;
+		}
+        else
+		{
+            wall_grab_delay_timer = WALL_GRAB_DELAY;
+		}
+		
+        
+		if (char_stats.current_master_state == CharEnums.MasterState.ClimbState) 
+		{
+            if (current_climb_state == ClimbState.WallClimb)
             {
                 ClimbMovementInput();
             }
-            else if (currentClimbState == ClimbState.ceilingClimb)
+            else if (current_climb_state == ClimbState.CeilingClimb)
             {
             }
 		}
@@ -72,41 +77,43 @@ public class MagGripUpgrade : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (ledgeClimb)
+        if (is_climbing_ledge)
         {
-            transform.position = movLib.BezierCurveMovement(charStats.BzrDistance, charStats.BzrStartPosition, charStats.BzrEndPosition, charStats.BzrCurvePosition);
-            if (charStats.BzrDistance < 1.0f)
-                charStats.BzrDistance = charStats.BzrDistance + Time.deltaTime * TimeScale.timeScale * 5;
+            transform.position = mov_lib.BezierCurveMovement(char_stats.bezier_distance, char_stats.bezier_start_position, char_stats.bezier_end_position, char_stats.bezier_curve_position);
+            if (char_stats.bezier_distance < 1.0f)
+			{
+                char_stats.bezier_distance = char_stats.bezier_distance + Time.deltaTime * TimeScale.timeScale * 5;
+			}
             else 
             {
-                ledgeClimb = false;
-                currentClimbState = transitioningToState;
-                inputManager.InputOverride = false;
-                if (currentClimbState == ClimbState.notClimb)
+                is_climbing_ledge = false;
+                current_climb_state = transitioning_to_state;
+                input_manager.InputOverride = false;
+                if (current_climb_state == ClimbState.NotClimb)
                 {
-                    lookingOverLedge = false;
-                    againstTheLedge = false;
-                    charStats.CurrentMasterState = CharEnums.MasterState.defaultState;
+                    is_overlooking_ledge = false;
+                    is_against_ledge = false;
+                    char_stats.current_master_state = CharEnums.MasterState.DefaultState;
                 }
             }
         }
-        else if (currentClimbState == ClimbState.wallClimb)
+        else if (current_climb_state == ClimbState.WallClimb)
         {
             ClimbHorizontalVelocity();
             ClimbVerticalVelocity();
-            playerScript.Collisions();
+            player_script.Collisions();
             ClimbVerticalEdgeDetect();
 
             //move the character after all calculations have been done
-            transform.Translate(charStats.Velocity);
+            transform.Translate(char_stats.velocity);
 
             //if you climb down and touch the ground, stop climbing
-            if (charStats.OnTheGround)
+			if (char_stats.IsGrounded)
             {
                 StopClimbing();
             }
         }
-        else if (currentClimbState == ClimbState.ceilingClimb)
+        else if (current_climb_state == ClimbState.CeilingClimb)
         {
 
         }
@@ -114,18 +121,26 @@ public class MagGripUpgrade : MonoBehaviour
 
     void ClimbHorizontalVelocity()
     {
-        if (Mathf.Approximately(charStats.Velocity.x - 1000000, -1000000))
-            charStats.Velocity.x = 0;
+        if (Mathf.Approximately(char_stats.velocity.x - 1000000, -1000000))
+		{
+            char_stats.velocity.x = 0;
+		}
     }
 
     void ClimbVerticalVelocity()
     {
-        if (inputManager.VerticalAxis > 0.0f)
-            charStats.Velocity.y = WALL_CLIMB_SPEED * inputManager.VerticalAxis;
-        else if (inputManager.VerticalAxis < 0.0f)
-            charStats.Velocity.y = -WALL_SLIDE_SPEED;
+        if (input_manager.VerticalAxis > 0.0f)
+		{
+            char_stats.velocity.y = WALL_CLIMB_SPEED * input_manager.VerticalAxis;
+		}
+        else if (input_manager.VerticalAxis < 0.0f)
+		{
+            char_stats.velocity.y = -WALL_SLIDE_SPEED;
+		}
         else
-            charStats.Velocity.y = 0.0f;
+		{
+            char_stats.velocity.y = 0.0f;
+		}
     }
 
     /// <summary>
@@ -134,85 +149,106 @@ public class MagGripUpgrade : MonoBehaviour
     void ClimbVerticalEdgeDetect()
     {
         // raycast to find the climbing object
-        RaycastHit2D hit = Physics2D.Raycast(charStats.CharCollider.bounds.center, new Vector2(charStats.FacingDirection, 0), charStats.CharCollider.bounds.size.x, CollisionMasks.WallGrabMask);
+		RaycastHit2D hit = Physics2D.Raycast(char_stats.char_collider.bounds.center, new Vector2(char_stats.GetFacingXComponent(), 0), char_stats.char_collider.bounds.size.x, CollisionMasks.WallGrabMask);
         if (hit.collider != null)
         {
             float colliderTop = hit.collider.bounds.max.y;
             float colliderBottom = hit.collider.bounds.min.y;
-            float characterTop = charStats.CharCollider.bounds.max.y;
-            float characterBottom = charStats.CharCollider.bounds.min.y;
+            float characterTop = char_stats.char_collider.bounds.max.y;
+            float characterBottom = char_stats.char_collider.bounds.min.y;
 
             // stop at the edges of the surface
             float ledgeDistanceTop = colliderTop - characterTop;
-            if (charStats.Velocity.y > 0.0f && ledgeDistanceTop <= Mathf.Abs(charStats.Velocity.y))
-                charStats.Velocity.y = ledgeDistanceTop;
+            if (char_stats.velocity.y > 0.0f && ledgeDistanceTop <= Mathf.Abs(char_stats.velocity.y))
+			{
+                char_stats.velocity.y = ledgeDistanceTop;
+			}
 
             float ledgeDistanceBottom = characterBottom - colliderBottom;
-            if (charStats.Velocity.y < 0.0f && ledgeDistanceBottom <= Mathf.Abs(charStats.Velocity.y))
-                charStats.Velocity.y = -ledgeDistanceBottom;
+            if (char_stats.velocity.y < 0.0f && ledgeDistanceBottom <= Mathf.Abs(char_stats.velocity.y))
+			{
+                char_stats.velocity.y = -ledgeDistanceBottom;
+			}
 
             // set if you're against the ledge
-            if (ledgeDistanceTop == 0.0f || ledgeDistanceBottom == 0.0f)
-                againstTheLedge = true;
+			if (ledgeDistanceTop == 0.0f || ledgeDistanceBottom == 0.0f) 
+			{
+				is_against_ledge = true;
+			}
             else
-                againstTheLedge = false;
+			{
+                is_against_ledge = false;
+			}
         }
         else
+		{
             Debug.LogError("Can't find collider when climbing against a wall. This shouldn't happen");
+		}
     }
 
     void ClimbMovementInput()
     {
-        if (grabCollider)
+        if (grab_collider)
         {
             LedgeLook();
 
             // Jump logic.
-            if (!lookingOverLedge && inputManager.JumpInputInst) {
+            if (!is_overlooking_ledge && input_manager.JumpInputInst) 
+			{
                 StopClimbing();
-                charStats.IsJumping = true;
-                charStats.JumpInputTime = 0.0f;
-                charStats.FacingDirection = -charStats.FacingDirection;
-                charAnims.JumpTrigger();
-                if (charStats.FacingDirection == 1)
-                    charStats.CharacterAccel = JUMP_ACCEL;
+                char_stats.is_jumping = true;
+                char_stats.jump_input_time = 0.0f;
+				char_stats.AboutFace();
+                char_anims.JumpTrigger();
+				if (char_stats.facing_direction == CharEnums.FacingDirection.Right)
+				{
+                    char_stats.character_acceleration = JUMP_ACCELERATION;
+				}
                 else
-                    charStats.CharacterAccel = -JUMP_ACCEL;
+				{
+					char_stats.character_acceleration = -JUMP_ACCELERATION;
+				}
 
-                playerScript.HorizontalJumpVelNoAccel((playerScript.GetJumpHoriSpeedMin() + playerScript.GetJumpHoriSpeedMax()) / 2.0f);
-                playerScript.SetFacing();
+                player_script.HorizontalJumpVelNoAccel((player_script.GetJumpHoriSpeedMin() + player_script.GetJumpHoriSpeedMax()) / 2.0f);
+                player_script.SetFacing();
             } 
             //ledge climb logic
-            else if (lookingOverLedge && inputManager.JumpInputInst) 
+            else if (is_overlooking_ledge && input_manager.JumpInputInst) 
             {
                 // if we're looking below
-                if (grabCollider.bounds.min.y == charStats.CharCollider.bounds.min.y)
+                if (grab_collider.bounds.min.y == char_stats.char_collider.bounds.min.y)
                 {
                     StopClimbing();
                 }
                 // if we're looking above
-                else if (grabCollider.bounds.max.y == charStats.CharCollider.bounds.max.y)
+                else if (grab_collider.bounds.max.y == char_stats.char_collider.bounds.max.y)
                 {
-                    SetupLedgeClimb(currentClimbState);
+                    SetupLedgeClimb(current_climb_state);
                 }
                 else
-                    Debug.LogError("The grabCollider object is most likely null. grabCollider.bounds.min.y: " + grabCollider.bounds.min.y);
+				{
+                    Debug.LogError("The grab_collider object is most likely null. grab_collider.bounds.min.y: " + grab_collider.bounds.min.y);
+				}
             }
         }
     }
 
     void LedgeLook()
     {
-        if (currentClimbState == ClimbState.wallClimb)
+        if (current_climb_state == ClimbState.WallClimb)
         {
-            if (againstTheLedge && (Mathf.Abs(inputManager.VerticalAxis) > 0.0f ||
-                (inputManager.HorizontalAxis > 0.0f && charStats.CharCollider.bounds.center.x < grabCollider.bounds.center.x) ||
-                (inputManager.HorizontalAxis < 0.0f && charStats.CharCollider.bounds.center.x > grabCollider.bounds.center.x)))
-                lookingOverLedge = true;
+            if (is_against_ledge && (Mathf.Abs(input_manager.VerticalAxis) > 0.0f ||
+                (input_manager.HorizontalAxis > 0.0f && char_stats.char_collider.bounds.center.x < grab_collider.bounds.center.x) ||
+                (input_manager.HorizontalAxis < 0.0f && char_stats.char_collider.bounds.center.x > grab_collider.bounds.center.x)))
+			{
+                is_overlooking_ledge = true;
+			}
             else
-                lookingOverLedge = false;
+			{
+                is_overlooking_ledge = false;
+			}
         }
-        else if (currentClimbState == ClimbState.ceilingClimb)
+        else if (current_climb_state == ClimbState.CeilingClimb)
         {
 
         }
@@ -223,58 +259,58 @@ public class MagGripUpgrade : MonoBehaviour
     /// </summary>
     void StopClimbing()
     {
-        currentClimbState = ClimbState.notClimb;
+        current_climb_state = ClimbState.NotClimb;
         //no grab, no collider
-        grabCollider = null;
+        grab_collider = null;
         //reset the delay before we can wall grab again
-        wallGrabDelayTimer = 0.0f;
+        wall_grab_delay_timer = 0.0f;
         //set the master state to the default state. It'll transition into any other state from there. 
-        charStats.CurrentMasterState = CharEnums.MasterState.defaultState;
+		char_stats.current_master_state = CharEnums.MasterState.DefaultState;
     }
 
     void SetupLedgeClimb(ClimbState startingState, Collider2D climbObject = null)
     {
-        grabCollider = climbObject;
-        inputManager.JumpInputInst = false;
-        inputManager.InputOverride = true;
+        grab_collider = climbObject;
+        input_manager.JumpInputInst = false;
+        input_manager.InputOverride = true;
         // translate body to on the ledge
-        charStats.BzrDistance = 0.0f;
-        charStats.BzrStartPosition = (Vector2)charStats.CharCollider.bounds.center - charStats.CharCollider.offset;
+        char_stats.bezier_distance = 0.0f;
+        char_stats.bezier_start_position = (Vector2)char_stats.char_collider.bounds.center - char_stats.char_collider.offset;
 
         // variable sterilazation
-        charStats.IsJumping = false;
+        char_stats.is_jumping = false;
 
-        if (startingState == ClimbState.notClimb)
+        if (startingState == ClimbState.NotClimb)
         {
-            if (charStats.FacingDirection == 1)
+			if (char_stats.facing_direction == CharEnums.FacingDirection.Right)
             {
-                charStats.BzrEndPosition = new Vector2(climbObject.bounds.max.x - charStats.CharCollider.offset.x + charStats.CharCollider.bounds.extents.x + 0.01f, climbObject.bounds.max.y - charStats.CharCollider.offset.y - charStats.CharCollider.bounds.extents.y);
-                charStats.BzrCurvePosition = new Vector2(charStats.CharCollider.bounds.center.x + charStats.CharCollider.bounds.extents.x * 2, charStats.CharCollider.bounds.center.y + charStats.CharCollider.size.y);
+                char_stats.bezier_end_position = new Vector2(climbObject.bounds.max.x - char_stats.char_collider.offset.x + char_stats.char_collider.bounds.extents.x + 0.01f, climbObject.bounds.max.y - char_stats.char_collider.offset.y - char_stats.char_collider.bounds.extents.y);
+                char_stats.bezier_curve_position = new Vector2(char_stats.char_collider.bounds.center.x + char_stats.char_collider.bounds.extents.x * 2, char_stats.char_collider.bounds.center.y + char_stats.char_collider.size.y);
             }
             else
             {
-                charStats.BzrEndPosition = new Vector2(climbObject.bounds.min.x - charStats.CharCollider.offset.x - charStats.CharCollider.bounds.extents.x - 0.01f, climbObject.bounds.max.y - charStats.CharCollider.offset.y - charStats.CharCollider.bounds.extents.y);
-                charStats.BzrCurvePosition = new Vector2(charStats.CharCollider.bounds.center.x - charStats.CharCollider.bounds.extents.x * 2, charStats.CharCollider.bounds.center.y + charStats.CharCollider.size.y);
+                char_stats.bezier_end_position = new Vector2(climbObject.bounds.min.x - char_stats.char_collider.offset.x - char_stats.char_collider.bounds.extents.x - 0.01f, climbObject.bounds.max.y - char_stats.char_collider.offset.y - char_stats.char_collider.bounds.extents.y);
+                char_stats.bezier_curve_position = new Vector2(char_stats.char_collider.bounds.center.x - char_stats.char_collider.bounds.extents.x * 2, char_stats.char_collider.bounds.center.y + char_stats.char_collider.size.y);
             }
-            transitioningToState = ClimbState.wallClimb;
-            charStats.FacingDirection = -charStats.FacingDirection;
-            playerScript.SetFacing();
+            transitioning_to_state = ClimbState.WallClimb;
+			char_stats.AboutFace();
+            player_script.SetFacing();
         }
-        else if (startingState == ClimbState.wallClimb)
+        else if (startingState == ClimbState.WallClimb)
         {
-            if (charStats.FacingDirection == 1)
+			if (char_stats.facing_direction == CharEnums.FacingDirection.Right)
             {
-                charStats.BzrEndPosition = new Vector2(charStats.CharCollider.bounds.center.x - charStats.CharCollider.offset.x + charStats.CharCollider.bounds.size.x, charStats.CharCollider.bounds.center.y - charStats.CharCollider.offset.y + charStats.CharCollider.bounds.size.y);
-                charStats.BzrCurvePosition = new Vector2(charStats.CharCollider.bounds.center.x - charStats.CharCollider.bounds.extents.x, charStats.CharCollider.bounds.center.y + charStats.CharCollider.size.y * 2);
+                char_stats.bezier_end_position = new Vector2(char_stats.char_collider.bounds.center.x - char_stats.char_collider.offset.x + char_stats.char_collider.bounds.size.x, char_stats.char_collider.bounds.center.y - char_stats.char_collider.offset.y + char_stats.char_collider.bounds.size.y);
+                char_stats.bezier_curve_position = new Vector2(char_stats.char_collider.bounds.center.x - char_stats.char_collider.bounds.extents.x, char_stats.char_collider.bounds.center.y + char_stats.char_collider.size.y * 2);
             }
             else
             {
-                charStats.BzrEndPosition = new Vector2(charStats.CharCollider.bounds.center.x - charStats.CharCollider.offset.x - charStats.CharCollider.bounds.size.x, charStats.CharCollider.bounds.center.y - charStats.CharCollider.offset.y + charStats.CharCollider.bounds.size.y);
-                charStats.BzrCurvePosition = new Vector2(charStats.CharCollider.bounds.center.x + charStats.CharCollider.bounds.extents.x, charStats.CharCollider.bounds.center.y + charStats.CharCollider.size.y * 2);
+                char_stats.bezier_end_position = new Vector2(char_stats.char_collider.bounds.center.x - char_stats.char_collider.offset.x - char_stats.char_collider.bounds.size.x, char_stats.char_collider.bounds.center.y - char_stats.char_collider.offset.y + char_stats.char_collider.bounds.size.y);
+                char_stats.bezier_curve_position = new Vector2(char_stats.char_collider.bounds.center.x + char_stats.char_collider.bounds.extents.x, char_stats.char_collider.bounds.center.y + char_stats.char_collider.size.y * 2);
             }
-            transitioningToState = ClimbState.notClimb;
+            transitioning_to_state = ClimbState.NotClimb;
         }
-        ledgeClimb = true;
+        is_climbing_ledge = true;
     }
 
     /// <summary>
@@ -283,32 +319,32 @@ public class MagGripUpgrade : MonoBehaviour
     public void WallClimbFromLedge()
     {
         // This is kinda inefficient as it is redundant code from the collision detection...
-        Vector2 verticalBoxSize = new Vector2(charStats.CharCollider.bounds.size.x - 0.1f, 0.1f);
-        Vector2 downHitOrigin = new Vector2(charStats.CharCollider.bounds.center.x, charStats.CharCollider.bounds.center.y - charStats.CharCollider.bounds.extents.y + 0.1f);
+        Vector2 verticalBoxSize = new Vector2(char_stats.char_collider.bounds.size.x - 0.1f, 0.1f);
+        Vector2 downHitOrigin = new Vector2(char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.center.y - char_stats.char_collider.bounds.extents.y + 0.1f);
         RaycastHit2D downHit = Physics2D.BoxCast(downHitOrigin, verticalBoxSize, 0.0f, Vector2.down, 25.0f, CollisionMasks.AllCollisionMask);
         if (downHit.collider != null)
         {
             //check the ledge to see if it's tall enough to grab onto
             RaycastHit2D grabCheck;
-            if (charStats.FacingDirection == 1)
+			if (char_stats.facing_direction == CharEnums.FacingDirection.Right)
             {
-                Vector2 leftPoint = new Vector2(charStats.CharCollider.bounds.center.x + charStats.CharCollider.bounds.size.x, charStats.CharCollider.bounds.min.y - charStats.CharCollider.bounds.size.y);
-                grabCheck = Physics2D.Raycast(leftPoint, Vector2.left, charStats.CharCollider.bounds.size.x);
+                Vector2 leftPoint = new Vector2(char_stats.char_collider.bounds.center.x + char_stats.char_collider.bounds.size.x, char_stats.char_collider.bounds.min.y - char_stats.char_collider.bounds.size.y);
+                grabCheck = Physics2D.Raycast(leftPoint, Vector2.left, char_stats.char_collider.bounds.size.x);
             }
             else
             {
-                Vector2 rightPoint = new Vector2(charStats.CharCollider.bounds.center.x - charStats.CharCollider.bounds.size.x, charStats.CharCollider.bounds.min.y - charStats.CharCollider.bounds.size.y);
-                grabCheck = Physics2D.Raycast(rightPoint, Vector2.right, charStats.CharCollider.bounds.size.x);
+                Vector2 rightPoint = new Vector2(char_stats.char_collider.bounds.center.x - char_stats.char_collider.bounds.size.x, char_stats.char_collider.bounds.min.y - char_stats.char_collider.bounds.size.y);
+                grabCheck = Physics2D.Raycast(rightPoint, Vector2.right, char_stats.char_collider.bounds.size.x);
             }
 
             if (grabCheck.collider == downHit.collider && downHit.collider.gameObject.GetComponent<CollisionType>().WallClimb)
             {
-                charStats.CurrentMasterState = CharEnums.MasterState.climbState;
-                SetupLedgeClimb(currentClimbState, downHit.collider);
+                char_stats.current_master_state = CharEnums.MasterState.ClimbState;
+                SetupLedgeClimb(current_climb_state, downHit.collider);
             }
             else
             {
-                charStats.IsJumping = false;
+                char_stats.is_jumping = false;
                 //TODO: head shake animation to notify that the ledge is too short
                 
             }
@@ -321,56 +357,56 @@ public class MagGripUpgrade : MonoBehaviour
     /// <param name="collisionObject"></param>
     public void InitiateWallGrab(Collider2D collisionObject)
     {
-        if (playerStats.AquiredMagGrip && collisionObject.gameObject.GetComponent<CollisionType>().WallClimb)
+        if (player_stats.acquired_mag_grip && collisionObject.gameObject.GetComponent<CollisionType>().WallClimb)
         {
-            if (currentClimbState == ClimbState.notClimb)
+            if (current_climb_state == ClimbState.NotClimb)
             {
-                if (!charStats.OnTheGround && currentClimbState == ClimbState.notClimb && wallGrabDelayTimer == WALL_GRAB_DELAY)
+				if (char_stats.IsInMidair && current_climb_state == ClimbState.NotClimb && wall_grab_delay_timer == WALL_GRAB_DELAY)
                 {
                     // only grab the wall if we aren't popping out under it or over it
-                    if (collisionObject.bounds.min.y <= charStats.CharCollider.bounds.min.y)
+                    if (collisionObject.bounds.min.y <= char_stats.char_collider.bounds.min.y)
                     {
                         // if character is a bit too above the ledge, bump them down till they're directly under it
                         // if this block is commented out, then the character will not snap directly to the ledge if slightly above it and will slide down till they grab on
                         /*
-                        if (collisionObject.bounds.max.y < charStats.CharCollider.bounds.max.y)
+                        if (collisionObject.bounds.max.y < char_stats.char_collider.bounds.max.y)
                         {
                             // check to see if the wall we're gonna be offsetting against is too short.
                             RaycastHit2D predictionCast;
-                            float offsetDistance = charStats.CharCollider.bounds.max.y - collisionObject.bounds.max.y;
-                            Vector2 predictionCastOrigin = new Vector2(charStats.CharCollider.bounds.center.x, charStats.CharCollider.bounds.min.y - offsetDistance);
-                            if (collisionObject.bounds.center.x < charStats.CharCollider.bounds.center.x)
-                                predictionCast = Physics2D.Raycast(predictionCastOrigin, Vector2.left, charStats.CharCollider.bounds.size.x, CollisionMasks.AllCollisionMask);
+                            float offsetDistance = char_stats.char_collider.bounds.max.y - collisionObject.bounds.max.y;
+                            Vector2 predictionCastOrigin = new Vector2(char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.min.y - offsetDistance);
+                            if (collisionObject.bounds.center.x < char_stats.char_collider.bounds.center.x)
+                                predictionCast = Physics2D.Raycast(predictionCastOrigin, Vector2.left, char_stats.char_collider.bounds.size.x, CollisionMasks.AllCollisionMask);
                             else
-                                predictionCast = Physics2D.Raycast(predictionCastOrigin, Vector2.right, charStats.CharCollider.bounds.size.x, CollisionMasks.AllCollisionMask);
+                                predictionCast = Physics2D.Raycast(predictionCastOrigin, Vector2.right, char_stats.char_collider.bounds.size.x, CollisionMasks.AllCollisionMask);
 
                             if (predictionCast.collider == collisionObject)
-                                transform.Translate(0.0f, -(charStats.CharCollider.bounds.max.y - collisionObject.bounds.max.y), 0.0f);
+                                transform.Translate(0.0f, -(char_stats.char_collider.bounds.max.y - collisionObject.bounds.max.y), 0.0f);
                         }
                         */
                         // if we're good to grab, get everything in order
-                        if (collisionObject.bounds.max.y >= charStats.CharCollider.bounds.max.y)
+                        if (collisionObject.bounds.max.y >= char_stats.char_collider.bounds.max.y)
                         {
-                            charStats.ResetJump();
-                            currentClimbState = ClimbState.wallClimb;
-                            charStats.CurrentMasterState = CharEnums.MasterState.climbState;
+                            char_stats.ResetJump();
+                            current_climb_state = ClimbState.WallClimb;
+                            char_stats.current_master_state = CharEnums.MasterState.ClimbState;
 
                             // variable sets to prevent weird turning when grabbing onto a wall
                             // if the wall is to our left
-                            if (collisionObject.bounds.center.x < charStats.CharCollider.bounds.center.x)
+                            if (collisionObject.bounds.center.x < char_stats.char_collider.bounds.center.x)
                             {
-                                charStats.FacingDirection = -1;
-                                spriteRenderer.flipX = true;
+								char_stats.facing_direction = CharEnums.FacingDirection.Left;
+                                sprite_renderer.flipX = true;
                             }
                             // if the wall is to our right
                             else
                             {
-                                charStats.FacingDirection = 1;
-                                spriteRenderer.flipX = false;
+								char_stats.facing_direction = CharEnums.FacingDirection.Right;
+                                sprite_renderer.flipX = false;
                             }
-                            charStats.Velocity.x = 0.0f;
-                            // assign the grabCollider now that the grab is actually happening
-                            grabCollider = collisionObject.GetComponent<Collider2D>();
+                            char_stats.velocity.x = 0.0f;
+                            // assign the grab_collider now that the grab is actually happening
+                            grab_collider = collisionObject.GetComponent<Collider2D>();
                         }
                     }
                 }
@@ -384,15 +420,15 @@ public class MagGripUpgrade : MonoBehaviour
     /// <param name="collisionObject"></param>
     public void InitiateCeilingGrab(Collider2D collisionObject)
     {
-        if (playerStats.AquiredMagGrip && collisionObject.gameObject.GetComponent<CollisionType>().CeilingClimb)
+        if (player_stats.acquired_mag_grip && collisionObject.gameObject.GetComponent<CollisionType>().CeilingClimb)
         {
-            if (currentClimbState == ClimbState.notClimb)
+            if (current_climb_state == ClimbState.NotClimb)
             {
-                if (!charStats.OnTheGround && currentClimbState == ClimbState.notClimb && wallGrabDelayTimer == WALL_GRAB_DELAY)
+				if (char_stats.IsInMidair && current_climb_state == ClimbState.NotClimb && wall_grab_delay_timer == WALL_GRAB_DELAY)
                 {
                     // TODO: Ceiling grab
                     // only grab the ceiling if we aren't popping out over the side
-                    //if (collisionObject.bounds.min.y <= charStats.CharCollider.bounds.min.y)
+                    //if (collisionObject.bounds.min.y <= char_stats.char_collider.bounds.min.y)
 
                 }
             }

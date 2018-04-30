@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+//TODO: wrap everything, rename the private vars.
 public class UserInputManager : IInputManager
 {
 

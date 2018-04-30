@@ -8,35 +8,42 @@ public class Enemy : MonoBehaviour
 {
     #region vars
     private bool canHear = true;
-    private float listeningRadius = 0.0f;
+    private float listening_radius = 0.0f;
 
     // snooze, vigilance, investigate, alert, combat
 
     #region vision
-    public GameObject visionSubObject;
-    private PolygonCollider2D visionTriangle;
-    public float visionHalfAngle = 30.0f; // degrees
-    public float visionRange = 100.0f; // pixels
+    public GameObject vision_subobject;
+    private PolygonCollider2D vision_triangle;
+    public float vision_half_angle = 30.0f; // degrees
+    public float vision_range = 100.0f; // pixels
     #endregion
+
+	private float fire_rate = 1.0f;
+	private float fire_timer = 0.0f;
+	public GameObject bullet_prefab;
     #endregion
 
     // Use this for pre-initialization
     private void Awake()
     {
-
+		if ( vision_subobject == null )
+		{
+			vision_subobject = this.gameObject.transform.Find ("Vision Field").gameObject;
+		}
     }
 
     // Use this for initialization
     void Start()
     {
-        Referencer.Instance.RegisterEnemy( this.gameObject );
+        Referencer.instance.RegisterEnemy( this.gameObject );
 
-        visionSubObject.GetComponent<EnemyVisionField>().enemy = this; // circular reference
-        visionTriangle = visionSubObject.GetComponent<PolygonCollider2D>();
-        if ( visionHalfAngle >= 90.0f || visionHalfAngle < 0.0f )
+        vision_subobject.GetComponent<EnemyVisionField>().enemy = this; // circular reference
+        vision_triangle = vision_subobject.GetComponent<PolygonCollider2D>();
+        if ( vision_half_angle >= 90.0f || vision_half_angle < 0.0f )
         {
             Debug.Log( "Invalid vision cone angle!" );
-            visionHalfAngle = 30.0f;
+            vision_half_angle = 30.0f;
         }
     }
 
@@ -47,6 +54,18 @@ public class Enemy : MonoBehaviour
         // if you're not already on alert...
         Listen();
         Watch();
+
+		if ( GameState.instance.is_red_alert )
+		{
+			fire_timer += Time.deltaTime * TimeScale.timeScale;
+			if ( fire_timer > 1.0f / fire_rate )
+			{
+				fire_timer = 0.0f;
+				Bullet bullet = Instantiate( bullet_prefab , this.transform.position, Quaternion.identity).GetComponent<Bullet>();
+				Vector3 player_position = Referencer.instance.player.transform.position;
+				bullet.Angle = Mathf.Atan2( player_position.y - transform.position.y, player_position.x - transform.position.x );
+			}
+		}
     }
 
     /// <summary>
@@ -56,14 +75,16 @@ public class Enemy : MonoBehaviour
     {
         if ( ! canHear ) { return; }
 
-        foreach ( Noise noise in Referencer.Instance.noises )
+        foreach ( Noise noise in Referencer.instance.noises )
         {
-            if ( IsDistanceBetweenPointsLessThan( noise.position.x, noise.position.y, this.gameObject.transform.position.x, this.gameObject.transform.position.y, noise.radius + listeningRadius ) )
+            if ( IsDistanceBetweenPointsLessThan( noise.position.x, noise.position.y, this.gameObject.transform.position.x, this.gameObject.transform.position.y, noise.radius + listening_radius ) )
             {
                 // Detected!
                 // TODO: if available, set investigation mode
+				#if UNITY_EDITOR
                 Debug.Log( "Sound detected!" );
-                GameState.Instance.IsRedAlert = true; // test
+				#endif
+				GameState.instance.is_red_alert = true; // test
             }
         }
     }
@@ -90,10 +111,10 @@ public class Enemy : MonoBehaviour
 
         Vector2[] path = new Vector2[3]; 
         path[0] = new Vector2( 0.0f, 0.0f ); // local space
-        path[1] = new Vector2( visionRange * Mathf.Cos( visionHalfAngle * Mathf.Deg2Rad ), visionRange * Mathf.Sin( visionHalfAngle * Mathf.Deg2Rad ) );
-        path[2] = new Vector2( visionRange * Mathf.Cos( -visionHalfAngle * Mathf.Deg2Rad ), visionRange * Mathf.Sin( -visionHalfAngle * Mathf.Deg2Rad ) );
+        path[1] = new Vector2( vision_range * Mathf.Cos( vision_half_angle * Mathf.Deg2Rad ), vision_range * Mathf.Sin( vision_half_angle * Mathf.Deg2Rad ) );
+        path[2] = new Vector2( vision_range * Mathf.Cos( -vision_half_angle * Mathf.Deg2Rad ), vision_range * Mathf.Sin( -vision_half_angle * Mathf.Deg2Rad ) );
 
-        visionTriangle.SetPath( 0, path );
+        vision_triangle.SetPath( 0, path );
     }
 
     public void PlayerSeen()
