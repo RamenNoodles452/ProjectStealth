@@ -1,10 +1,11 @@
 ﻿public static class CharEnums
 {
     // this is used throughout all the character scripts
-    public enum MasterState { defaultState, climbState, attackState, vaultState };
+    public enum MasterState { DefaultState, ClimbState, AttackState, VaultState };
 
-    // moveState is used by simpleCharacterCore to determine which movement type is currently being used
-    public enum MoveState { isWalking, isSneaking, isRunning };
+    // moveState is used by SimpleCharacterCore to determine which movement type is currently being used
+    public enum MoveState { IsWalking, IsSneaking, IsRunning };
 
-
+	// used by CharacterStats and SimpleCharacterCore
+	public enum FacingDirection { Left, Right };
 }

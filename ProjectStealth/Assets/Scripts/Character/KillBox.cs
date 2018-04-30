@@ -2,17 +2,18 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// GabeV
 // Kills the player (character) if they step out of the level
 public class KillBox : MonoBehaviour
 {
     Player player;
-    public BoxCollider2D boundBox;
+    public BoxCollider2D bound_box;
 
 	// Use this for initialization
 	void Start ()
     {
-        player = GameObject.Find("PlayerCharacter").GetComponent<Player>(); //bad
-        boundBox = this.gameObject.GetComponent<BoxCollider2D>();
+        player = Referencer.instance.player; //GameObject.Find("PlayerCharacter").GetComponent<Player>(); //bad
+        bound_box = this.gameObject.GetComponent<BoxCollider2D>();
 	}
 	
 	// Update is called once per frame
@@ -27,10 +28,10 @@ public class KillBox : MonoBehaviour
         Vector2 playerCenter = player.CenterPoint();
 
         // bound box should be at (0,0), but use position just in case
-        float minx = boundBox.transform.position.x + boundBox.offset.x - boundBox.size.x / 2.0f;
-        float maxx = boundBox.transform.position.x + boundBox.offset.x + boundBox.size.x / 2.0f;
-        float miny = boundBox.transform.position.y + boundBox.offset.y - boundBox.size.y / 2.0f;
-        float maxy = boundBox.transform.position.y + boundBox.offset.y + boundBox.size.y / 2.0f;
+        float minx = bound_box.transform.position.x + bound_box.offset.x - bound_box.size.x / 2.0f;
+        float maxx = bound_box.transform.position.x + bound_box.offset.x + bound_box.size.x / 2.0f;
+        float miny = bound_box.transform.position.y + bound_box.offset.y - bound_box.size.y / 2.0f;
+        float maxy = bound_box.transform.position.y + bound_box.offset.y + bound_box.size.y / 2.0f;
 
         if ( playerCenter.x >=  minx && playerCenter.x <= maxx && playerCenter.y >= miny && playerCenter.y <= maxy)
         {
@@ -39,7 +40,7 @@ public class KillBox : MonoBehaviour
         else
         {
             Debug.Log( "Player went outside the map." );
-            //player.Kill(); //may need to specify animation
+            player.Kill(); //may need to specify animation
         }
 	}
 }
