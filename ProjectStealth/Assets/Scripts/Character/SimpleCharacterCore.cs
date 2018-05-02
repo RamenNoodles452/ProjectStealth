@@ -4,6 +4,7 @@ using System.Collections;
 // Handles movement
 public class SimpleCharacterCore : MonoBehaviour
 {
+	#region vars
     protected CharacterStats char_stats;
     protected CharacterAnimationLogic char_anims;
 
@@ -42,6 +43,9 @@ public class SimpleCharacterCore : MonoBehaviour
     protected bool is_overlooking_ledge;
     protected bool is_against_ledge;
     protected bool fallthrough;
+
+	private const float APPROXIMATE_EQUALITY_MARGIN = 0.001f; //Mathf.Epsilon;
+	#endregion
 
     // Use this for initialization
     public virtual void Start()
@@ -194,9 +198,9 @@ public class SimpleCharacterCore : MonoBehaviour
 
         char_stats.velocity.x = Mathf.Clamp(char_stats.velocity.x, -MAX_HORIZONTAL_SPEED, MAX_HORIZONTAL_SPEED);
 
-        if (Mathf.Approximately(char_stats.velocity.x - 1000000, -1000000)) //TODO: improve this, and all similar comparisons, with a better way.
+		if (IsAlmostZero(char_stats.velocity.x))
         {
-            char_stats.velocity.x = 0;
+            char_stats.velocity.x = 0.0f;
         }
     }
 
@@ -257,7 +261,7 @@ public class SimpleCharacterCore : MonoBehaviour
 
         char_stats.velocity.y = Mathf.Clamp(char_stats.velocity.y, -MAX_VERTICAL_SPEED, MAX_VERTICAL_SPEED);
 
-		if (char_stats.IsGrounded && Mathf.Approximately(char_stats.velocity.y - 1000000, -1000000))
+		if (char_stats.IsGrounded && IsAlmostZero(char_stats.velocity.y))
         {
             char_stats.velocity.y = 0;
         }
@@ -285,11 +289,11 @@ public class SimpleCharacterCore : MonoBehaviour
             {
 				if (char_stats.velocity.y > 0) 
 				{
-					rightHitOrigin = new Vector2 (char_stats.char_collider.bounds.max.x - 0.1f, char_stats.char_collider.bounds.center.y + 5f);
+					rightHitOrigin = new Vector2 (char_stats.char_collider.bounds.max.x - 0.1f, char_stats.char_collider.bounds.center.y + 5.0f);
 				}
                 else
 				{
-                    rightHitOrigin = new Vector2(char_stats.char_collider.bounds.max.x - 0.1f, char_stats.char_collider.bounds.center.y - 5f);
+                    rightHitOrigin = new Vector2(char_stats.char_collider.bounds.max.x - 0.1f, char_stats.char_collider.bounds.center.y - 5.0f);
 				}
             }
             RaycastHit2D rightHit = Physics2D.BoxCast(rightHitOrigin, horizontalBoxSize, 0.0f, Vector2.right, 50.0f, CollisionMasks.upwards_collision_mask);
@@ -302,9 +306,9 @@ public class SimpleCharacterCore : MonoBehaviour
 				}
 
                 // are we touching the right wall?
-                if (Mathf.Approximately(rightHitDist - 1000000, -1000000))
+				if (IsAlmostZero(rightHitDist))
                 {
-                    char_stats.velocity.x = 0;
+                    char_stats.velocity.x = 0.0f;
                     TouchedWall(rightHit.collider.gameObject);
 					if (rightHit.collider.GetComponent<CollisionType> ().VaultObstacle == true && char_stats.IsGrounded) 
 					{
@@ -333,11 +337,11 @@ public class SimpleCharacterCore : MonoBehaviour
             {
 				if (char_stats.velocity.y > 0) 
 				{
-					leftHitOrigin = new Vector2 (char_stats.char_collider.bounds.min.x + 0.1f, char_stats.char_collider.bounds.center.y + 5f);
+					leftHitOrigin = new Vector2 (char_stats.char_collider.bounds.min.x + 0.1f, char_stats.char_collider.bounds.center.y + 5.0f);
 				}
 				else 
 				{
-					leftHitOrigin = new Vector2 (char_stats.char_collider.bounds.min.x + 0.1f, char_stats.char_collider.bounds.center.y - 5f);
+					leftHitOrigin = new Vector2 (char_stats.char_collider.bounds.min.x + 0.1f, char_stats.char_collider.bounds.center.y - 5.0f);
 				}
             }
             RaycastHit2D leftHit = Physics2D.BoxCast(leftHitOrigin, horizontalBoxSize, 0.0f, Vector2.left, 50.0f, CollisionMasks.upwards_collision_mask);
@@ -350,9 +354,9 @@ public class SimpleCharacterCore : MonoBehaviour
 				}
 
                 // are we touching the left wall?
-                if (Mathf.Approximately(leftHitDist - 1000000, -1000000))
+				if (IsAlmostZero(leftHitDist))
                 {
-                    char_stats.velocity.x = 0;
+                    char_stats.velocity.x = 0.0f;
                     TouchedWall(leftHit.collider.gameObject);
 					if (leftHit.collider.GetComponent<CollisionType>().VaultObstacle == true && char_stats.IsGrounded)
 					{
@@ -382,14 +386,14 @@ public class SimpleCharacterCore : MonoBehaviour
         RaycastHit2D upHit = Physics2D.BoxCast(upHitOrigin, verticalBoxSize, 0.0f, Vector2.up, 50.0f, CollisionMasks.upwards_collision_mask);
         if (upHit.collider != null)
         {
-            float hitDist = upHit.distance - 0.05f;
+            float hitDist = upHit.distance - 0.05f; //TODO: bake
             if (char_stats.velocity.y > 0.0f && hitDist <= Mathf.Abs(char_stats.velocity.y))
 			{
                 char_stats.velocity.y = hitDist;
 			}
 
             // are we touching the ceiling?
-            if (Mathf.Approximately(hitDist - 1000000, -1000000))
+			if (IsAlmostZero(hitDist))
             {
                 //stop upward movement
                 char_stats.is_jumping = false;
@@ -473,8 +477,7 @@ public class SimpleCharacterCore : MonoBehaviour
             {
                 is_against_ledge = false;
             }
-            // Approximate since floats are dumb
-            if (Mathf.Approximately(hitDist - 1000000, -1000000))
+			if (IsAlmostZero(hitDist))
             {
                 if (touchGround)
                 {
@@ -596,23 +599,23 @@ public class SimpleCharacterCore : MonoBehaviour
 			}
 
             // running automatically starts at the sneaking speed and accelerates from there
-            if (start_run == true && input_manager.HorizontalAxis > 0 && Mathf.Abs(char_stats.velocity.x) < char_stats.SNEAK_SPEED)
+            if (start_run == true && input_manager.HorizontalAxis > 0.0f && Mathf.Abs(char_stats.velocity.x) < char_stats.SNEAK_SPEED)
             {
                 char_stats.velocity.x = char_stats.SNEAK_SPEED;
                 start_run = false;
             }
-            else if (start_run == true && input_manager.HorizontalAxis < 0 && Mathf.Abs(char_stats.velocity.x) < char_stats.SNEAK_SPEED)
+            else if (start_run == true && input_manager.HorizontalAxis < 0.0f && Mathf.Abs(char_stats.velocity.x) < char_stats.SNEAK_SPEED)
             {
                 char_stats.velocity.x = -char_stats.SNEAK_SPEED;
                 start_run = false;
             }
         }
         
-        if (input_manager.HorizontalAxis > 0)
+        if (input_manager.HorizontalAxis > 0.0f)
 		{
             char_stats.character_acceleration = ACCELERATION;
 		}
-        else if (input_manager.HorizontalAxis < 0)
+        else if (input_manager.HorizontalAxis < 0.0f)
 		{
             char_stats.character_acceleration = -ACCELERATION;
 		}
@@ -624,7 +627,7 @@ public class SimpleCharacterCore : MonoBehaviour
         // Jump logic. Keep the Y velocity constant while holding jump for the duration of JUMP_CONTROL_TIME
 		if ((jump_grace_period || char_stats.IsGrounded) && input_manager.JumpInputInst)
         {
-            if (input_manager.VerticalAxis < 0)
+            if (input_manager.VerticalAxis < 0.0f)
             {
                 //trigger fallthrough
                 fallthrough = true;
@@ -675,4 +678,33 @@ public class SimpleCharacterCore : MonoBehaviour
     {
         return JUMP_HORIZONTAL_SPEED_MAX;
     }
+
+	/// <summary>
+	/// Determines whether  the specified number is almost zero.
+	/// </summary>
+	/// <returns><c>true</c> if the number is almost zero; otherwise, <c>false</c>.</returns>
+	/// <param name="number">The number to check</param>
+	private bool IsAlmostZero(float number)
+	{
+		return ApproximatelyEquals( number, 0.0f, APPROXIMATE_EQUALITY_MARGIN );
+	}
+
+	/// <summary>
+	/// Determines if two numbers are approximately equal (within a given margin of error)
+	/// </summary>
+	/// <returns><c>true</c>, if the numbers are almost equal, <c>false</c> otherwise.</returns>
+	/// <param name="a">the first number</param>
+	/// <param name="b">the second number</param>
+	/// <param name="margin_of_error">margin of error</param>
+	private bool ApproximatelyEquals(float a, float b, float margin_of_error )
+	{
+		if ( a >= b - margin_of_error && a <= b + margin_of_error )
+		{
+			return true;
+		}
+		else
+		{
+		    return false;
+		}
+	}
 }
