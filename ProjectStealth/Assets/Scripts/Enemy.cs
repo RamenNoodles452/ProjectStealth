@@ -57,13 +57,16 @@ public class Enemy : MonoBehaviour
 
 		if ( GameState.instance.is_red_alert )
 		{
+			
 			fire_timer += Time.deltaTime * TimeScale.timeScale;
 			if ( fire_timer > 1.0f / fire_rate )
 			{
 				fire_timer = 0.0f;
-				Bullet bullet = Instantiate( bullet_prefab , this.transform.position, Quaternion.identity).GetComponent<Bullet>();
 				Vector3 player_position = Referencer.instance.player.transform.position;
-				bullet.Angle = Mathf.Atan2( player_position.y - transform.position.y, player_position.x - transform.position.x );
+				float angle = Mathf.Atan2( player_position.y - transform.position.y, player_position.x - transform.position.x );
+				Vector3 fire_offset = new Vector3( 15.0f * Mathf.Cos(angle), 15.0f * Mathf.Sin(angle), 0.0f); // TODO: improve this. Bullets should shoot outside bounds.
+				Bullet bullet = Instantiate( bullet_prefab , this.transform.position + fire_offset, Quaternion.identity).GetComponent<Bullet>();
+				bullet.Angle = angle;
 			}
 		}
     }
