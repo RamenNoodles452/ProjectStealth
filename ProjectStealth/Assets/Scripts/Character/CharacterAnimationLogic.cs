@@ -20,8 +20,10 @@ public class CharacterAnimationLogic : MonoBehaviour
         CoverLogic();
         SneakingLogic();
         CrouchLogic();
-        
-	}
+        WallClimb();
+        WallSlide();
+
+    }
 
     void SneakingLogic()
     {
@@ -58,37 +60,46 @@ public class CharacterAnimationLogic : MonoBehaviour
             Anim.SetBool("crouching", true);
     }
 
+    // Triggers are called within the character scripts
     public void JumpTrigger()
     {
         Anim.SetTrigger("jump_ascend");
     }
 
+    // Triggers are called within the character scripts
     public void FallTrigger()
     {
         Anim.SetTrigger("jump_descend");
     }
 
-    public void WallClimbTrigger()
+    // Triggers are called within the character scripts
+    public void WallGrabTrigger()
     {
         Anim.SetTrigger("wall_grab_trigger");
     }
 
-    // TODO: hook up wall climb anim
-    public void WallAscend()
+    public void WallClimb()
     {
         if (charStats.CurrentMasterState == CharEnums.MasterState.climbState && charStats.Velocity.y > 0)
         {
-            Anim.SetBool("wall_ascend", true);
+            Anim.SetBool("wall_climb", true);
         }
         else
         {
-            Anim.SetBool("wall_ascend", false);
+            Anim.SetBool("wall_climb", false);
         }
     }
     //TODO: make a wall slide animation
-    public void WallDescend()
+    public void WallSlide()
     {
-
+        if (charStats.CurrentMasterState == CharEnums.MasterState.climbState && charStats.Velocity.y < 0)
+        {
+            Anim.SetBool("wall_slide", true);
+        }
+        else
+        {
+            Anim.SetBool("wall_slide", false);
+        }
     }
 
     //triggers when a character dropps from a wall by moving down to the end of the wall and pressing down + jump

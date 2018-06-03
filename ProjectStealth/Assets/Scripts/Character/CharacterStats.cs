@@ -10,11 +10,11 @@ public class CharacterStats : MonoBehaviour
     [HideInInspector]
     public BoxCollider2D CharCollider; // defaults: offset[0,-2] size [26,40]
     [HideInInspector]
-    public Vector2 STANDING_COLLIDER_SIZE = new Vector2(26f, 40f);
+    public Vector2 STANDING_COLLIDER_SIZE = new Vector2(22f, 40f);
     [HideInInspector]
     public Vector2 STANDING_COLLIDER_OFFSET = new Vector2(0f, -2f);
     [HideInInspector]
-    public Vector2 CROUCHING_COLLIDER_SIZE = new Vector2(26f, 20f);
+    public Vector2 CROUCHING_COLLIDER_SIZE = new Vector2(22f, 20f);
     [HideInInspector]
     public Vector2 CROUCHING_COLLIDER_OFFSET = new Vector2(0f, -12f);
 

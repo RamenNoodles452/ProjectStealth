@@ -24,7 +24,7 @@ public class MagGripUpgrade : MonoBehaviour
     private ClimbState transitioningToState = ClimbState.notClimb; // used when bzr curving to a new climb state
 
 
-    private const float WALL_CLIMB_SPEED = 2.0f;
+    private const float WALL_CLIMB_SPEED = 1.5f;
     private const float WALL_SLIDE_SPEED = 3.0f;
 
     // ledge logic
@@ -265,7 +265,7 @@ public class MagGripUpgrade : MonoBehaviour
             transitioningToState = ClimbState.wallClimb;
             charStats.FacingDirection = -charStats.FacingDirection;
             playerScript.SetFacing();
-            charAnims.WallClimbTrigger();
+            charAnims.WallGrabTrigger();
         }
         else if (startingState == ClimbState.wallClimb)
         {
@@ -381,7 +381,7 @@ public class MagGripUpgrade : MonoBehaviour
                             grabCollider = collisionObject.GetComponent<Collider2D>();
 
                             //trigger the signal to start the wall climb animation
-                            charAnims.WallClimbTrigger();
+                            charAnims.WallGrabTrigger();
                         }
                     }
                 }
