@@ -21,13 +21,13 @@ public class Noise : MonoBehaviour
         Referencer.instance.RegisterNoise( this ); // Register, so enemies can interact with it
 
         // Initialize line renderer
-        LineRenderer lineRenderer = gameObject.AddComponent<LineRenderer>();
-        lineRenderer.material = new Material( Shader.Find( "Particles/Additive" ) );
-        lineRenderer.startColor = new Color( 1.0f, 0.0f, 0.0f, 1.0f );
-        lineRenderer.endColor = new Color( 1.0f, 0.0f, 0.0f, 1.0f );
-        lineRenderer.startWidth = 1.0f;
-        lineRenderer.endWidth = 1.0f;
-        lineRenderer.positionCount = 101;
+        LineRenderer line_renderer = gameObject.AddComponent<LineRenderer>();
+        line_renderer.material = new Material( Shader.Find( "Particles/Additive" ) );
+        line_renderer.startColor = new Color( 1.0f, 0.0f, 0.0f, 1.0f );
+        line_renderer.endColor = new Color( 1.0f, 0.0f, 0.0f, 1.0f );
+        line_renderer.startWidth = 1.0f;
+        line_renderer.endWidth = 1.0f;
+        line_renderer.positionCount = 101;
     }
 	
 	// Update is called once per frame
@@ -35,7 +35,7 @@ public class Noise : MonoBehaviour
     {
         // draw
         float x, y;
-        LineRenderer lineRenderer = gameObject.GetComponent<LineRenderer>();
+        LineRenderer line_renderer = gameObject.GetComponent<LineRenderer>();
         for ( int i = 0; i <= 100; i++ )
         {
             float theta = 2.0f * Mathf.PI * ((float) i) / 100.0f;
@@ -43,7 +43,7 @@ public class Noise : MonoBehaviour
             y = ( timer / lifetime ) * radius * Mathf.Sin( theta ) + position.y;
 
             Vector3 pos = new Vector3( x, y, 0 );
-            lineRenderer.SetPosition( i, pos );
+            line_renderer.SetPosition( i, pos );
         }
 
         // timer

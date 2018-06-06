@@ -14,13 +14,36 @@ public class EnemyVisionField : MonoBehaviour
     // Use this for initialization
     void Start ()
     {
-		
+		#if UNITY_EDITOR
+		// Initialize line renderer to show the vision field.
+		LineRenderer line_renderer = gameObject.AddComponent<LineRenderer>();
+		line_renderer.material = new Material( Shader.Find( "Particles/Additive" ) );
+		line_renderer.startColor = new Color( 1.0f, 0.0f, 0.0f, 1.0f );
+		line_renderer.endColor = new Color( 1.0f, 0.0f, 0.0f, 1.0f );
+		line_renderer.startWidth = 1.0f;
+		line_renderer.endWidth = 1.0f;
+		line_renderer.positionCount = 4;
+		#endif
 	}
 	
 	// Update is called once per frame
 	void Update ()
     {
-		
+		#if UNITY_EDITOR
+		// Show the vision field in debug mode.
+		LineRenderer line_renderer = gameObject.GetComponent<LineRenderer>();
+		if ( line_renderer == null )
+		{
+			Debug.LogError( "Vision field line renderer is null." );
+		}
+
+		PolygonCollider2D vision_polygon = gameObject.GetComponent<PolygonCollider2D>();
+		for ( int i = 0; i < vision_polygon.points.Length; i++ )
+		{
+			line_renderer.SetPosition( i, this.gameObject.transform.position + new Vector3( vision_polygon.points[i].x, vision_polygon.points[i].y, 0.0f ) );
+		}
+		line_renderer.SetPosition( vision_polygon.points.Length, this.gameObject.transform.position + new Vector3( vision_polygon.points[0].x, vision_polygon.points[0].y, 0.0f ) );
+		#endif
 	}
 
     private void OnTriggerEnter2D( Collider2D collision )
