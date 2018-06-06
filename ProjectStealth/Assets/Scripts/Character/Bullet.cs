@@ -6,10 +6,10 @@ using UnityEngine;
 public class Bullet : MonoBehaviour 
 {
 	#region vars
-	private float damage = 10.0f;
+	private float damage = 50.0f;
 	private float lifetime = 3.0f;
 	private float timer = 0.0f;
-	private float speed = 100.0f;
+	private float speed = 200.0f; // pixels / second
 	private float angle = 0.0f;
 	private bool is_homing = false;
 	#endregion

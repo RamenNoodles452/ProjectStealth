@@ -38,11 +38,12 @@ public class EnemyVisionField : MonoBehaviour
 		}
 
 		PolygonCollider2D vision_polygon = gameObject.GetComponent<PolygonCollider2D>();
+		Vector3 scale = this.gameObject.transform.localScale;
 		for ( int i = 0; i < vision_polygon.points.Length; i++ )
 		{
-			line_renderer.SetPosition( i, this.gameObject.transform.position + new Vector3( vision_polygon.points[i].x, vision_polygon.points[i].y, 0.0f ) );
+			line_renderer.SetPosition( i, this.gameObject.transform.position + new Vector3( vision_polygon.points[i].x * scale.x, vision_polygon.points[i].y * scale.y, 0.0f ) );
 		}
-		line_renderer.SetPosition( vision_polygon.points.Length, this.gameObject.transform.position + new Vector3( vision_polygon.points[0].x, vision_polygon.points[0].y, 0.0f ) );
+		line_renderer.SetPosition( vision_polygon.points.Length, this.gameObject.transform.position + new Vector3( vision_polygon.points[0].x * scale.x, vision_polygon.points[0].y * scale.y, 0.0f ) );
 		#endif
 	}
 
