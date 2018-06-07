@@ -4,13 +4,15 @@ using System.Collections;
 // Reads in character state data from char_stats, and sets/executes animator triggers accordingly.
 public class CharacterAnimationLogic : MonoBehaviour
 {
+	#region vars
     public Animator animator;
     protected CharacterStats char_stats;
+	#endregion
 
     // Use this for initialization
     void Start ()
     {
-        animator = GetComponent<Animator>();
+        animator   = GetComponent<Animator>();
         char_stats = GetComponent<CharacterStats>();
     }
 

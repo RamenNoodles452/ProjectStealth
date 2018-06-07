@@ -30,12 +30,12 @@ public class RedAlertOverlay : MonoBehaviour
         { 
 		    if ( fade_in )
             {
-                alpha += increment * Time.deltaTime * TimeScale.timeScale;
+                alpha += increment * Time.deltaTime * Time.timeScale;
                 if ( alpha >= 1.0f ) { alpha = 1.0f; fade_in = false; }
             }
             else
             {
-                alpha -= increment * Time.deltaTime * TimeScale.timeScale;
+                alpha -= increment * Time.deltaTime * Time.timeScale;
                 if ( alpha <= 0.0f ) { alpha = 0.0f; fade_in = true; }
             }
         }

@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// Player lighting effect
 public class SuitLightPulse : MonoBehaviour 
 {
+	#region vars
 	public Light light_reference;
 	private float timer;
+	#endregion
 
 	// Use this for initialization
 	void Start () 
@@ -16,7 +19,7 @@ public class SuitLightPulse : MonoBehaviour
 	// Update is called once per frame
 	void Update () 
 	{
-		timer += Time.deltaTime * TimeScale.timeScale;
+		timer += Time.deltaTime * Time.timeScale;
 		float alpha = 0.6f + 0.4f * Mathf.Sin( timer * 2.0f * Mathf.PI );
 
 		Color color = this.GetComponent<SpriteRenderer> ().color;

@@ -389,7 +389,7 @@ public class PlayerStats : MonoBehaviour
         if ( is_regenerating )
         {
             // Regenerate to full
-            shield = Mathf.Min( shield + ( shield_max / shield_regeneration_time ) * Time.deltaTime * TimeScale.timeScale, shield_max );
+            shield = Mathf.Min( shield + ( shield_max / shield_regeneration_time ) * Time.deltaTime * Time.timeScale, shield_max );
             if ( shield == shield_max )
             {
                 is_regenerating = false;
@@ -398,7 +398,7 @@ public class PlayerStats : MonoBehaviour
         else if ( shield < shield_max )
         {
             // Delay before regen begins
-            shield_delay_counter += Time.deltaTime * TimeScale.timeScale;
+            shield_delay_counter += Time.deltaTime * Time.timeScale;
 			if ( shield_delay_counter >= SHIELD_REGENERATION_DELAY )
             {
                 is_regenerating = true;
@@ -411,7 +411,7 @@ public class PlayerStats : MonoBehaviour
 		if ( is_evade_winding_up )
         {
             //Debug.Log( "Evade windup" );
-            evade_windup_counter += Time.deltaTime * TimeScale.timeScale;
+            evade_windup_counter += Time.deltaTime * Time.timeScale;
 			if ( evade_windup_counter >= EVADE_WINDUP_TIME )
             {
                 is_evade_winding_up = false;
@@ -423,7 +423,7 @@ public class PlayerStats : MonoBehaviour
         if ( invincible )
         {
             //Debug.Log("Evade");
-            invincibility_counter += Time.deltaTime * TimeScale.timeScale;
+            invincibility_counter += Time.deltaTime * Time.timeScale;
             if ( invincibility_counter >= INVINCIBILITY_TIME )
             {
                 invincible = false;
@@ -434,7 +434,7 @@ public class PlayerStats : MonoBehaviour
         if ( is_evade_recovering )
         {
             //Debug.Log("Evade recovery");
-            evade_recovery_counter += Time.deltaTime * TimeScale.timeScale;
+            evade_recovery_counter += Time.deltaTime * Time.timeScale;
 			if ( evade_recovery_counter >= EVADE_RECOVERY_TIME )
             {
                 is_evade_recovering = false;
@@ -452,7 +452,7 @@ public class PlayerStats : MonoBehaviour
         #region Cloaking
         if ( is_cloaked )
         {
-			energy = Mathf.Max( energy - CLOAK_DRAIN_PER_SECOND * Time.deltaTime * TimeScale.timeScale, 0.0f );
+			energy = Mathf.Max( energy - CLOAK_DRAIN_PER_SECOND * Time.deltaTime * Time.timeScale, 0.0f );
             if ( energy <= 0.0f )
             {
                 is_cloaked = false;
@@ -461,7 +461,7 @@ public class PlayerStats : MonoBehaviour
         #endregion
 
         #region Silencer
-        silencer = Mathf.Min( silencer + silencer_regen * Time.deltaTime * TimeScale.timeScale, silencer_max );
+        silencer = Mathf.Min( silencer + silencer_regen * Time.deltaTime * Time.timeScale, silencer_max );
         #endregion
 
         #region Energy
@@ -472,7 +472,7 @@ public class PlayerStats : MonoBehaviour
 
         if ( is_energy_regenerating )
         {
-            energy = Mathf.Min( energy + ( energy_max / energy_regeneration_time ) * Time.deltaTime * TimeScale.timeScale, energy_max );
+            energy = Mathf.Min( energy + ( energy_max / energy_regeneration_time ) * Time.deltaTime * Time.timeScale, energy_max );
         }
         #endregion
 

@@ -9,11 +9,14 @@ public class VaultAction : MonoBehaviour
     /// This module allows a character who is sprinting to automatically vault over low obstacles
     /// Input: (While sprinting) Run into a low obstacle at full speed
     /// </summary>
+
+	#region vars
     private CharacterStats char_stats;
     private IInputManager input_manager;
     private GenericMovementLib mov_lib;
 
     private bool vaulting = false;
+	#endregion
 
     void Start()
     {
@@ -24,7 +27,7 @@ public class VaultAction : MonoBehaviour
 
     void Update()
     {
-        if (char_stats.is_taking_cover && input_manager.InteractInputInst || char_stats.is_touching_vault_obstacle && char_stats.current_move_state == CharEnums.MoveState.IsRunning)
+        if (char_stats.is_taking_cover && input_manager.InteractInputInst || char_stats.is_touching_vault_obstacle && char_stats.IsRunning)
         {
             if(char_stats.current_move_state == CharEnums.MoveState.IsRunning)
 			{
@@ -61,7 +64,7 @@ public class VaultAction : MonoBehaviour
             transform.position = mov_lib.BezierCurveMovement(char_stats.bezier_distance, char_stats.bezier_start_position, char_stats.bezier_end_position, char_stats.bezier_curve_position);
             if (char_stats.bezier_distance < 1.0f)
 			{
-                char_stats.bezier_distance = char_stats.bezier_distance + Time.deltaTime * TimeScale.timeScale * 3.5f;
+				char_stats.bezier_distance = char_stats.bezier_distance + Time.deltaTime * Time.timeScale * 3.5f; //...what? WHAT? WAT!?
 			}
             else
             {

@@ -7,6 +7,7 @@ using System.Collections;
 /// NOTE: This duplicates some functionality of CharacterStats, and is more similar to it atm than SimpleCharacterCore, so the name of this class is a bit fishy.
 public class ComplexCharacterCore : MonoBehaviour
 {
+	#region vars
 	protected CharEnums.FacingDirection previous_facing_direction = CharEnums.FacingDirection.Right;
 	public CharEnums.FacingDirection facing_direction = CharEnums.FacingDirection.Right;
     public Animator animator;
@@ -14,10 +15,11 @@ public class ComplexCharacterCore : MonoBehaviour
     public PolygonCollider2D character_collider;
 
     public bool is_on_ground = false;
-    static float MAX_FALL_SPEED = 10.0f;
-    static float GRAVITATIONAL_FORCE = 9.0f;
+    static float MAX_FALL_SPEED = 600.0f;             // pixels per second
+    static float GRAVITATIONAL_ACCELERATION = 540.0f; // pixels per second per second
     public float vertical_velocity;
     float falling_time;
+	#endregion
 
     // Use this for initialization
     public virtual void Start()
@@ -37,9 +39,9 @@ public class ComplexCharacterCore : MonoBehaviour
 
     private void Gravity()
     {
-        falling_time = falling_time + Time.deltaTime * TimeScale.timeScale;
+        falling_time = falling_time + Time.deltaTime * Time.timeScale;
 
-        vertical_velocity = Mathf.Clamp(GRAVITATIONAL_FORCE * falling_time, -MAX_FALL_SPEED, MAX_FALL_SPEED);
+        vertical_velocity = Mathf.Clamp(GRAVITATIONAL_ACCELERATION * falling_time, -MAX_FALL_SPEED, MAX_FALL_SPEED);
         transform.Translate(Vector2.down * vertical_velocity);
 
         //transform.Translate(Vector2.down * MAX_FALL_SPEED * Time.deltaTime * TimeScale.timeScale);

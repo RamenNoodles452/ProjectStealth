@@ -12,32 +12,29 @@ public class SimpleCharacterCore : MonoBehaviour
 	public IInputManager input_manager;
 
     //gravity vars
-    private const float MAX_VERTICAL_SPEED = 10.0f;
-    private const float GRAVITATIONAL_FORCE = -30.0f;
+	private const float MAX_VERTICAL_SPEED          =   600.0f; // (pixels / second)
+	private const float GRAVITATIONAL_ACCELERATION  = -1800.0f; // (pixels / second / second)
 
     //jump vars
-    private const float JUMP_VERTICAL_SPEED = 6.0f;
-    protected const float JUMP_HORIZONTAL_SPEED_MIN = 2.5f;
-    protected const float JUMP_HORIZONTAL_SPEED_MAX = 4.0f;
-
-    private const float JUMP_CONTROL_TIME = 0.20f; //maximum duration of a jump if you hold it
-    private const float JUMP_DURATION_MIN = 0.10f; //minimum duration of a jump if you tap it
-    private const float JUMP_GRACE_PERIOD_TIME = 0.1f; //how long a player has to jump if they slip off a platform
+	protected const float JUMP_HORIZONTAL_SPEED_MIN =   150.0f; // (pixels / seond)
+	protected const float JUMP_HORIZONTAL_SPEED_MAX =   240.0f; // (pixels / second)
+	private   const float JUMP_VERTICAL_SPEED       =   360.0f; // (pixels / second)
+	private   const float JUMP_CONTROL_TIME         =     0.2f; // maximum duration of a jump (in seconds) if you hold it
+	private   const float JUMP_DURATION_MIN         =     0.1f; // minimum duration of a jump (in seconds) if you tap it
+	private   const float JUMP_GRACE_PERIOD_TIME    =     0.1f; // how long (in seconds) a player has to jump if they slip off a platform
     [SerializeField]
-    private bool jump_grace_period; //variable for jump tolerance if a player walks off a platform but wants to jump
+	private bool jump_grace_period; //for jump tolerance if a player walks off a platform but wants to jump
     [SerializeField]
     private float jump_grace_period_timer;
 
     //walk and run vars
-    private const float MAX_HORIZONTAL_SPEED = 10.0f;
-    protected float WALK_SPEED = 1.0f; //used for cutscenes for PC, guards will walk when not alerted
-    protected float SNEAK_SPEED = 2.0f; //default speed, enemies that were walking will use this speed when on guard
-    protected float RUN_SPEED = 4.5f;
-    protected float ACCELERATION = 6.0f; // acceleration used for velocity calcs when running
-    protected float DRAG = 15.0f; // how quickly a character decelerates when running
-
-    //protected float characterAccel = 0.0f;
-    private bool start_run; // this bool prevents wonky shit from happening if you turn around during a run
+	private const float MAX_HORIZONTAL_SPEED = 600.0f; // pixels per second
+	protected float WALK_SPEED   =  60.0f; // used for cutscenes for PC, guards will walk when not alerted (pixels / second)
+	protected float SNEAK_SPEED  = 120.0f; // default speed, enemies that were walking will use this speed when on guard (pixels / second)
+	protected float RUN_SPEED    = 270.0f; // (pixels / second)
+	protected float ACCELERATION = 360.0f; // acceleration used for velocity calcs when running (pixels / second / second)
+	protected float DRAG         = 900.0f; // how quickly a character decelerates when running  (pixels / second / second)
+    private bool start_run;                // prevents wonky shit from happening if you turn around during a run
 
     // ledge logic
     protected bool is_overlooking_ledge;
@@ -47,17 +44,15 @@ public class SimpleCharacterCore : MonoBehaviour
 	private const float APPROXIMATE_EQUALITY_MARGIN = 0.001f; //Mathf.Epsilon;
 	#endregion
 
+	#region virtual overrides
     // Use this for initialization
     public virtual void Start()
     {
-		char_stats = GetComponent<CharacterStats>();
-        input_manager = GetComponent<IInputManager>();
-        char_anims = GetComponent<CharacterAnimationLogic>();
-
-        // character sprite is now a child object. If a chracter sprite has multiple child sprite tho, this might break
+		char_stats      = GetComponent<CharacterStats>();
+        input_manager   = GetComponent<IInputManager>();
+        char_anims      = GetComponent<CharacterAnimationLogic>();
         sprite_renderer = GetComponent<SpriteRenderer>();
 
-        //Velocity = new Vector2(0.0f, 0.0f);
         jump_grace_period = false;
 		jump_grace_period_timer = JUMP_GRACE_PERIOD_TIME;
         fallthrough = false;
@@ -67,27 +62,11 @@ public class SimpleCharacterCore : MonoBehaviour
     public virtual void Update()
     {
         MovementInput();
-
         CalculateDirection();
-        // set Sprite flip
-        if (char_stats.previous_facing_direction != char_stats.facing_direction)
-		{
-            SetFacing();
-		}
-
-        // Give all characters gravity
         HorizontalVelocity();
         VerticalVelocity();
         Collisions();
-
-        if (jump_grace_period == true)
-        {
-			jump_grace_period_timer = jump_grace_period_timer + Time.deltaTime * TimeScale.timeScale;
-			if (jump_grace_period_timer >= JUMP_GRACE_PERIOD_TIME)
-			{
-                jump_grace_period = false;
-			}
-        }
+		UpdateGracePeriod();
     }
 
 	// Called each frame, after update
@@ -103,7 +82,7 @@ public class SimpleCharacterCore : MonoBehaviour
         //move the character after all calculations have been done
         if (char_stats.current_master_state == CharEnums.MasterState.DefaultState)
         {
-            transform.Translate(char_stats.velocity);
+			transform.Translate(char_stats.velocity * Time.fixedDeltaTime * Time.timeScale);
             if (fallthrough == true)
             {
                 transform.Translate(Vector3.down);
@@ -111,6 +90,8 @@ public class SimpleCharacterCore : MonoBehaviour
             }
         }
     }
+	#endregion
+
 
     private void HorizontalVelocity()
     {
@@ -123,45 +104,35 @@ public class SimpleCharacterCore : MonoBehaviour
             else
             {
                 //movement stuff
-                if (char_stats.current_move_state == CharEnums.MoveState.IsWalking)
+                if (char_stats.IsWalking)
 				{
                     char_stats.velocity.x = char_stats.WALK_SPEED * input_manager.HorizontalAxis;
 				}
-                else if (char_stats.current_move_state == CharEnums.MoveState.IsSneaking)
+                else if (char_stats.IsSneaking)
                 {
                     // if current speed is greater than sneak speed, then decel to sneak speed.
                     if (Mathf.Abs(char_stats.velocity.x) > char_stats.SNEAK_SPEED)
                     {
-                        if (char_stats.velocity.x > 0.0f)
-						{
-                            char_stats.velocity.x = char_stats.velocity.x - DRAG * Time.deltaTime * TimeScale.timeScale;
-						}
-                        else if (char_stats.velocity.x < 0.0f)
-						{
-                            char_stats.velocity.x = char_stats.velocity.x + DRAG * Time.deltaTime * TimeScale.timeScale;
-						}
+						IncreaseMagnitude( ref char_stats.velocity.x, - DRAG * Time.deltaTime * Time.timeScale );
                     }
                     else
                     {
+						// TODO: FIX BUG?: smooth?
+						// If a character is moving with 50% axis input, they'll smooth to the sneak speed, then snap to half of it. That seems silly.
                         char_stats.velocity.x = char_stats.SNEAK_SPEED * input_manager.HorizontalAxis;
                     }
                 }
-                else if (char_stats.current_move_state == CharEnums.MoveState.IsRunning)
+                else if (char_stats.IsRunning)
                 {
                     //smooth damp to 0 if there's no directional input for running or if you're trying to run the opposite direction
-                    if (char_stats.character_acceleration == 0.0f || (char_stats.character_acceleration < 0.0f && char_stats.velocity.x > 0.0f) || (char_stats.character_acceleration > 0.0f && char_stats.velocity.x < 0.0f))
+                    if ( char_stats.acceleration.x == 0.0f || 
+						(char_stats.acceleration.x < 0.0f && char_stats.velocity.x > 0.0f) || 
+						(char_stats.acceleration.x > 0.0f && char_stats.velocity.x < 0.0f))
                     {
                         if (Mathf.Abs(char_stats.velocity.x) > char_stats.SNEAK_SPEED)
                         {
                             //print("SKID BOIS");
-							if (char_stats.velocity.x > 0.0f) 
-							{
-								char_stats.velocity.x = char_stats.velocity.x - DRAG * Time.deltaTime * TimeScale.timeScale;
-							}
-                            else if (char_stats.velocity.x < 0.0f)
-							{
-                                char_stats.velocity.x = char_stats.velocity.x + DRAG * Time.deltaTime * TimeScale.timeScale;
-							}
+							IncreaseMagnitude( ref char_stats.velocity.x, - DRAG * Time.deltaTime * Time.timeScale );
                         }
                         else
                         {
@@ -170,7 +141,7 @@ public class SimpleCharacterCore : MonoBehaviour
                     }
                     else
 					{
-                        char_stats.velocity.x = char_stats.velocity.x + char_stats.character_acceleration * Time.deltaTime * TimeScale.timeScale;
+                        char_stats.velocity.x += char_stats.acceleration.x * Time.deltaTime * Time.timeScale;
 					}
 
                     char_stats.velocity.x = Mathf.Clamp(char_stats.velocity.x, -char_stats.RUN_SPEED, char_stats.RUN_SPEED);
@@ -204,13 +175,36 @@ public class SimpleCharacterCore : MonoBehaviour
         }
     }
 
+
+	/// <summary>
+	/// Magnitude increasing function. Adds the increment to value if value is positive.
+	/// Subtracts the increment from value if value is negative.
+	/// </summary>
+	/// <param name="value">The value to add to or subtract from. 
+	///     The sign of value dictates whether the increment will be added or subtracted. 
+	///     The result is returned in value.</param>
+	/// <param name="increment">The amount to add to value when value is positive OR ZERO. 
+	///     The opposite will be added when value is negative.</param>
+	private void IncreaseMagnitude( ref float value, float increment )
+	{
+		if ( value >= 0.0f ) // I guess we'll consider 0 positive?
+		{
+			value += increment;
+		}
+		else if ( value < 0.0f )
+		{
+			value -= increment;
+		}
+	}
+
+	//TODO: improvement target. Rename, make character_acceleration horizontal/a vector, document
     public void HorizontalJumpVelNoAccel(float speed)
     {
-		if (char_stats.character_acceleration > 0.0f) 
+		if (char_stats.acceleration.x > 0.0f) 
 		{
 			char_stats.velocity.x = speed;
 		} 
-		else if (char_stats.character_acceleration < 0.0f) 
+		else if (char_stats.acceleration.x < 0.0f) 
 		{
 			char_stats.velocity.x = -speed;
 		}
@@ -218,24 +212,24 @@ public class SimpleCharacterCore : MonoBehaviour
 
     protected void HorizontalJumpVelAccel()
     {
-        if (char_stats.character_acceleration < 0.0f && char_stats.velocity.x >= 0.0f)
+        if (char_stats.acceleration.x < 0.0f && char_stats.velocity.x >= 0.0f)
         {
             char_stats.velocity.x = -char_stats.SNEAK_SPEED;
         }
-        else if (char_stats.character_acceleration > 0.0f && char_stats.velocity.x <= 0.0f)
+        else if (char_stats.acceleration.x > 0.0f && char_stats.velocity.x <= 0.0f)
         {
             char_stats.velocity.x = char_stats.SNEAK_SPEED;
         }
         else
         {
-            char_stats.velocity.x = char_stats.velocity.x + char_stats.character_acceleration * Time.deltaTime * TimeScale.timeScale;
+            char_stats.velocity.x += char_stats.acceleration.x * Time.deltaTime * Time.timeScale;
             char_stats.velocity.x = Mathf.Clamp(char_stats.velocity.x, -JUMP_HORIZONTAL_SPEED_MAX, JUMP_HORIZONTAL_SPEED_MAX);
         }
     }
 
     private void VerticalVelocity()
     {
-        char_stats.velocity.y = char_stats.velocity.y + GRAVITATIONAL_FORCE * Time.deltaTime * TimeScale.timeScale;
+        char_stats.velocity.y += GRAVITATIONAL_ACCELERATION * Time.deltaTime * Time.timeScale;
 
         //override the vertical velocity if we're in the middle of jumping
         if (char_stats.is_jumping)
@@ -263,258 +257,267 @@ public class SimpleCharacterCore : MonoBehaviour
 
 		if (char_stats.IsGrounded && IsAlmostZero(char_stats.velocity.y))
         {
-            char_stats.velocity.y = 0;
+            char_stats.velocity.y = 0.0f;
         }
     }
 
 	public virtual void Collisions()
     {
-        // Horizontal Collision Block
-        // box used to collide against horizontal objects. Extend the hitbox vertically while in the air to avoid corner clipping
-        Vector2 horizontalBoxSize;
+		CheckCollisionHorizontal();
+		CheckCollisionVertical();
+    }
+
+	private void CheckCollisionHorizontal()
+	{
+		// box used to collide against horizontal objects. Extend the hitbox vertically while in the air to avoid corner clipping
+		Vector2 box_size;
 		if (char_stats.IsGrounded) 
 		{
-			horizontalBoxSize = new Vector2 (0.1f, char_stats.char_collider.bounds.size.y - 0.1f);
+			box_size = new Vector2 (1.0f, char_stats.char_collider.bounds.size.y); // 1px x height box
 		}
 		else
 		{
-            horizontalBoxSize = new Vector2 (0.1f, char_stats.char_collider.bounds.size.y + 10.0f);//15.0f);
+			box_size = new Vector2 (1.0f, char_stats.char_collider.bounds.size.y + 10.0f); // this expands 5 pixels in each direction from the middle. //TODO: magic number refactor
 		}
 
-        // raycast to collide right
-        if (char_stats.velocity.x > 0)
-        {
-            Vector2 rightHitOrigin = new Vector2(char_stats.char_collider.bounds.max.x - 0.1f, char_stats.char_collider.bounds.center.y);
+		// raycast to collide right
+		if (char_stats.velocity.x > 0.0f)
+		{
+			Vector2 right_hit_origin = new Vector2(char_stats.char_collider.bounds.max.x - box_size.x, char_stats.char_collider.bounds.center.y);
 			if (char_stats.IsInMidair)
-            {
-				if (char_stats.velocity.y > 0) 
+			{
+				if (char_stats.velocity.y > 0.0f) 
 				{
-					rightHitOrigin = new Vector2 (char_stats.char_collider.bounds.max.x - 0.1f, char_stats.char_collider.bounds.center.y + 5.0f);
+					right_hit_origin = new Vector2 (char_stats.char_collider.bounds.max.x - box_size.x, char_stats.char_collider.bounds.center.y + 5.0f); // TODO: magic numbers
 				}
-                else
+				else
 				{
-                    rightHitOrigin = new Vector2(char_stats.char_collider.bounds.max.x - 0.1f, char_stats.char_collider.bounds.center.y - 5.0f);
+					right_hit_origin = new Vector2(char_stats.char_collider.bounds.max.x - box_size.x, char_stats.char_collider.bounds.center.y - 5.0f); //TODO: magic numbers
 				}
-            }
-            RaycastHit2D rightHit = Physics2D.BoxCast(rightHitOrigin, horizontalBoxSize, 0.0f, Vector2.right, 50.0f, CollisionMasks.upwards_collision_mask);
-            if (rightHit.collider != null)
-            {
-                float rightHitDist = rightHit.distance - 0.05f;
-                if (char_stats.velocity.x > 0.0f && rightHitDist <= Mathf.Abs(char_stats.velocity.x))
+			}
+			char_stats.is_touching_vault_obstacle = null;
+			RaycastHit2D right_hit = Physics2D.BoxCast(right_hit_origin, box_size, 0.0f, Vector2.right, 50.0f, CollisionMasks.upwards_collision_mask);
+			if (right_hit.collider != null)
+			{
+				float right_hit_distance = right_hit.distance - 0.05f; // TODO: magic number
+				if (char_stats.velocity.x > 0.0f && right_hit_distance <= Mathf.Abs( char_stats.velocity.x * Time.fixedDeltaTime * Time.timeScale ))
 				{
-                    char_stats.velocity.x = rightHitDist;
+					char_stats.velocity.x = right_hit_distance / (Time.fixedDeltaTime * Time.timeScale);
 				}
 
-                // are we touching the right wall?
-				if (IsAlmostZero(rightHitDist))
-                {
-                    char_stats.velocity.x = 0.0f;
-                    TouchedWall(rightHit.collider.gameObject);
-					if (rightHit.collider.GetComponent<CollisionType> ().VaultObstacle == true && char_stats.IsGrounded) 
-					{
-						char_stats.is_touching_vault_obstacle = rightHit.collider;
-					} 
-					else 
-					{
-						char_stats.is_touching_vault_obstacle = null;
-					}
-                }
-                else
-                {
-                    char_stats.is_touching_vault_obstacle = null;
-                }
-            }
-            else
-            {
-                char_stats.is_touching_vault_obstacle = null;
-            }
-        }
-        // raycast to collide left
-        else if (char_stats.velocity.x < 0)
-        {
-            Vector2 leftHitOrigin = new Vector2(char_stats.char_collider.bounds.min.x + 0.1f, char_stats.char_collider.bounds.center.y);
-			if (char_stats.IsInMidair)
-            {
-				if (char_stats.velocity.y > 0) 
+				// are we touching the right wall?
+				if (IsAlmostZero(right_hit_distance))
 				{
-					leftHitOrigin = new Vector2 (char_stats.char_collider.bounds.min.x + 0.1f, char_stats.char_collider.bounds.center.y + 5.0f);
+					char_stats.velocity.x = 0.0f;
+					TouchedWall(right_hit.collider.gameObject);
+
+					CollisionType right_hit_collision_type = right_hit.collider.GetComponent<CollisionType>();
+					if ( right_hit_collision_type != null )
+					{
+						if (right_hit_collision_type.VaultObstacle == true && char_stats.IsGrounded) 
+						{
+							char_stats.is_touching_vault_obstacle = right_hit.collider;
+						}
+				    }
+				}
+			}
+		}
+
+		// raycast to collide left
+		// TODO: REFACTOR. DRY violation
+		else if (char_stats.velocity.x < 0.0f)
+		{
+			Vector2 left_hit_origin = new Vector2(char_stats.char_collider.bounds.min.x + box_size.x, char_stats.char_collider.bounds.center.y);
+			if (char_stats.IsInMidair)
+			{
+				if (char_stats.velocity.y > 0.0f) 
+				{
+					left_hit_origin = new Vector2 (char_stats.char_collider.bounds.min.x + box_size.x, char_stats.char_collider.bounds.center.y + 5.0f); // TODO: magic number
 				}
 				else 
 				{
-					leftHitOrigin = new Vector2 (char_stats.char_collider.bounds.min.x + 0.1f, char_stats.char_collider.bounds.center.y - 5.0f);
+					left_hit_origin = new Vector2 (char_stats.char_collider.bounds.min.x + box_size.x, char_stats.char_collider.bounds.center.y - 5.0f); //TODO: magic number
 				}
-            }
-            RaycastHit2D leftHit = Physics2D.BoxCast(leftHitOrigin, horizontalBoxSize, 0.0f, Vector2.left, 50.0f, CollisionMasks.upwards_collision_mask);
-            if (leftHit.collider != null)
-            {
-                float leftHitDist = leftHit.distance - 0.05f;
-				if (char_stats.velocity.x < 0.0f && leftHitDist <= Mathf.Abs (char_stats.velocity.x)) 
-				{
-					char_stats.velocity.x = -leftHitDist;
-				}
-
-                // are we touching the left wall?
-				if (IsAlmostZero(leftHitDist))
-                {
-                    char_stats.velocity.x = 0.0f;
-                    TouchedWall(leftHit.collider.gameObject);
-					if (leftHit.collider.GetComponent<CollisionType>().VaultObstacle == true && char_stats.IsGrounded)
-					{
-                        char_stats.is_touching_vault_obstacle = leftHit.collider;
-					}
-                    else
-					{
-                        char_stats.is_touching_vault_obstacle = null;
-					}
-                }
-                else
-                {
-                    char_stats.is_touching_vault_obstacle = null;
-                }
-            }
-            else
-            {
-                char_stats.is_touching_vault_obstacle = null;
-            }
-        }
-
-        // Vertical Collision Block
-        Vector2 verticalBoxSize = new Vector2(char_stats.char_collider.bounds.size.x - 0.1f, 0.1f);
-
-        // raycast to hit the ceiling
-        Vector2 upHitOrigin = new Vector2(char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.max.y - 0.1f);
-        RaycastHit2D upHit = Physics2D.BoxCast(upHitOrigin, verticalBoxSize, 0.0f, Vector2.up, 50.0f, CollisionMasks.upwards_collision_mask);
-        if (upHit.collider != null)
-        {
-            float hitDist = upHit.distance - 0.05f; //TODO: bake
-            if (char_stats.velocity.y > 0.0f && hitDist <= Mathf.Abs(char_stats.velocity.y))
+			}
+			char_stats.is_touching_vault_obstacle = null;
+			RaycastHit2D leftHit = Physics2D.BoxCast(left_hit_origin, box_size, 0.0f, Vector2.left, 50.0f, CollisionMasks.upwards_collision_mask);
+			if (leftHit.collider != null)
 			{
-                char_stats.velocity.y = hitDist;
+				float left_hit_distance = leftHit.distance - 0.05f;  // TODO: magic number
+				if (char_stats.velocity.x < 0.0f && leftHit.distance <= Mathf.Abs (char_stats.velocity.x * Time.fixedDeltaTime * Time.timeScale))
+				{
+					char_stats.velocity.x = -left_hit_distance / (Time.fixedDeltaTime * Time.timeScale);
+				}
+
+				// are we touching the left wall?
+				if (IsAlmostZero(left_hit_distance))
+				{
+					char_stats.velocity.x = 0.0f;
+					TouchedWall(leftHit.collider.gameObject);
+					CollisionType left_hit_collision_type = leftHit.collider.GetComponent<CollisionType>();
+					if (left_hit_collision_type != null)
+					{
+					    if (left_hit_collision_type.VaultObstacle == true && char_stats.IsGrounded)
+						{
+							char_stats.is_touching_vault_obstacle = leftHit.collider;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	private void CheckCollisionVertical()
+	{
+		// Vertical Collision Block
+		Vector2 box_size = new Vector2(char_stats.char_collider.bounds.size.x, 1.0f); // width x 1 px box
+
+		// raycast to hit the ceiling
+		Vector2 up_hit_origin = new Vector2(char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.max.y - box_size.y);
+		RaycastHit2D up_hit = Physics2D.BoxCast(up_hit_origin, box_size, 0.0f, Vector2.up, 50.0f, CollisionMasks.upwards_collision_mask);
+		if (up_hit.collider != null)
+		{
+			float hit_distance = up_hit.distance - 0.05f; //TODO: magic number
+			if (char_stats.velocity.y > 0.0f && hit_distance <= Mathf.Abs(char_stats.velocity.y * Time.fixedDeltaTime * Time.timeScale))
+			{
+				char_stats.velocity.y = hit_distance / (Time.fixedDeltaTime * Time.timeScale);
 			}
 
-            // are we touching the ceiling?
-			if (IsAlmostZero(hitDist))
-            {
-                //stop upward movement
-                char_stats.is_jumping = false;
-                TouchedCeiling(upHit.collider.gameObject);
-            }
-        }
+			// are we touching the ceiling?
+			if (IsAlmostZero(hit_distance))
+			{
+				//stop upward movement
+				char_stats.is_jumping = false;
+				TouchedCeiling(up_hit.collider.gameObject);
+			}
+		}
 
-        // raycast to find the floor
-        Vector2 downHitOrigin = new Vector2(char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.min.y + 0.1f);
-        RaycastHit2D downHit = Physics2D.BoxCast(downHitOrigin, verticalBoxSize, 0.0f, Vector2.down, 50.0f, CollisionMasks.all_collision_mask);
-        if (downHit.collider != null)
-        {
-            float downHitColliderLeft = downHit.collider.bounds.min.x;
-            float downHitColliderRight = downHit.collider.bounds.max.x;
-            float characterLeft = char_stats.char_collider.bounds.min.x;
-            float characterRight = char_stats.char_collider.bounds.max.x;
-            bool touchGround = true; // this is to prevent the game from thinking you touched the ground when you're gonna slip off the side when falling
+		// raycast to find the floor
+		Vector2 down_hit_origin = new Vector2(char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.min.y + box_size.y);
+		RaycastHit2D down_hit = Physics2D.BoxCast(down_hit_origin, box_size, 0.0f, Vector2.down, 50.0f, CollisionMasks.all_collision_mask);
+		if (down_hit.collider != null)
+		{
+			float down_hit_collider_left = down_hit.collider.bounds.min.x;
+			float down_hit_collider_right = down_hit.collider.bounds.max.x;
+			float character_left = char_stats.char_collider.bounds.min.x;
+			float character_right = char_stats.char_collider.bounds.max.x;
+			bool touch_ground = true; // this is to prevent the game from thinking you touched the ground when you're gonna slip off the side when falling
+			CollisionType down_hit_collision_type = down_hit.transform.gameObject.GetComponent<CollisionType>();
 
-            float hitDist = downHit.distance - 0.05f;
-            if (char_stats.velocity.y < 0.0f && hitDist <= Mathf.Abs(char_stats.velocity.y))
-            {
-                // if the character is about to clip into the enviornment with the back of their hit box, move them so that they won't clip
-                if (char_stats.velocity.x > 0.0f && downHitColliderRight < char_stats.char_collider.bounds.center.x && downHit.transform.gameObject.GetComponent<CollisionType>().WalkOffRight == false)
-                {
-                    transform.Translate(downHitColliderRight - characterLeft, 0.0f, 0.0f);
-                    touchGround = false;
-                }
-                else if (char_stats.velocity.x < 0.0f && downHitColliderLeft > char_stats.char_collider.bounds.center.x && downHit.transform.gameObject.GetComponent<CollisionType>().WalkOffLeft == false)
-                {
-                    transform.Translate(-(characterRight - downHitColliderLeft), 0.0f, 0.0f);
-                    touchGround = false;
-                }
-                else // otherwise, touch the ground
-                {
-                    char_stats.velocity.y = -hitDist;
-                }
-            }
-            //This logic allows characters to walk over connected platforms
-			if ((char_stats.facing_direction == CharEnums.FacingDirection.Left && downHit.collider.gameObject.GetComponent<CollisionType>().WalkOffLeft == false) || 
-				(char_stats.facing_direction == CharEnums.FacingDirection.Right && downHit.collider.gameObject.GetComponent<CollisionType>().WalkOffRight == false))
-            {
-                // stop at the edge of a platform
-				if (char_stats.IsGrounded && char_stats.current_move_state != CharEnums.MoveState.IsRunning)
-                {
-                    float rightLedgeDist = downHitColliderRight - characterRight;
-                    if (char_stats.velocity.x > 0.0f && rightLedgeDist <= Mathf.Abs(char_stats.velocity.x))
-                    {
-						if (characterRight < downHitColliderRight) 
-						{
-							char_stats.velocity.x = rightLedgeDist;
-						}
-                        else
-						{
-                            char_stats.velocity.x = 0.0f;
-						}
-                    }
-                    float leftLedgeDist = characterLeft - downHitColliderLeft;
-                    if (char_stats.velocity.x < 0.0f && leftLedgeDist <= Mathf.Abs(char_stats.velocity.x))
-                    {
-                        if (characterLeft > downHitColliderLeft)
-						{
-                            char_stats.velocity.x = -leftLedgeDist;
-						}
-                        else
-						{
-                            char_stats.velocity.x = 0.0f;
-						}
-                    }
-                    // set if character is against the ledge
-					if ((rightLedgeDist < 1.0f && char_stats.facing_direction == CharEnums.FacingDirection.Right) || (leftLedgeDist < 1.0f && char_stats.facing_direction == CharEnums.FacingDirection.Left))
+			float hit_distance = down_hit.distance - 0.05f; //TODO: magic number
+			if (char_stats.velocity.y < 0.0f && hit_distance <= Mathf.Abs(char_stats.velocity.y * Time.fixedDeltaTime * Time.timeScale))
+			{
+				// if the character is about to clip into the environment with the back of their hit box, move them so that they won't clip
+				if ( down_hit_collision_type != null )
+				{
+					if (char_stats.velocity.x > 0.0f && down_hit_collider_right < char_stats.char_collider.bounds.center.x && down_hit_collision_type.WalkOffRight == false)
 					{
-                        is_against_ledge = true;
+						transform.Translate(down_hit_collider_right - character_left, 0.0f, 0.0f);
+						touch_ground = false;
 					}
-                    else
+					else if (char_stats.velocity.x < 0.0f && down_hit_collider_left > char_stats.char_collider.bounds.center.x && down_hit_collision_type.WalkOffLeft == false)
 					{
-                        is_against_ledge = false;
+						transform.Translate(-(character_right - down_hit_collider_left), 0.0f, 0.0f);
+						touch_ground = false;
 					}
-                }
-            }
-            else
-            {
-                is_against_ledge = false;
-            }
-			if (IsAlmostZero(hitDist))
-            {
-                if (touchGround)
-                {
-                    char_stats.is_on_ground = true;
-                    char_stats.jump_turned = false;
-                }
-            }
-            else
-            {
-                FallingLogic();
-            }
-            //Fallthrough platforms
-            if (fallthrough == true)
-            {
-                if (downHit.collider.gameObject.GetComponent<CollisionType>().Fallthrough == false)
-                {
-                    fallthrough = false;
-                }
-                else
-                {
-                    // make sure that the player character is not straddling a solid platform
-                    // issue can't fall down when straddling two fallthrough platforms 
-                    //(but there shouldn't be a need to have two passthrough platforms touch, they can just merge into 1)
-                    if ((downHit.collider.gameObject.GetComponent<CollisionType>().WalkOffRight == true && characterRight > downHitColliderRight) ||
-                        (downHit.collider.gameObject.GetComponent<CollisionType>().WalkOffLeft == true && characterLeft < downHitColliderLeft))
-                    {
-                        fallthrough = false;
-                    }
-                }
-            }
-        }
-        // if there is no floor, just fall
-        else
-        {
-            FallingLogic();
-        }
-    }
+					else // otherwise, touch the ground
+					{
+						char_stats.velocity.y = -hit_distance / (Time.fixedDeltaTime * Time.timeScale);
+					}
+				}
+				else
+				{
+					char_stats.velocity.y = -hit_distance / (Time.fixedDeltaTime * Time.timeScale);
+				}
+			}
+			//This logic allows characters to walk over connected platforms
+			is_against_ledge = false;
+			if ( down_hit_collision_type != null )
+			{
+				if ((char_stats.facing_direction == CharEnums.FacingDirection.Left && down_hit_collision_type.WalkOffLeft == false) || 
+					(char_stats.facing_direction == CharEnums.FacingDirection.Right && down_hit_collision_type.WalkOffRight == false))
+				{
+					// stop at the edge of a platform
+					if (char_stats.IsGrounded && char_stats.current_move_state != CharEnums.MoveState.IsRunning)
+					{
+						float right_ledge_distance = down_hit_collider_right - character_right;
+						if (char_stats.velocity.x > 0.0f && right_ledge_distance <= Mathf.Abs(char_stats.velocity.x * Time.fixedDeltaTime * Time.timeScale))
+						{
+							if (character_right < down_hit_collider_right) 
+							{
+								char_stats.velocity.x = right_ledge_distance / (Time.fixedDeltaTime * Time.timeScale);
+							}
+							else
+							{
+								char_stats.velocity.x = 0.0f;
+							}
+						}
+						float left_ledge_distance = character_left - down_hit_collider_left;
+						if (char_stats.velocity.x < 0.0f && left_ledge_distance <= Mathf.Abs(char_stats.velocity.x * Time.fixedDeltaTime * Time.timeScale))
+						{
+							if (character_left > down_hit_collider_left)
+							{
+								char_stats.velocity.x = -left_ledge_distance / (Time.fixedDeltaTime * Time.timeScale);
+							}
+							else
+							{
+								char_stats.velocity.x = 0.0f;
+							}
+						}
+						// set if character is against the ledge
+						if ((right_ledge_distance < 1.0f && char_stats.facing_direction == CharEnums.FacingDirection.Right) || (left_ledge_distance < 1.0f && char_stats.facing_direction == CharEnums.FacingDirection.Left))
+						{
+							is_against_ledge = true;
+						}
+					}
+				}
+			}
+
+			if (IsAlmostZero(hit_distance))
+			{
+				if (touch_ground)
+				{
+					char_stats.is_on_ground = true;
+					char_stats.jump_turned = false;
+				}
+			}
+			else
+			{
+				FallingLogic();
+			}
+			//Fallthrough platforms
+			if (fallthrough == true)
+			{
+				if ( down_hit_collision_type != null )
+				{
+					if (down_hit_collision_type.Fallthrough == false)
+					{
+						fallthrough = false;
+					}
+					else
+					{
+						// make sure that the player character is not straddling a solid platform
+						// issue can't fall down when straddling two fallthrough platforms 
+						//(but there shouldn't be a need to have two passthrough platforms touch, they can just merge into 1)
+						if ((down_hit_collision_type.WalkOffRight && character_right > down_hit_collider_right) ||
+							(down_hit_collision_type.WalkOffLeft  && character_left  < down_hit_collider_left ))
+						{
+							fallthrough = false;
+						}
+					}
+				}
+				else
+				{
+					//fallthrough = false; //TODO: ? is this right?, or should we do nothing?
+				}
+			}
+		}
+		// if there is no floor, just fall
+		else
+		{
+			FallingLogic();
+		}
+	}
 
 	/// <summary>
 	/// Called when the character is falling.
@@ -534,9 +537,8 @@ public class SimpleCharacterCore : MonoBehaviour
 
 	/// <summary>
 	/// Figures out which way the character should be facing, based on their movement, then sets their facing.
-	/// Does NOT handle the sprite flipping, that's (allegedly) done by SetFacing
 	/// </summary>
-    void CalculateDirection()
+    private void CalculateDirection()
     {
         // character direction logic
 		bool turnAround = false;
@@ -559,6 +561,12 @@ public class SimpleCharacterCore : MonoBehaviour
 			{
 				char_stats.jump_turned = true;
 			}
+		}
+
+		// set Sprite flip
+		if (char_stats.previous_facing_direction != char_stats.facing_direction)
+		{
+			SetFacing();
 		}
     }
 
@@ -587,7 +595,7 @@ public class SimpleCharacterCore : MonoBehaviour
             char_stats.current_move_state = CharEnums.MoveState.IsSneaking;
 		}
 
-        if(char_stats.current_move_state == CharEnums.MoveState.IsRunning)
+        if (char_stats.current_move_state == CharEnums.MoveState.IsRunning)
         {
             // if the character comes to a full stop, let them start the run again
             // This also works when turning around
@@ -613,15 +621,15 @@ public class SimpleCharacterCore : MonoBehaviour
         
         if (input_manager.HorizontalAxis > 0.0f)
 		{
-            char_stats.character_acceleration = ACCELERATION;
+            char_stats.acceleration.x = ACCELERATION;
 		}
         else if (input_manager.HorizontalAxis < 0.0f)
 		{
-            char_stats.character_acceleration = -ACCELERATION;
+            char_stats.acceleration.x = -ACCELERATION;
 		}
         else
 		{
-            char_stats.character_acceleration = 0.0f;
+            char_stats.acceleration.x = 0.0f;
 		}
 
         // Jump logic. Keep the Y velocity constant while holding jump for the duration of JUMP_CONTROL_TIME
@@ -669,12 +677,24 @@ public class SimpleCharacterCore : MonoBehaviour
         //base class does nothing with this function. gets overridden at the subclass level to handle such occasions
     }
 
-    public float GetJumpHoriSpeedMin()
+	private void UpdateGracePeriod()
+	{
+		if ( jump_grace_period )
+		{
+			jump_grace_period_timer = jump_grace_period_timer + Time.deltaTime * Time.timeScale;
+			if ( jump_grace_period_timer >= JUMP_GRACE_PERIOD_TIME )
+			{
+				jump_grace_period = false;
+			}
+		}
+	}
+
+    public float GetJumpHorizontalSpeedMin()
     {
         return JUMP_HORIZONTAL_SPEED_MIN;
     }
 
-    public float GetJumpHoriSpeedMax()
+    public float GetJumpHorizontalSpeedMax()
     {
         return JUMP_HORIZONTAL_SPEED_MAX;
     }

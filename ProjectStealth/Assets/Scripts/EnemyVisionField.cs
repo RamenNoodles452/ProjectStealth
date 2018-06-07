@@ -16,12 +16,12 @@ public class EnemyVisionField : MonoBehaviour
     {
 		#if UNITY_EDITOR
 		// Initialize line renderer to show the vision field.
-		LineRenderer line_renderer = gameObject.AddComponent<LineRenderer>();
-		line_renderer.material = new Material( Shader.Find( "Particles/Additive" ) );
-		line_renderer.startColor = new Color( 1.0f, 0.0f, 0.0f, 1.0f );
-		line_renderer.endColor = new Color( 1.0f, 0.0f, 0.0f, 1.0f );
-		line_renderer.startWidth = 1.0f;
-		line_renderer.endWidth = 1.0f;
+		LineRenderer line_renderer  = gameObject.AddComponent<LineRenderer>();
+		line_renderer.material      = new Material( Shader.Find( "Particles/Additive" ) );
+		line_renderer.startColor    = new Color( 1.0f, 0.0f, 0.0f, 1.0f );
+		line_renderer.endColor      = new Color( 1.0f, 0.0f, 0.0f, 1.0f );
+		line_renderer.startWidth    = 1.0f;
+		line_renderer.endWidth      = 1.0f;
 		line_renderer.positionCount = 4;
 		#endif
 	}

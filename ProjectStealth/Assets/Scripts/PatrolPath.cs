@@ -9,6 +9,8 @@ public class PatrolPath : MonoBehaviour
 {
 	#region vars
 	public bool is_flying;      // ignore such trivial things as collision & gravity
+	public PathLoopMode loop_mode;
+
 	public Vector3[] positions;
 	// public float[] delays; // probably better to merge positions & delays instead of using parallel arrays
 	private int index;
@@ -19,6 +21,16 @@ public class PatrolPath : MonoBehaviour
 	/// </summary>
 	public Vector3 Next()
 	{
+		bool was_reset;
+		return Next( out was_reset );
+	}
+
+	/// <summary>
+	/// Gets the next point on the path.
+	/// </summary>
+	public Vector3 Next( out bool was_reset )
+	{
+		was_reset = false;
 		if ( positions == null ) { return transform.position; }
 		if ( positions.Length <= 0 ) { return transform.position; }
 
@@ -26,6 +38,7 @@ public class PatrolPath : MonoBehaviour
 		if ( index >= positions.Length )
 		{
 			index = 0;
+			was_reset = true;
 		}
 		return positions[index];
 	}
@@ -40,4 +53,9 @@ public class PatrolPath : MonoBehaviour
 
 		return positions[index];
 	}
+}
+
+public enum PathLoopMode
+{
+	LOOP, SNAP_BACK
 }

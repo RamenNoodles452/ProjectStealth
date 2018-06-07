@@ -21,12 +21,12 @@ public class Noise : MonoBehaviour
         Referencer.instance.RegisterNoise( this ); // Register, so enemies can interact with it
 
         // Initialize line renderer
-        LineRenderer line_renderer = gameObject.AddComponent<LineRenderer>();
-        line_renderer.material = new Material( Shader.Find( "Particles/Additive" ) );
-        line_renderer.startColor = new Color( 1.0f, 0.0f, 0.0f, 1.0f );
-        line_renderer.endColor = new Color( 1.0f, 0.0f, 0.0f, 1.0f );
-        line_renderer.startWidth = 1.0f;
-        line_renderer.endWidth = 1.0f;
+        LineRenderer line_renderer  = gameObject.AddComponent<LineRenderer>();
+        line_renderer.material      = new Material( Shader.Find( "Particles/Additive" ) );
+        line_renderer.startColor    = new Color( 1.0f, 0.0f, 0.0f, 1.0f );
+        line_renderer.endColor      = new Color( 1.0f, 0.0f, 0.0f, 1.0f );
+        line_renderer.startWidth    = 1.0f;
+        line_renderer.endWidth      = 1.0f;
         line_renderer.positionCount = 101;
     }
 	
@@ -47,7 +47,7 @@ public class Noise : MonoBehaviour
         }
 
         // timer
-        timer += Time.deltaTime * TimeScale.timeScale;
+        timer += Time.deltaTime * Time.timeScale;
         if ( timer >= lifetime )
         {
             CleanUp();

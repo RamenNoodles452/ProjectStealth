@@ -12,28 +12,30 @@ public class TakeCoverAction : MonoBehaviour
     /// is_taking_cover
     /// </summary>
 
+	#region vars
     private CharacterStats char_stats;
     private IInputManager input_manager;
 
     private float cover_timer;
-    private const float COVER_TIME = 0.10f;
+    private const float COVER_TIME = 0.10f; //seconds
+	#endregion
 
     void Start ()
     {
-        char_stats = GetComponent<CharacterStats>();
+        char_stats    = GetComponent<CharacterStats>();
         input_manager = GetComponent<IInputManager>();
-        cover_timer = 0.0f;
+        cover_timer   = 0.0f;
     }
 	
 	void Update ()
     {
-		if (char_stats.is_touching_vault_obstacle && char_stats.current_move_state == CharEnums.MoveState.IsSneaking &&
+		if (char_stats.is_touching_vault_obstacle && char_stats.IsSneaking &&
 			((char_stats.facing_direction == CharEnums.FacingDirection.Left && input_manager.HorizontalAxis < 0.0f) || 
 				(char_stats.facing_direction == CharEnums.FacingDirection.Right && input_manager.HorizontalAxis > 0.0f))) //TODO: expose left/right API for this
         {
             if (cover_timer < COVER_TIME)
             {
-                cover_timer += Time.deltaTime * TimeScale.timeScale;
+                cover_timer += Time.deltaTime * Time.timeScale;
             }
             if (cover_timer >= COVER_TIME)
             {

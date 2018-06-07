@@ -4,30 +4,30 @@
 // Stores character movement-related state data.
 public class CharacterStats : MonoBehaviour 
 {
+	#region vars
     // vars related to character core that are referenced in other scripts
     public CharEnums.MasterState current_master_state = CharEnums.MasterState.DefaultState;
-    public CharEnums.MoveState current_move_state = CharEnums.MoveState.IsWalking;
-	public CharEnums.MoveState previous_move_state = CharEnums.MoveState.IsWalking;
+    public CharEnums.MoveState   current_move_state   = CharEnums.MoveState.IsWalking;
+	public CharEnums.MoveState   previous_move_state  = CharEnums.MoveState.IsWalking;
 
 	// Collision geometry
     [HideInInspector]
     public BoxCollider2D char_collider; // defaults: offset[0,-2] size [26,40]
     [HideInInspector]
-    public Vector2 STANDING_COLLIDER_SIZE = new Vector2(26f, 40f);
+    public Vector2 STANDING_COLLIDER_SIZE    = new Vector2(26.0f,  40.0f);
     [HideInInspector]
-    public Vector2 STANDING_COLLIDER_OFFSET = new Vector2(0f, -2f);
+    public Vector2 STANDING_COLLIDER_OFFSET  = new Vector2( 0.0f,  -2.0f);
     [HideInInspector]
-    public Vector2 CROUCHING_COLLIDER_SIZE = new Vector2(26f, 20f);
+    public Vector2 CROUCHING_COLLIDER_SIZE   = new Vector2(26.0f,  20.0f);
     [HideInInspector]
-    public Vector2 CROUCHING_COLLIDER_OFFSET = new Vector2(0f, -12f);
+    public Vector2 CROUCHING_COLLIDER_OFFSET = new Vector2( 0.0f, -12.0f);
 
+	public float WALK_SPEED  = 1.0f * 60.0f; //used for cutscenes for PC, guards will walk when not alerted (pixels per fixed update frame)
+	public float SNEAK_SPEED = 2.0f * 60.0f; //default speed, enemies that were walking will use this speed when on guard
+	public float RUN_SPEED   = 4.5f * 60.0f;
     public Vector2 velocity;
-    public float WALK_SPEED = 1.0f; //used for cutscenes for PC, guards will walk when not alerted
-    public float SNEAK_SPEED = 2.0f; //default speed, enemies that were walking will use this speed when on guard
-    public float RUN_SPEED = 4.5f;
-
     [HideInInspector]
-    public float character_acceleration = 0.0f; //this changes based on if a character is mid air or not.
+    public Vector2 acceleration; //this changes based on if a character is mid air or not.
 	public CharEnums.FacingDirection facing_direction;
 	public CharEnums.FacingDirection previous_facing_direction;
 
@@ -55,20 +55,21 @@ public class CharacterStats : MonoBehaviour
     public Vector2 bezier_curve_position;
     [HideInInspector]
     public float bezier_distance;
-
+	#endregion
 
     void Start()
     {
         char_collider = GetComponent<BoxCollider2D>();
-        char_collider.size = STANDING_COLLIDER_SIZE;
+        char_collider.size   = STANDING_COLLIDER_SIZE;
         char_collider.offset = STANDING_COLLIDER_OFFSET;
-        velocity = new Vector2(0.0f, 0.0f);
+        velocity     = new Vector2(0.0f, 0.0f);
+		acceleration = new Vector2(0.0f, 0.0f);
         jump_input_time = 0.0f;
     }
-
+		
     public void ResetJump()
     {
-        is_jumping = false;
+        is_jumping  = false;
         jump_turned = false;
     }
 
@@ -91,7 +92,7 @@ public class CharacterStats : MonoBehaviour
     }
 
 	/// <summary>
-	/// Gets a value indicating whether this character is in midair.
+	/// Gets whether this character is in midair.
 	/// If it is not, then it is Grounded.
 	/// </summary>
 	/// <value><c>true</c> if this character is in midair; otherwise, <c>false</c>.</value>
@@ -104,7 +105,7 @@ public class CharacterStats : MonoBehaviour
 	}
 
 	/// <summary>
-	/// Gets a value indicating whether this character is grounded.
+	/// Gets whether this character is grounded.
 	/// If it is not, then it is in Midair
 	/// </summary>
 	/// <value><c>true</c> if this character is grounded; otherwise, <c>false</c>.</value>
@@ -113,6 +114,42 @@ public class CharacterStats : MonoBehaviour
 		get
 		{
 			return is_on_ground;
+		}
+	}
+
+	/// <summary>
+	/// Gets whether this character is running.
+	/// </summary>
+	/// <value><c>true</c> if this character is running; otherwise, <c>false</c>.</value>
+	public bool IsRunning
+	{
+		get 
+		{
+			return current_move_state == CharEnums.MoveState.IsRunning;
+		}
+	}
+
+	/// <summary>
+	/// Gets whether this character is walking.
+	/// </summary>
+	/// <value><c>true</c> if this character is walking; otherwise, <c>false</c>.</value>
+	public bool IsWalking
+	{
+		get 
+		{
+			return current_move_state == CharEnums.MoveState.IsWalking;
+		}
+	}
+
+	/// <summary>
+	/// Gets whether this character is sneaking.
+	/// </summary>
+	/// <value><c>true</c> if this character is sneaking; otherwise, <c>false</c>.</value>
+	public bool IsSneaking
+	{
+		get 
+		{
+			return current_move_state == CharEnums.MoveState.IsSneaking;
 		}
 	}
 		

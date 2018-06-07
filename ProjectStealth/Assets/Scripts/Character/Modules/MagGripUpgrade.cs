@@ -4,6 +4,7 @@ using System.Collections;
 // Handles wall climbing
 public class MagGripUpgrade : MonoBehaviour 
 {
+	#region vars
     private SpriteRenderer sprite_renderer;
     private IInputManager input_manager;
     private GenericMovementLib mov_lib;
@@ -23,8 +24,8 @@ public class MagGripUpgrade : MonoBehaviour
     public ClimbState current_climb_state = ClimbState.NotClimb;
     private ClimbState transitioning_to_state = ClimbState.NotClimb; // used when bzr curving to a new climb state
 
-    private const float WALL_CLIMB_SPEED = 2.0f;
-    private const float WALL_SLIDE_SPEED = 3.0f;
+    private const float WALL_CLIMB_SPEED = 120.0f; // pixels / second
+    private const float WALL_SLIDE_SPEED = 180.0f; // pixels / second
 
 	//TODO: do something about duplicate code
     // ledge logic
@@ -33,8 +34,8 @@ public class MagGripUpgrade : MonoBehaviour
     private bool is_climbing_ledge;
 
     //consts
-    protected const float JUMP_ACCELERATION = 4.0f; //base accel for jump off the wall with no input
-
+	protected const float JUMP_ACCELERATION = 240.0f; // base accel for jump off the wall with no input (pixels / second / second)
+	#endregion
 
 	// Use this for initialization
 	void Start () 
@@ -55,7 +56,7 @@ public class MagGripUpgrade : MonoBehaviour
         //wall grab delay timer
         if (wall_grab_delay_timer < WALL_GRAB_DELAY)
 		{
-            wall_grab_delay_timer = wall_grab_delay_timer + Time.deltaTime * TimeScale.timeScale;
+            wall_grab_delay_timer = wall_grab_delay_timer + Time.deltaTime * Time.timeScale;
 		}
         else
 		{
@@ -82,7 +83,7 @@ public class MagGripUpgrade : MonoBehaviour
             transform.position = mov_lib.BezierCurveMovement(char_stats.bezier_distance, char_stats.bezier_start_position, char_stats.bezier_end_position, char_stats.bezier_curve_position);
             if (char_stats.bezier_distance < 1.0f)
 			{
-                char_stats.bezier_distance = char_stats.bezier_distance + Time.deltaTime * TimeScale.timeScale * 5;
+				char_stats.bezier_distance = char_stats.bezier_distance + Time.fixedDeltaTime * Time.timeScale * 5.0f; //...what? WHAT? WAT!? 
 			}
             else 
             {
@@ -121,7 +122,7 @@ public class MagGripUpgrade : MonoBehaviour
 
     void ClimbHorizontalVelocity()
     {
-        if (Mathf.Approximately(char_stats.velocity.x - 1000000, -1000000))
+        if (Mathf.Approximately(char_stats.velocity.x - 1000000, -1000000)) //TODO:
 		{
             char_stats.velocity.x = 0;
 		}
@@ -202,14 +203,14 @@ public class MagGripUpgrade : MonoBehaviour
                 char_anims.JumpTrigger();
 				if (char_stats.facing_direction == CharEnums.FacingDirection.Right)
 				{
-                    char_stats.character_acceleration = JUMP_ACCELERATION;
+                    char_stats.acceleration.x = JUMP_ACCELERATION;
 				}
                 else
 				{
-					char_stats.character_acceleration = -JUMP_ACCELERATION;
+					char_stats.acceleration.x = -JUMP_ACCELERATION;
 				}
 
-                player_script.HorizontalJumpVelNoAccel((player_script.GetJumpHoriSpeedMin() + player_script.GetJumpHoriSpeedMax()) / 2.0f);
+                player_script.HorizontalJumpVelNoAccel((player_script.GetJumpHorizontalSpeedMin() + player_script.GetJumpHorizontalSpeedMax()) / 2.0f);
                 player_script.SetFacing();
             } 
             //ledge climb logic

@@ -70,7 +70,7 @@ public class Enemy : MonoBehaviour
 			if (player_position.x > this.gameObject.transform.position.x) { Face( CharEnums.FacingDirection.Right ); }
 			if (player_position.x < this.gameObject.transform.position.x) { Face( CharEnums.FacingDirection.Left  ); }
 			
-			fire_timer += Time.deltaTime * TimeScale.timeScale;
+			fire_timer += Time.deltaTime * Time.timeScale;
 			if ( fire_timer > 1.0f / fire_rate )
 			{
 				fire_timer = 0.0f;
