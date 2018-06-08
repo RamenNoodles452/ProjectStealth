@@ -727,4 +727,44 @@ public class SimpleCharacterCore : MonoBehaviour
 		    return false;
 		}
 	}
+
+	/// <summary>
+	/// Utility function for objects that move the player.
+	/// Will move them, respecting collision.
+	/// </summary>
+	/// <param name="change">The change to immediately apply to the player's position.</param>
+	public void MoveWithCollision( Vector3 change )
+	{
+		BoxCollider2D collider = GetComponent<BoxCollider2D>();
+		if ( collider == null ) 
+		{
+			Debug.LogError( "Player doesn't have a collider." );
+			return;
+		}
+
+		Vector2 size = new Vector2( collider.size.x, collider.size.y );
+		RaycastHit2D hit = Physics2D.BoxCast( this.gameObject.transform.position, size, 0.0f, change, change.magnitude, CollisionMasks.all_collision_mask );
+		if ( hit != null )
+		{
+			if ( hit.collider != null )
+			{
+				Debug.Log( "collided" + hit.distance );
+				if ( change.magnitude == 0.0f ) 
+				{
+					Debug.Log( "Don't be a troll." );
+					return;
+				}
+
+				this.gameObject.transform.position += (hit.distance / change.magnitude - 0.05f) * change; //TODO: magic number
+			}
+			else
+			{
+				this.gameObject.transform.position += change;
+			}
+		}
+		else
+		{
+		    this.gameObject.transform.position += change;
+		}
+	}
 }

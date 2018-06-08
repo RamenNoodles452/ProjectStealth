@@ -12,12 +12,25 @@ public class PlatformPatrol : MonoBehaviour
 	public Vector3 delta;
 
 	private bool attached = false; //TODO: make this function for enemies and players in multiplicity.
+	private Player player;
 	#endregion
 
 	// Use this for initialization
 	void Start () 
 	{
 		path = GetComponent<PatrolPath>();
+		player = Referencer.instance.player.GetComponent<Player>();
+
+		#if UNITY_EDITOR
+		if ( path == null )
+		{
+			Debug.LogError( "Lift configured improperly: missing path." );
+		}
+		if ( player == null ) 
+		{
+			Debug.LogError( "Lift couldn't find player." );
+		}
+		#endif
 	}
 	
 	// Update is called once per frame
@@ -34,7 +47,7 @@ public class PlatformPatrol : MonoBehaviour
 			transform.position += delta;
 			if ( attached )
 			{
-				Referencer.instance.player.transform.position += delta; //TODO: respect collision
+				player.MoveWithCollision( delta );
 			}
 		}
 		else
@@ -44,7 +57,7 @@ public class PlatformPatrol : MonoBehaviour
 			transform.position = aim;
 			if ( attached )
 			{
-				Referencer.instance.player.transform.position += delta; //TODO: respect collision
+				player.MoveWithCollision( delta );
 			}
 
 			aim = path.Next( out was_reset );
