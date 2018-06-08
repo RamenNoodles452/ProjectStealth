@@ -29,7 +29,7 @@ public class VaultAction : MonoBehaviour
     {
         if (char_stats.is_taking_cover && input_manager.InteractInputInst || char_stats.is_touching_vault_obstacle && char_stats.IsRunning)
         {
-            if(char_stats.current_move_state == CharEnums.MoveState.IsRunning)
+            if (char_stats.current_move_state == CharEnums.MoveState.IsRunning)
 			{
                 char_stats.current_move_state = CharEnums.MoveState.IsSneaking;
 			}
@@ -55,10 +55,7 @@ public class VaultAction : MonoBehaviour
 			char_stats.bezier_curve_position = new Vector2(char_stats.is_touching_vault_obstacle.bounds.center.x, char_stats.is_touching_vault_obstacle.bounds.max.y + char_stats.CROUCHING_COLLIDER_SIZE.y * 3);
             vaulting = true;
         }
-    }
 
-    void FixedUpdate()
-    {
         if (vaulting)
         {
             transform.position = mov_lib.BezierCurveMovement(char_stats.bezier_distance, char_stats.bezier_start_position, char_stats.bezier_end_position, char_stats.bezier_curve_position);

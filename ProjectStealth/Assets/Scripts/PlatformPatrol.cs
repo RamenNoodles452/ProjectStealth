@@ -74,7 +74,7 @@ public class PlatformPatrol : MonoBehaviour
 	public void AttachPlayer()
 	{
 		attached = true;
-		Referencer.instance.player.transform.position += delta;
+		player.MoveWithCollision( delta );
 	}
 
 	public void DetachPlayer()

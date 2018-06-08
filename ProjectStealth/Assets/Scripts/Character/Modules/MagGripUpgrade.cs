@@ -74,16 +74,13 @@ public class MagGripUpgrade : MonoBehaviour
             {
             }
 		}
-	}
 
-    void FixedUpdate()
-    {
         if (is_climbing_ledge)
         {
             transform.position = mov_lib.BezierCurveMovement(char_stats.bezier_distance, char_stats.bezier_start_position, char_stats.bezier_end_position, char_stats.bezier_curve_position);
             if (char_stats.bezier_distance < 1.0f)
 			{
-				char_stats.bezier_distance = char_stats.bezier_distance + Time.fixedDeltaTime * Time.timeScale * 5.0f; //...what? WHAT? WAT!? 
+				char_stats.bezier_distance = char_stats.bezier_distance + Time.deltaTime * Time.timeScale * 5.0f; //...what? WHAT? WAT!? 
 			}
             else 
             {
@@ -106,7 +103,7 @@ public class MagGripUpgrade : MonoBehaviour
             ClimbVerticalEdgeDetect();
 
             //move the character after all calculations have been done
-			transform.Translate( char_stats.velocity * Time.fixedDeltaTime * Time.timeScale );
+			transform.Translate( char_stats.velocity * Time.deltaTime * Time.timeScale );
 
             //if you climb down and touch the ground, stop climbing
 			if (char_stats.IsGrounded)
@@ -160,15 +157,15 @@ public class MagGripUpgrade : MonoBehaviour
 
             // stop at the edges of the surface
             float ledgeDistanceTop = colliderTop - characterTop;
-			if (char_stats.velocity.y > 0.0f && ledgeDistanceTop <= Mathf.Abs(char_stats.velocity.y * Time.fixedDeltaTime * Time.timeScale))
+			if (char_stats.velocity.y > 0.0f && ledgeDistanceTop <= Mathf.Abs(char_stats.velocity.y * Time.deltaTime * Time.timeScale))
 			{
-				char_stats.velocity.y = ledgeDistanceTop / (Time.fixedDeltaTime * Time.timeScale);
+				char_stats.velocity.y = ledgeDistanceTop / (Time.deltaTime * Time.timeScale);
 			}
 
             float ledgeDistanceBottom = characterBottom - colliderBottom;
-			if (char_stats.velocity.y < 0.0f && ledgeDistanceBottom <= Mathf.Abs(char_stats.velocity.y * Time.fixedDeltaTime * Time.timeScale))
+			if (char_stats.velocity.y < 0.0f && ledgeDistanceBottom <= Mathf.Abs(char_stats.velocity.y * Time.deltaTime * Time.timeScale))
 			{
-				char_stats.velocity.y = -ledgeDistanceBottom / (Time.fixedDeltaTime * Time.timeScale);
+				char_stats.velocity.y = -ledgeDistanceBottom / (Time.deltaTime * Time.timeScale);
 			}
 
             // set if you're against the ledge

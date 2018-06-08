@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 // Handles movement
 public class SimpleCharacterCore : MonoBehaviour
@@ -42,6 +43,8 @@ public class SimpleCharacterCore : MonoBehaviour
     protected bool fallthrough;
 
 	private const float APPROXIMATE_EQUALITY_MARGIN = 0.001f; //Mathf.Epsilon;
+
+	private Queue<Vector3> applied_moves;
 	#endregion
 
 	#region virtual overrides
@@ -53,6 +56,8 @@ public class SimpleCharacterCore : MonoBehaviour
         char_anims      = GetComponent<CharacterAnimationLogic>();
         sprite_renderer = GetComponent<SpriteRenderer>();
 
+		applied_moves = new Queue<Vector3>();
+
         jump_grace_period = false;
 		jump_grace_period_timer = JUMP_GRACE_PERIOD_TIME;
         fallthrough = false;
@@ -61,12 +66,28 @@ public class SimpleCharacterCore : MonoBehaviour
 	// Called each frame
     public virtual void Update()
     {
-        MovementInput();
-        CalculateDirection();
-        HorizontalVelocity();
-        VerticalVelocity();
-        Collisions();
+		while ( applied_moves.Count > 0 )
+		{
+			ApplyMoveWithCollision( applied_moves.Dequeue() );
+		}
+
+		MovementInput();
+		CalculateDirection();
+		HorizontalVelocity();
+		VerticalVelocity();
+		Collisions();
 		UpdateGracePeriod();
+
+		//move the character after all calculations have been done
+		if ( char_stats.current_master_state == CharEnums.MasterState.DefaultState )
+		{
+			transform.Translate( char_stats.velocity * Time.deltaTime * Time.timeScale );
+			if (fallthrough == true)
+			{
+				transform.Translate( Vector3.down ); // move 1 pixel down.
+				fallthrough = false;
+			}
+		}
     }
 
 	// Called each frame, after update
@@ -79,16 +100,7 @@ public class SimpleCharacterCore : MonoBehaviour
 
     public virtual void FixedUpdate()
     {
-        //move the character after all calculations have been done
-        if ( char_stats.current_master_state == CharEnums.MasterState.DefaultState )
-        {
-			transform.Translate( char_stats.velocity * Time.fixedDeltaTime * Time.timeScale );
-            if (fallthrough == true)
-            {
-				transform.Translate( Vector3.down ); // move 1 pixel down.
-                fallthrough = false;
-            }
-        }
+        
     }
 	#endregion
 
@@ -299,10 +311,10 @@ public class SimpleCharacterCore : MonoBehaviour
 			RaycastHit2D right_hit = Physics2D.BoxCast(right_hit_origin, box_size, 0.0f, Vector2.right, 50.0f, CollisionMasks.upwards_collision_mask);
 			if (right_hit.collider != null)
 			{
-				float right_hit_distance = right_hit.distance - 0.05f; // TODO: magic number
-				if (char_stats.velocity.x > 0.0f && right_hit_distance <= Mathf.Abs( char_stats.velocity.x * Time.fixedDeltaTime * Time.timeScale ))
+				float right_hit_distance = right_hit.distance - 1.0f; // TODO: magic number
+				if (char_stats.velocity.x > 0.0f && right_hit_distance <= Mathf.Abs( char_stats.velocity.x * Time.deltaTime * Time.timeScale ))
 				{
-					char_stats.velocity.x = right_hit_distance / (Time.fixedDeltaTime * Time.timeScale);
+					char_stats.velocity.x = right_hit_distance / (Time.deltaTime * Time.timeScale);
 				}
 
 				// are we touching the right wall?
@@ -343,10 +355,10 @@ public class SimpleCharacterCore : MonoBehaviour
 			RaycastHit2D leftHit = Physics2D.BoxCast(left_hit_origin, box_size, 0.0f, Vector2.left, 50.0f, CollisionMasks.upwards_collision_mask);
 			if (leftHit.collider != null)
 			{
-				float left_hit_distance = leftHit.distance - 0.05f;  // TODO: magic number
-				if (char_stats.velocity.x < 0.0f && leftHit.distance <= Mathf.Abs (char_stats.velocity.x * Time.fixedDeltaTime * Time.timeScale))
+				float left_hit_distance = leftHit.distance - 1.0f;  // TODO: magic number
+				if (char_stats.velocity.x < 0.0f && leftHit.distance <= Mathf.Abs (char_stats.velocity.x * Time.deltaTime * Time.timeScale))
 				{
-					char_stats.velocity.x = -left_hit_distance / (Time.fixedDeltaTime * Time.timeScale);
+					char_stats.velocity.x = -left_hit_distance / (Time.deltaTime * Time.timeScale);
 				}
 
 				// are we touching the left wall?
@@ -377,10 +389,10 @@ public class SimpleCharacterCore : MonoBehaviour
 		RaycastHit2D up_hit = Physics2D.BoxCast(up_hit_origin, box_size, 0.0f, Vector2.up, 50.0f, CollisionMasks.upwards_collision_mask);
 		if (up_hit.collider != null)
 		{
-			float hit_distance = up_hit.distance - 0.05f; //TODO: magic number
-			if (char_stats.velocity.y > 0.0f && hit_distance <= Mathf.Abs(char_stats.velocity.y * Time.fixedDeltaTime * Time.timeScale))
+			float hit_distance = up_hit.distance - 1.0f; //TODO: magic number
+			if (char_stats.velocity.y > 0.0f && hit_distance <= Mathf.Abs(char_stats.velocity.y * Time.deltaTime * Time.timeScale))
 			{
-				char_stats.velocity.y = hit_distance / (Time.fixedDeltaTime * Time.timeScale);
+				char_stats.velocity.y = hit_distance / (Time.deltaTime * Time.timeScale);
 			}
 
 			// are we touching the ceiling?
@@ -404,8 +416,8 @@ public class SimpleCharacterCore : MonoBehaviour
 			bool touch_ground = true; // this is to prevent the game from thinking you touched the ground when you're gonna slip off the side when falling
 			CollisionType down_hit_collision_type = down_hit.transform.gameObject.GetComponent<CollisionType>();
 
-			float hit_distance = down_hit.distance - 0.05f; //TODO: magic number
-			if (char_stats.velocity.y < 0.0f && hit_distance <= Mathf.Abs(char_stats.velocity.y * Time.fixedDeltaTime * Time.timeScale))
+			float hit_distance = down_hit.distance - 1.0f; //TODO: magic number
+			if (char_stats.velocity.y < 0.0f && hit_distance <= Mathf.Abs(char_stats.velocity.y * Time.deltaTime * Time.timeScale))
 			{
 				// if the character is about to clip into the environment with the back of their hit box, move them so that they won't clip
 				if ( down_hit_collision_type != null )
@@ -422,12 +434,12 @@ public class SimpleCharacterCore : MonoBehaviour
 					}
 					else // otherwise, touch the ground
 					{
-						char_stats.velocity.y = -hit_distance / (Time.fixedDeltaTime * Time.timeScale);
+						char_stats.velocity.y = -hit_distance / (Time.deltaTime * Time.timeScale);
 					}
 				}
 				else
 				{
-					char_stats.velocity.y = -hit_distance / (Time.fixedDeltaTime * Time.timeScale);
+					char_stats.velocity.y = -hit_distance / (Time.deltaTime * Time.timeScale);
 				}
 			}
 			//This logic allows characters to walk over connected platforms
@@ -441,11 +453,11 @@ public class SimpleCharacterCore : MonoBehaviour
 					if (char_stats.IsGrounded && char_stats.current_move_state != CharEnums.MoveState.IsRunning)
 					{
 						float right_ledge_distance = down_hit_collider_right - character_right;
-						if (char_stats.velocity.x > 0.0f && right_ledge_distance <= Mathf.Abs(char_stats.velocity.x * Time.fixedDeltaTime * Time.timeScale))
+						if (char_stats.velocity.x > 0.0f && right_ledge_distance <= Mathf.Abs(char_stats.velocity.x * Time.deltaTime * Time.timeScale))
 						{
 							if (character_right < down_hit_collider_right) 
 							{
-								char_stats.velocity.x = right_ledge_distance / (Time.fixedDeltaTime * Time.timeScale);
+								char_stats.velocity.x = right_ledge_distance / (Time.deltaTime * Time.timeScale);
 							}
 							else
 							{
@@ -453,11 +465,11 @@ public class SimpleCharacterCore : MonoBehaviour
 							}
 						}
 						float left_ledge_distance = character_left - down_hit_collider_left;
-						if (char_stats.velocity.x < 0.0f && left_ledge_distance <= Mathf.Abs(char_stats.velocity.x * Time.fixedDeltaTime * Time.timeScale))
+						if (char_stats.velocity.x < 0.0f && left_ledge_distance <= Mathf.Abs(char_stats.velocity.x * Time.deltaTime * Time.timeScale))
 						{
 							if (character_left > down_hit_collider_left)
 							{
-								char_stats.velocity.x = -left_ledge_distance / (Time.fixedDeltaTime * Time.timeScale);
+								char_stats.velocity.x = -left_ledge_distance / (Time.deltaTime * Time.timeScale);
 							}
 							else
 							{
@@ -732,8 +744,19 @@ public class SimpleCharacterCore : MonoBehaviour
 	/// Utility function for objects that move the player.
 	/// Will move them, respecting collision.
 	/// </summary>
-	/// <param name="change">The change to immediately apply to the player's position.</param>
+	/// <param name="change">The change to apply this frame to the player's position.</param>
 	public void MoveWithCollision( Vector3 change )
+	{
+		applied_moves.Enqueue( change );
+		// What's with this?
+		// Control-based player collision sets player velocity to the exact amount to touch and not go through a wall, and applies it later on when a player would hit a wall.
+		// ANY player positional manipulation that takes place before velocity is applied could cause the player to phase through a wall, so we store it and apply later.
+
+		// NOTE: other scripts that apply movement to the player anywhere other than here could cause problems due to lack of ordering guarantees (maggrip, vault).
+		//       these will typically be fine if the player has NO OTHER MOVEMENT applied to them.
+	}
+
+	private void ApplyMoveWithCollision( Vector3 change )
 	{
 		BoxCollider2D collider = GetComponent<BoxCollider2D>();
 		if ( collider == null ) 
@@ -754,7 +777,9 @@ public class SimpleCharacterCore : MonoBehaviour
 					return;
 				}
 
-				this.gameObject.transform.position += (hit.distance / change.magnitude - 0.05f) * change; //TODO: magic number
+				//Debug.Log ((hit.distance / change.magnitude - 1.0f) * change);
+				//Debug.Log (hit.distance);
+				this.gameObject.transform.position += (hit.distance / change.magnitude - 1.0f) * change; //TODO: magic number
 			}
 			else
 			{
