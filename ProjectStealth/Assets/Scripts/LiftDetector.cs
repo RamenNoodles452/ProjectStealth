@@ -28,7 +28,6 @@ public class LiftDetector : MonoBehaviour
 	{
 		if ( other.gameObject.layer == LayerMask.NameToLayer( "character objects" ) )
 		{
-		    Debug.Log( "on platform" );
 		    platform_path.AttachPlayer();
 		}
 	}
@@ -37,7 +36,6 @@ public class LiftDetector : MonoBehaviour
 	{
 		if ( other.gameObject.layer == LayerMask.NameToLayer( "character objects" ) ) 
 		{
-			Debug.Log ( "off platform" );
 			platform_path.DetachPlayer();
 		}
 	}

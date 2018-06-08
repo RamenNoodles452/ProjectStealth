@@ -30,11 +30,11 @@ public class PlatformPatrol : MonoBehaviour
 
 		if ( ! arrive ) 
 		{
-			delta = (speed * Time.deltaTime * Time.timeScale) * new Vector3( Mathf.Cos( angle ), Mathf.Sin( angle ) );
+			delta = (speed * Time.deltaTime * Time.timeScale) * new Vector3( Mathf.Cos( angle ), Mathf.Sin( angle ), 0.0f );
 			transform.position += delta;
 			if ( attached )
 			{
-				Referencer.instance.player.transform.position += delta;
+				Referencer.instance.player.transform.position += delta; //TODO: respect collision
 			}
 		}
 		else
@@ -44,7 +44,7 @@ public class PlatformPatrol : MonoBehaviour
 			transform.position = aim;
 			if ( attached )
 			{
-				Referencer.instance.player.transform.position += delta;
+				Referencer.instance.player.transform.position += delta; //TODO: respect collision
 			}
 
 			aim = path.Next( out was_reset );
@@ -61,6 +61,7 @@ public class PlatformPatrol : MonoBehaviour
 	public void AttachPlayer()
 	{
 		attached = true;
+		Referencer.instance.player.transform.position += delta;
 	}
 
 	public void DetachPlayer()
