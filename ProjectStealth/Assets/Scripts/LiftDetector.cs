@@ -29,6 +29,12 @@ public class LiftDetector : MonoBehaviour
 		if ( other.gameObject.layer == LayerMask.NameToLayer( "character objects" ) )
 		{
 		    platform_path.AttachPlayer();
+
+			//reset state from climbing, etc.
+			if ( Referencer.instance.player.GetComponent<CharacterStats>().current_master_state == CharEnums.MasterState.ClimbState )
+			{
+			    Referencer.instance.player.GetComponent<MagGripUpgrade>().StopClimbing();
+			}
 		}
 	}
 

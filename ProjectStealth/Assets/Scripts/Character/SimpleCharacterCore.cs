@@ -80,12 +80,12 @@ public class SimpleCharacterCore : MonoBehaviour
     public virtual void FixedUpdate()
     {
         //move the character after all calculations have been done
-        if (char_stats.current_master_state == CharEnums.MasterState.DefaultState)
+        if ( char_stats.current_master_state == CharEnums.MasterState.DefaultState )
         {
-			transform.Translate(char_stats.velocity * Time.fixedDeltaTime * Time.timeScale);
+			transform.Translate( char_stats.velocity * Time.fixedDeltaTime * Time.timeScale );
             if (fallthrough == true)
             {
-                transform.Translate(Vector3.down);
+				transform.Translate( Vector3.down ); // move 1 pixel down.
                 fallthrough = false;
             }
         }
@@ -748,7 +748,6 @@ public class SimpleCharacterCore : MonoBehaviour
 		{
 			if ( hit.collider != null )
 			{
-				Debug.Log( "collided" + hit.distance );
 				if ( change.magnitude == 0.0f ) 
 				{
 					Debug.Log( "Don't be a troll." );

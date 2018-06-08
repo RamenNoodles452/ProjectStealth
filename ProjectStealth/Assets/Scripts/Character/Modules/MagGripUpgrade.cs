@@ -106,7 +106,7 @@ public class MagGripUpgrade : MonoBehaviour
             ClimbVerticalEdgeDetect();
 
             //move the character after all calculations have been done
-            transform.Translate(char_stats.velocity);
+			transform.Translate( char_stats.velocity * Time.fixedDeltaTime * Time.timeScale );
 
             //if you climb down and touch the ground, stop climbing
 			if (char_stats.IsGrounded)
@@ -160,15 +160,15 @@ public class MagGripUpgrade : MonoBehaviour
 
             // stop at the edges of the surface
             float ledgeDistanceTop = colliderTop - characterTop;
-            if (char_stats.velocity.y > 0.0f && ledgeDistanceTop <= Mathf.Abs(char_stats.velocity.y))
+			if (char_stats.velocity.y > 0.0f && ledgeDistanceTop <= Mathf.Abs(char_stats.velocity.y * Time.fixedDeltaTime * Time.timeScale))
 			{
-                char_stats.velocity.y = ledgeDistanceTop;
+				char_stats.velocity.y = ledgeDistanceTop / (Time.fixedDeltaTime * Time.timeScale);
 			}
 
             float ledgeDistanceBottom = characterBottom - colliderBottom;
-            if (char_stats.velocity.y < 0.0f && ledgeDistanceBottom <= Mathf.Abs(char_stats.velocity.y))
+			if (char_stats.velocity.y < 0.0f && ledgeDistanceBottom <= Mathf.Abs(char_stats.velocity.y * Time.fixedDeltaTime * Time.timeScale))
 			{
-                char_stats.velocity.y = -ledgeDistanceBottom;
+				char_stats.velocity.y = -ledgeDistanceBottom / (Time.fixedDeltaTime * Time.timeScale);
 			}
 
             // set if you're against the ledge
@@ -259,7 +259,7 @@ public class MagGripUpgrade : MonoBehaviour
     /// <summary>
     /// sets everything that needs to be done when player stops climbing
     /// </summary>
-    void StopClimbing()
+    public void StopClimbing()
     {
         current_climb_state = ClimbState.NotClimb;
         //no grab, no collider

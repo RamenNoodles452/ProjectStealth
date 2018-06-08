@@ -199,6 +199,11 @@ public class PlayerStats : MonoBehaviour
         shield = shield_max;
 
         // TODO: interrupt everything, stop animations, reset all that
+		//reset state from climbing, etc.
+		if ( Referencer.instance.player.GetComponent<CharacterStats>().current_master_state == CharEnums.MasterState.ClimbState )
+		{
+			Referencer.instance.player.GetComponent<MagGripUpgrade>().StopClimbing();
+		}
 
         // reset movement
         char_stats = this.gameObject.GetComponent<CharacterStats>();
