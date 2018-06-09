@@ -1,117 +1,126 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+// Reads in character state data from char_stats, and sets/executes animator triggers accordingly.
 public class CharacterAnimationLogic : MonoBehaviour
 {
-    public Animator Anim;
-    protected CharacterStats charStats;
+	#region vars
+    public Animator animator;
+    protected CharacterStats char_stats;
+	#endregion
 
     // Use this for initialization
     void Start ()
     {
-        Anim = GetComponent<Animator>();
-        charStats = GetComponent<CharacterStats>();
+        animator   = GetComponent<Animator>();
+        char_stats = GetComponent<CharacterStats>();
     }
 
     // Update is called once per frame
     void Update ()
     {
-        Anim.SetBool("jumping", !charStats.OnTheGround);
+		animator.SetBool("jumping", char_stats.IsInMidair);
         CoverLogic();
         SneakingLogic();
         CrouchLogic();
         WallClimb();
         WallSlide();
-
     }
 
-    void SneakingLogic()
+    private void SneakingLogic()
     {
-        if (charStats.OnTheGround == true)
+		if (char_stats.IsGrounded)
         {
-            
-            if (charStats.CurrentMoveState == CharEnums.MoveState.isSneaking)
+			if (char_stats.current_move_state == CharEnums.MoveState.IsSneaking)
             {
-                if (charStats.Velocity.x != 0.0f)
+                if (char_stats.velocity.x != 0.0f)
                 {
-                    Anim.SetBool("sneaking", true);
+					animator.SetBool("sneaking", true);
                 }
                 else
                 {
-                    Anim.SetBool("sneaking", false);
+					animator.SetBool("sneaking", false);
                 }
             }
         }
     }
 
-    void CoverLogic()
+    private void CoverLogic()
     {
-        if (charStats.IsTakingCover == false)
-            Anim.SetBool("taking_cover", false);
+		if (char_stats.is_taking_cover == false) 
+		{
+			animator.SetBool ("taking_cover", false);
+		}
         else
-            Anim.SetBool("taking_cover", true);
+		{
+			animator.SetBool("taking_cover", true);
+		}
     }
 
-    void CrouchLogic()
+    private void CrouchLogic()
     {
-        if (charStats.IsCrouching == false)
-            Anim.SetBool("crouching", false);
+		if (char_stats.is_crouching == false) 
+		{
+			animator.SetBool ("crouching", false);
+		}
         else
-            Anim.SetBool("crouching", true);
+		{
+			animator.SetBool("crouching", true);
+		}
     }
 
     // Triggers are called within the character scripts
     public void JumpTrigger()
     {
-        Anim.SetTrigger("jump_ascend");
+		animator.SetTrigger("jump_ascend");
     }
 
     // Triggers are called within the character scripts
     public void FallTrigger()
     {
-        Anim.SetTrigger("jump_descend");
+		animator.SetTrigger("jump_descend");
     }
 
     // Triggers are called within the character scripts
     public void WallGrabTrigger()
     {
-        Anim.SetTrigger("wall_grab_trigger");
+		animator.SetTrigger("wall_grab_trigger");
     }
 
     public void WallClimb()
     {
-        if (charStats.CurrentMasterState == CharEnums.MasterState.climbState && charStats.Velocity.y > 0)
+        if (char_stats.current_master_state == CharEnums.MasterState.ClimbState && char_stats.velocity.y > 0)
         {
-            Anim.SetBool("wall_climb", true);
+            animator.SetBool("wall_climb", true);
         }
         else
         {
-            Anim.SetBool("wall_climb", false);
+            animator.SetBool("wall_climb", false);
         }
     }
     //TODO: make a wall slide animation
     public void WallSlide()
     {
-        if (charStats.CurrentMasterState == CharEnums.MasterState.climbState && charStats.Velocity.y < 0)
+        if (char_stats.current_master_state == CharEnums.MasterState.ClimbState && char_stats.velocity.y < 0)
         {
-            Anim.SetBool("wall_slide", true);
+            animator.SetBool("wall_slide", true);
         }
         else
         {
-            Anim.SetBool("wall_slide", false);
+            animator.SetBool("wall_slide", false);
         }
     }
 
     //triggers when a character dropps from a wall by moving down to the end of the wall and pressing down + jump
     public void DropFromWallTrigger()
     {
-       Anim.SetTrigger("drop_from_wall");
+		animator.SetTrigger("drop_from_wall");
     }
 
     //triggers when a character climbs up from a wall
     public void WallClimbUpTrigger()
     {
-        Anim.SetTrigger("wall_to_ground");
+		animator.SetTrigger("wall_to_ground");
     }
 }
 

@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+//TODO: wrap everything, rename the private vars.
 public class UserInputManager : IInputManager
 {
 
@@ -37,66 +38,50 @@ public class UserInputManager : IInputManager
                 horizontalInstanceCheck = true;
             }
 
-            /*
-            if (Input.GetButton("Horizontal"))
-            {
-                HorizontalInput = true;
-            }
-            else
-            {
-                HorizontalInput = false;
-            }
-            */
-            if (Input.GetButton("Jump"))
-            {
-                //Debug.Log("Jump");
-                //this.Jump.Invoke();
-                JumpInput = true;
-            }
-            else
-            {
-                JumpInput = false;
-            }
-            if (Input.GetButtonDown("Jump"))
-                JumpInputInst = true;
-            else
-                JumpInputInst = false;
+            if ( Input.GetButton("Jump") ) { JumpInput = true; }
+            else { JumpInput = false; }
 
-            if (RunAxis > 0)
-                RunInput = true;
-            else
-                RunInput = false;
-            if (Input.GetButtonDown("Run"))
-                RunInputDownInst = true;
-            else
-                RunInputDownInst = false;
-            if (Input.GetButtonUp("Run"))
-                RunInputUpInst = true;
-            else
-                RunInputUpInst = false;
+            if ( Input.GetButtonDown("Jump") ) { JumpInputInst = true; }
+            else { JumpInputInst = false; }
 
-            /*
-            if (Input.GetButton("Attack"))
-            {
-                //Debug.Log("LightAttack");
-                this.Attack.Invoke();
-            }
+            if ( RunAxis > 0 ) { RunInput = true; }
+            else { RunInput = false; }
+            if ( Input.GetButtonDown("Run") ) { RunInputDownInst = true; }
+            else { RunInputDownInst = false; }
+            if ( Input.GetButtonUp("Run") ) { RunInputUpInst = true; }
+            else { RunInputUpInst = false; }
 
-            if (Input.GetButton("Evade"))
-            {
-                //Debug.Log("Evade");
-                this.Evade.Invoke();
-            }
-            */
-            if (Input.GetButton("Interact"))
-                InteractInput = true;
-            else
-                InteractInput = false;
+            if ( Input.GetButton("Attack") ) { AttackInput = true; }
+            else { AttackInput = false; }
+            if ( Input.GetButtonDown("Attack") ) { AttackInputInst = true; }
+            else { AttackInputInst = false; }
 
-            if (Input.GetButtonDown("Interact"))
-                InteractInputInst = true;
-            else
-                InteractInputInst = false;
+            if ( Input.GetButton("Assassinate") ) { AssassinateInput = true; }
+            else { AssassinateInput = false; }
+            if ( Input.GetButtonDown("Assassinate") ) { AssassinateInputInst = true; }
+            else { AssassinateInputInst = false; }
+
+            if ( Input.GetButton("Shoot") ) { ShootInput = true; }
+            else { ShootInput = false; }
+            if ( Input.GetButtonDown("Shoot") ) { ShootInputInst = true; }
+            else { ShootInputInst = false; }
+
+            if (Input.GetButton("Cloak")) { CloakInput = true; }
+            else { CloakInput = false; }
+            if (Input.GetButtonDown("Cloak")) { CloakInputInst = true; }
+            else { CloakInputInst = false; }
+
+            if ( Input.GetButton("Evade") ) { EvadeInput = true; }
+            else { EvadeInput = false; }
+
+            if ( Input.GetButtonDown("Evade") ) { EvadeInputInst = true; }
+            else { EvadeInputInst = false; }
+
+            if ( Input.GetButton("Interact") ) { InteractInput = true; }
+            else { InteractInput = false; }
+
+            if ( Input.GetButtonDown("Interact") ) { InteractInputInst = true; }
+            else { InteractInputInst = false; }
 
         }
     }

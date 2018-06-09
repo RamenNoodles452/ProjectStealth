@@ -5,34 +5,34 @@ public class CrouchAction : MonoBehaviour
     /// <summary>
     /// 
     /// CharacterStats Vars:
-    /// IsCrouching
+    /// is_crouching
     /// </summary>
 
-    private CharacterStats charStats;
-    private IInputManager inputManager;
+    private CharacterStats char_stats;
+    private IInputManager input_manager;
 
     void Start()
     {
-        charStats = GetComponent<CharacterStats>();
-        inputManager = GetComponent<IInputManager>();
+        char_stats = GetComponent<CharacterStats>();
+        input_manager = GetComponent<IInputManager>();
     }
 
     void Update()
     {
-        if (charStats.OnTheGround && charStats.CurrentMoveState == CharEnums.MoveState.isSneaking && inputManager.VerticalAxis < 0f)
+		if (char_stats.IsGrounded && char_stats.current_move_state == CharEnums.MoveState.IsSneaking && input_manager.VerticalAxis < 0.0f) //TODO: we really need to expose a stopped API.
         {
-            if (charStats.IsCrouching == false)
+            if (char_stats.is_crouching == false)
             {
-                charStats.IsCrouching = true;
-                charStats.CrouchingHitBox();
+                char_stats.is_crouching = true;
+                char_stats.CrouchingHitBox();
             }
         }
         else
         {
-            if (charStats.IsCrouching)
+            if (char_stats.is_crouching)
             {
-                charStats.IsCrouching = false;
-                charStats.StandingHitBox();
+                char_stats.is_crouching = false;
+                char_stats.StandingHitBox();
             }
         }
     }

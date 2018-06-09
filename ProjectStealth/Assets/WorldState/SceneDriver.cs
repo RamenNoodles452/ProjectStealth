@@ -3,14 +3,14 @@ using System.Collections;
 
 public class SceneDriver : MonoBehaviour {
 
-    public GameObject gameStateObject;
+    public GameObject game_state_object;
 
 	// Use this for initialization
 	void Awake ()
     {
-        if (GameState.Instance == null)
+        if (GameState.instance == null)
         {
-            Instantiate(gameStateObject);
+            Instantiate(game_state_object);
         }
     }
 }

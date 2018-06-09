@@ -19,3 +19,12 @@
 
 # Unity3D Generated File On Crash Reports
 sysinfo.txt
+
+# More Unity3D build junk
+*/test_Data/*
+*/.vs/*
+*/manifest.json
+*/ProjectSettings/*
+*/UnityPackageManager/manifest.json
+*.exe
+*.dll

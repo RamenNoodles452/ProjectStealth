@@ -1,82 +1,183 @@
 ﻿using UnityEngine;
 //using System.Collections;
 
+// Stores character movement-related state data.
 public class CharacterStats : MonoBehaviour 
 {
+	#region vars
     // vars related to character core that are referenced in other scripts
-    public CharEnums.MasterState CurrentMasterState = CharEnums.MasterState.defaultState;
-    public CharEnums.MoveState CurrentMoveState = CharEnums.MoveState.isWalking;
+    public CharEnums.MasterState current_master_state = CharEnums.MasterState.DefaultState;
+    public CharEnums.MoveState   current_move_state   = CharEnums.MoveState.IsWalking;
+	public CharEnums.MoveState   previous_move_state  = CharEnums.MoveState.IsWalking;
 
+	// Collision geometry
     [HideInInspector]
-    public BoxCollider2D CharCollider; // defaults: offset[0,-2] size [26,40]
+    public BoxCollider2D char_collider; // defaults: offset[0,-2] size [26,40]
     [HideInInspector]
-    public Vector2 STANDING_COLLIDER_SIZE = new Vector2(22f, 40f);
+    public Vector2 STANDING_COLLIDER_SIZE = new Vector2(22.0f, 40.0f);
     [HideInInspector]
-    public Vector2 STANDING_COLLIDER_OFFSET = new Vector2(0f, -2f);
+    public Vector2 STANDING_COLLIDER_OFFSET = new Vector2(0.0f, -2.0f);
     [HideInInspector]
-    public Vector2 CROUCHING_COLLIDER_SIZE = new Vector2(22f, 20f);
+    public Vector2 CROUCHING_COLLIDER_SIZE = new Vector2(22.0f, 20.0f);
     [HideInInspector]
-    public Vector2 CROUCHING_COLLIDER_OFFSET = new Vector2(0f, -12f);
+    public Vector2 CROUCHING_COLLIDER_OFFSET = new Vector2(0.0f, -12.0f);
 
-    public Vector2 Velocity;
-    public float WALK_SPEED = 1.0f; //used for cutscenes for PC, guards will walk when not alerted
-    public float SNEAK_SPEED = 2.0f; //default speed, enemies that were walking will use this speed when on guard
-    public float RUN_SPEED = 4.5f;
+	public float WALK_SPEED  =  60.0f; //used for cutscenes for PC, guards will walk when not alerted (pixels per fixed update frame)
+	public float SNEAK_SPEED = 120.0f; //default speed, enemies that were walking will use this speed when on guard
+	public float RUN_SPEED   = 270.0f;
+    public Vector2 velocity;
+    [HideInInspector]
+    public Vector2 acceleration; //this changes based on if a character is mid air or not.
+	public CharEnums.FacingDirection facing_direction;
+	public CharEnums.FacingDirection previous_facing_direction;
 
+	public bool is_on_ground = false; //TODO: write a setter
     [HideInInspector]
-    public float CharacterAccel = 0.0f; //this changes based on if a character is mid air or not.
-    public int FacingDirection = 1; // [-1,1]
-
-	public bool OnTheGround = false;
+    public bool is_jumping = false; //this is specifically for applying SimpleCharacterCore.JUMP_VERTICAL_SPEED to the character. is set to false once the character stops ascending
     [HideInInspector]
-    public bool IsJumping = false; //this is specifically for applying SimpleCharacterCore.JUMP_VERTICAL_SPEED to the character. is set to false once the character stops ascending
+    public bool jump_turned = false;
     [HideInInspector]
-    public bool JumpTurned = false;
-    [HideInInspector]
-    public float JumpInputTime;
+    public float jump_input_time;
 
     // Taking cover vars
-    public Collider2D IsTouchingVaultObstacle = null;
-    public bool IsTakingCover = false;
+    public Collider2D is_touching_vault_obstacle = null;
+    public bool is_taking_cover = false;
 
     // Crouching vars
-    public bool IsCrouching = false;
+    public bool is_crouching = false;
 
     // bezier curve vars for getting up ledges and jumping over cover
     [HideInInspector]
-    public Vector2 BzrStartPosition;
+    public Vector2 bezier_start_position;
     [HideInInspector]
-    public Vector2 BzrEndPosition;
+    public Vector2 bezier_end_position;
     [HideInInspector]
-    public Vector2 BzrCurvePosition;
+    public Vector2 bezier_curve_position;
     [HideInInspector]
-    public float BzrDistance;
-
+    public float bezier_distance;
+	#endregion
 
     void Start()
     {
-        CharCollider = GetComponent<BoxCollider2D>();
-        CharCollider.size = STANDING_COLLIDER_SIZE;
-        CharCollider.offset = STANDING_COLLIDER_OFFSET;
-        Velocity = new Vector2(0.0f, 0.0f);
-        JumpInputTime = 0.0f;
+        char_collider = GetComponent<BoxCollider2D>();
+        char_collider.size   = STANDING_COLLIDER_SIZE;
+        char_collider.offset = STANDING_COLLIDER_OFFSET;
+        velocity     = new Vector2( 0.0f, 0.0f );
+		acceleration = new Vector2( 0.0f, 0.0f );
+        jump_input_time = 0.0f;
     }
-
+		
     public void ResetJump()
     {
-        IsJumping = false;
-        JumpTurned = false;
+        is_jumping  = false;
+        jump_turned = false;
     }
 
+	/// <summary>
+	/// Resizes the character's hit box to be smaller when crouching.
+	/// </summary>
     public void CrouchingHitBox()
     {
-        CharCollider.size = CROUCHING_COLLIDER_SIZE;
-        CharCollider.offset = CROUCHING_COLLIDER_OFFSET;
+        char_collider.size = CROUCHING_COLLIDER_SIZE;
+        char_collider.offset = CROUCHING_COLLIDER_OFFSET;
     }
 
+	/// <summary>
+	/// Restores the character's hit box to normal size.
+	/// </summary>
     public void StandingHitBox()
     {
-        CharCollider.size = STANDING_COLLIDER_SIZE;
-        CharCollider.offset = STANDING_COLLIDER_OFFSET;
+        char_collider.size = STANDING_COLLIDER_SIZE;
+        char_collider.offset = STANDING_COLLIDER_OFFSET;
     }
+
+	/// <summary>
+	/// Gets whether this character is in midair.
+	/// If it is not, then it is Grounded.
+	/// </summary>
+	/// <value><c>true</c> if this character is in midair; otherwise, <c>false</c>.</value>
+	public bool IsInMidair
+	{
+		get 
+		{
+			return !is_on_ground;
+		}
+	}
+
+	/// <summary>
+	/// Gets whether this character is grounded.
+	/// If it is not, then it is in Midair
+	/// </summary>
+	/// <value><c>true</c> if this character is grounded; otherwise, <c>false</c>.</value>
+	public bool IsGrounded
+	{
+		get
+		{
+			return is_on_ground;
+		}
+	}
+
+	/// <summary>
+	/// Gets whether this character is running.
+	/// </summary>
+	/// <value><c>true</c> if this character is running; otherwise, <c>false</c>.</value>
+	public bool IsRunning
+	{
+		get 
+		{
+			return current_move_state == CharEnums.MoveState.IsRunning;
+		}
+	}
+
+	/// <summary>
+	/// Gets whether this character is walking.
+	/// </summary>
+	/// <value><c>true</c> if this character is walking; otherwise, <c>false</c>.</value>
+	public bool IsWalking
+	{
+		get 
+		{
+			return current_move_state == CharEnums.MoveState.IsWalking;
+		}
+	}
+
+	/// <summary>
+	/// Gets whether this character is sneaking.
+	/// </summary>
+	/// <value><c>true</c> if this character is sneaking; otherwise, <c>false</c>.</value>
+	public bool IsSneaking
+	{
+		get 
+		{
+			return current_move_state == CharEnums.MoveState.IsSneaking;
+		}
+	}
+		
+	/// <summary>
+	/// Reverses the character's facing.
+	/// </summary>
+	public void AboutFace()
+	{
+		if ( facing_direction == CharEnums.FacingDirection.Right )
+		{
+			facing_direction = CharEnums.FacingDirection.Left;
+		}
+		else
+		{
+			facing_direction = CharEnums.FacingDirection.Right;
+		}
+	}
+
+	/// <summary>
+	/// Gets the X component of the "facing vector".
+	/// </summary>
+	/// <returns>1 if the character is facing right, -1 if the character is facing left.</returns>
+	public int GetFacingXComponent()
+	{
+		if ( facing_direction == CharEnums.FacingDirection.Right )
+		{
+			return 1;
+		}
+		return -1;
+	}
 }

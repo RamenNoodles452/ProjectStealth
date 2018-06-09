@@ -2,11 +2,14 @@
 using UnityEngine.Events;
 using System.Collections;
 
+//TODO: wrap everything, rename private vars.
+
 /// <summary>
 /// The IInputManager class provides a common interface for mapping input messages to action messages.
 /// Subclasses may inherit this class an invoke action events according to need
 /// </summary>
-public abstract class IInputManager : MonoBehaviour {
+public abstract class IInputManager : MonoBehaviour
+{
 
     #region Events
 
@@ -29,6 +32,21 @@ public abstract class IInputManager : MonoBehaviour {
     public bool JumpInput;
     public bool JumpInputInst;
 
+    public bool EvadeInput;
+    public bool EvadeInputInst;
+
+    public bool AttackInput;
+    public bool AttackInputInst;
+
+    public bool AssassinateInput;
+    public bool AssassinateInputInst;
+
+    public bool ShootInput;
+    public bool ShootInputInst;
+
+    public bool CloakInput;
+    public bool CloakInputInst;
+
     protected float RunAxis;
     public bool RunInput;
     public bool RunInputDownInst;
@@ -36,4 +54,5 @@ public abstract class IInputManager : MonoBehaviour {
 
     public bool InteractInput;
     public bool InteractInputInst;
+
 }

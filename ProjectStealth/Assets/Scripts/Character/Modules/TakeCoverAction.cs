@@ -9,47 +9,50 @@ public class TakeCoverAction : MonoBehaviour
     /// If an obstacle has the variable "IsCover" in the CollisionType script, you can vault over it
     /// 
     /// CharacterStats Vars:
-    /// IsTakingCover
+    /// is_taking_cover
     /// </summary>
 
-    private CharacterStats charStats;
-    private IInputManager inputManager;
+	#region vars
+    private CharacterStats char_stats;
+    private IInputManager input_manager;
 
-    private float coverTimer;
-    private const float COVER_TIME = 0.10f;
+    private float cover_timer;
+    private const float COVER_TIME = 0.10f; //seconds
+	#endregion
 
     void Start ()
     {
-        charStats = GetComponent<CharacterStats>();
-        inputManager = GetComponent<IInputManager>();
-        coverTimer = 0.0f;
+        char_stats    = GetComponent<CharacterStats>();
+        input_manager = GetComponent<IInputManager>();
+        cover_timer   = 0.0f;
     }
 	
 	void Update ()
     {
-        if (charStats.IsTouchingVaultObstacle && charStats.CurrentMoveState == CharEnums.MoveState.isSneaking &&
-           ((charStats.FacingDirection == -1 && inputManager.HorizontalAxis < 0f) || (charStats.FacingDirection == 1 && inputManager.HorizontalAxis > 0f)))
+		if (char_stats.is_touching_vault_obstacle && char_stats.IsSneaking &&
+			((char_stats.facing_direction == CharEnums.FacingDirection.Left && input_manager.HorizontalAxis < 0.0f) || 
+				(char_stats.facing_direction == CharEnums.FacingDirection.Right && input_manager.HorizontalAxis > 0.0f))) //TODO: expose left/right API for this
         {
-            if (coverTimer < COVER_TIME)
+            if (cover_timer < COVER_TIME)
             {
-                coverTimer += Time.deltaTime * TimeScale.timeScale;
+                cover_timer += Time.deltaTime * Time.timeScale;
             }
-            if (coverTimer >= COVER_TIME)
+            if (cover_timer >= COVER_TIME)
             {
-                if (charStats.IsTakingCover == false)
+                if (char_stats.is_taking_cover == false)
                 {
-                    charStats.IsTakingCover = true;
-                    charStats.CrouchingHitBox();
+                    char_stats.is_taking_cover = true;
+                    char_stats.CrouchingHitBox();
                 }
             }
         }
         else
         {
-            coverTimer = 0.0f;
-            if (charStats.IsTakingCover)
+            cover_timer = 0.0f;
+            if (char_stats.is_taking_cover)
             {
-                charStats.IsTakingCover = false;
-                charStats.StandingHitBox();
+                char_stats.is_taking_cover = false;
+                char_stats.StandingHitBox();
             }
         }
     }

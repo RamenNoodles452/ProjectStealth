@@ -3,12 +3,17 @@ using System.Collections;
 
 public class CameraMovement : MonoBehaviour
 {
-    public float DampTime = 0.15f;
+    public float damp_time = 0.15f;
     private Vector3 velocity = Vector3.zero;
-    public Transform FocalTarget;
+    public Transform focal_target;
     private Camera cam;
 
     private BoxCollider2D boundingBox;
+
+    private void Awake()
+    {
+        focal_target = GameObject.Find("CameraFocalPoint").transform;
+    }
 
     // Use this for initialization
     void Start ()
@@ -22,12 +27,12 @@ public class CameraMovement : MonoBehaviour
     // Update is called once per frame
     void Update ()
     {
-        //transform.position = FocalTarget.position;
+        //transform.position = focal_target.position;
 
-        if (FocalTarget)
+        if (focal_target)
         {
             #region clamp
-            Vector3 ClampedFocalTarget = FocalTarget.position;
+            Vector3 clamped_focal_target = focal_target.position;
 
             if (!boundingBox)
             {
@@ -37,40 +42,48 @@ public class CameraMovement : MonoBehaviour
             {
                 // Clamping math
                 Vector3 center = cam.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, 0.0f));
-                Vector3 bottomRight = cam.ViewportToWorldPoint(new Vector3(1.0f, 1.0f, 0.0f));
-                float halfWidthInWorld = bottomRight.x - center.x;
-                float halfHeightInWorld = bottomRight.y - center.y;
+                Vector3 bottom_right = cam.ViewportToWorldPoint(new Vector3(1.0f, 1.0f, 0.0f));
+                float half_width_in_world = bottom_right.x - center.x;
+                float half_height_in_world = bottom_right.y - center.y;
 
                 // Implementation ASSUMES a level will never be smaller than 1 screen
-                if (FocalTarget.position.x + halfWidthInWorld > boundingBox.gameObject.transform.position.x + boundingBox.offset.x + boundingBox.size.x / 2.0f)
+                if (focal_target.position.x + half_width_in_world > boundingBox.gameObject.transform.position.x + boundingBox.offset.x + boundingBox.size.x / 2.0f)
                 {
                     // don't go too far right
-                    ClampedFocalTarget.x = (boundingBox.gameObject.transform.position.x + boundingBox.offset.x + boundingBox.size.x / 2.0f) - halfWidthInWorld;
+					clamped_focal_target.x = (boundingBox.gameObject.transform.position.x + boundingBox.offset.x + boundingBox.size.x / 2.0f) - half_width_in_world;
                 }
-                else if (FocalTarget.position.x - halfWidthInWorld < boundingBox.gameObject.transform.position.x + boundingBox.offset.x - boundingBox.size.x / 2.0f)
+                else if (focal_target.position.x - half_width_in_world < boundingBox.gameObject.transform.position.x + boundingBox.offset.x - boundingBox.size.x / 2.0f)
                 {
                     // don't go too far left
-                    ClampedFocalTarget.x = (boundingBox.gameObject.transform.position.x + boundingBox.offset.x - boundingBox.size.x / 2.0f) + halfWidthInWorld;
+					clamped_focal_target.x = (boundingBox.gameObject.transform.position.x + boundingBox.offset.x - boundingBox.size.x / 2.0f) + half_width_in_world;
                 }
 
-                if (FocalTarget.position.y + halfHeightInWorld > boundingBox.gameObject.transform.position.y + boundingBox.offset.y + boundingBox.size.y / 2.0f)
+                if (focal_target.position.y + half_height_in_world > boundingBox.gameObject.transform.position.y + boundingBox.offset.y + boundingBox.size.y / 2.0f)
                 {
                     // don't go too far up/down
-                    ClampedFocalTarget.y = (boundingBox.gameObject.transform.position.y + boundingBox.offset.y + boundingBox.size.y / 2.0f) - halfHeightInWorld;
+					clamped_focal_target.y = (boundingBox.gameObject.transform.position.y + boundingBox.offset.y + boundingBox.size.y / 2.0f) - half_height_in_world;
                 }
-                else if (FocalTarget.position.y - halfHeightInWorld < boundingBox.gameObject.transform.position.y + boundingBox.offset.y - boundingBox.size.y / 2.0f)
+                else if (focal_target.position.y - half_height_in_world < boundingBox.gameObject.transform.position.y + boundingBox.offset.y - boundingBox.size.y / 2.0f)
                 {
                     // don't go too far up/down
-                    ClampedFocalTarget.y = (boundingBox.gameObject.transform.position.y + boundingBox.offset.y - boundingBox.size.y / 2.0f) + halfHeightInWorld;
+					clamped_focal_target.y = (boundingBox.gameObject.transform.position.y + boundingBox.offset.y - boundingBox.size.y / 2.0f) + half_height_in_world;
                 }
             }
             #endregion
 
-            Vector3 point = cam.WorldToViewportPoint( ClampedFocalTarget );
-            Vector3 delta = ClampedFocalTarget - cam.ViewportToWorldPoint( new Vector3( 0.5f, 0.5f, point.z ) );
+			Vector3 point = cam.WorldToViewportPoint( clamped_focal_target );
+			Vector3 delta = clamped_focal_target - cam.ViewportToWorldPoint( new Vector3( 0.5f, 0.5f, point.z ) );
             Vector3 destination = transform.position + delta;
-            transform.position = Vector3.SmoothDamp( transform.position, destination, ref velocity, DampTime );
+            transform.position = Vector3.SmoothDamp( transform.position, destination, ref velocity, damp_time );
         }
         
+    }
+
+    /// <summary>
+    /// Instantly centers the camera on the focus target
+    /// </summary>
+    public void SnapToFocalPoint()
+    {
+        transform.position = focal_target.position;
     }
 }
