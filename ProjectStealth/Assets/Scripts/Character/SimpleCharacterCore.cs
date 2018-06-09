@@ -118,12 +118,12 @@ public class SimpleCharacterCore : MonoBehaviour
                 //movement stuff
                 if (char_stats.IsWalking)
 				{
-                    char_stats.velocity.x = char_stats.WALK_SPEED * input_manager.HorizontalAxis;
+                    char_stats.velocity.x = WALK_SPEED * input_manager.HorizontalAxis;
 				}
                 else if (char_stats.IsSneaking)
                 {
                     // if current speed is greater than sneak speed, then decel to sneak speed.
-                    if (Mathf.Abs(char_stats.velocity.x) > char_stats.SNEAK_SPEED)
+                    if (Mathf.Abs(char_stats.velocity.x) > SNEAK_SPEED)
                     {
 						IncreaseMagnitude( ref char_stats.velocity.x, - DRAG * Time.deltaTime * Time.timeScale );
                     }
@@ -131,7 +131,7 @@ public class SimpleCharacterCore : MonoBehaviour
                     {
 						// TODO: FIX BUG?: smooth?
 						// If a character is moving with 50% axis input, they'll smooth to the sneak speed, then snap to half of it. That seems silly.
-                        char_stats.velocity.x = char_stats.SNEAK_SPEED * input_manager.HorizontalAxis;
+                        char_stats.velocity.x = SNEAK_SPEED * input_manager.HorizontalAxis;
                     }
                 }
                 else if (char_stats.IsRunning)
@@ -141,7 +141,7 @@ public class SimpleCharacterCore : MonoBehaviour
 						(char_stats.acceleration.x < 0.0f && char_stats.velocity.x > 0.0f) || 
 						(char_stats.acceleration.x > 0.0f && char_stats.velocity.x < 0.0f))
                     {
-                        if (Mathf.Abs(char_stats.velocity.x) > char_stats.SNEAK_SPEED)
+                        if (Mathf.Abs(char_stats.velocity.x) > SNEAK_SPEED)
                         {
                             //print("SKID BOIS");
 							IncreaseMagnitude( ref char_stats.velocity.x, - DRAG * Time.deltaTime * Time.timeScale );
@@ -156,7 +156,7 @@ public class SimpleCharacterCore : MonoBehaviour
                         char_stats.velocity.x += char_stats.acceleration.x * Time.deltaTime * Time.timeScale;
 					}
 
-                    char_stats.velocity.x = Mathf.Clamp(char_stats.velocity.x, -char_stats.RUN_SPEED, char_stats.RUN_SPEED);
+                    char_stats.velocity.x = Mathf.Clamp(char_stats.velocity.x, -RUN_SPEED, RUN_SPEED);
                 }
             }
         }
@@ -164,7 +164,7 @@ public class SimpleCharacterCore : MonoBehaviour
         {
             if (char_stats.jump_turned)
 			{
-                HorizontalJumpVelNoAccel(char_stats.SNEAK_SPEED);
+                HorizontalJumpVelNoAccel(SNEAK_SPEED);
 			}
             else
             {
@@ -226,11 +226,11 @@ public class SimpleCharacterCore : MonoBehaviour
     {
         if (char_stats.acceleration.x < 0.0f && char_stats.velocity.x >= 0.0f)
         {
-            char_stats.velocity.x = -char_stats.SNEAK_SPEED;
+            char_stats.velocity.x = -SNEAK_SPEED;
         }
         else if (char_stats.acceleration.x > 0.0f && char_stats.velocity.x <= 0.0f)
         {
-            char_stats.velocity.x = char_stats.SNEAK_SPEED;
+            char_stats.velocity.x = SNEAK_SPEED;
         }
         else
         {
@@ -619,14 +619,14 @@ public class SimpleCharacterCore : MonoBehaviour
 			}
 
             // running automatically starts at the sneaking speed and accelerates from there
-            if (start_run == true && input_manager.HorizontalAxis > 0.0f && Mathf.Abs(char_stats.velocity.x) < char_stats.SNEAK_SPEED)
+            if (start_run == true && input_manager.HorizontalAxis > 0.0f && Mathf.Abs(char_stats.velocity.x) < SNEAK_SPEED)
             {
-                char_stats.velocity.x = char_stats.SNEAK_SPEED;
+                char_stats.velocity.x = SNEAK_SPEED;
                 start_run = false;
             }
-            else if (start_run == true && input_manager.HorizontalAxis < 0.0f && Mathf.Abs(char_stats.velocity.x) < char_stats.SNEAK_SPEED)
+            else if (start_run == true && input_manager.HorizontalAxis < 0.0f && Mathf.Abs(char_stats.velocity.x) < SNEAK_SPEED)
             {
-                char_stats.velocity.x = -char_stats.SNEAK_SPEED;
+                char_stats.velocity.x = -SNEAK_SPEED;
                 start_run = false;
             }
         }

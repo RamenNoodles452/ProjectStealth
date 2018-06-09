@@ -22,9 +22,6 @@ public class CharacterStats : MonoBehaviour
     [HideInInspector]
     public Vector2 CROUCHING_COLLIDER_OFFSET = new Vector2(0.0f, -12.0f);
 
-	public float WALK_SPEED  =  60.0f; //used for cutscenes for PC, guards will walk when not alerted (pixels per fixed update frame)
-	public float SNEAK_SPEED = 120.0f; //default speed, enemies that were walking will use this speed when on guard
-	public float RUN_SPEED   = 270.0f;
     public Vector2 velocity;
     [HideInInspector]
     public Vector2 acceleration; //this changes based on if a character is mid air or not.
