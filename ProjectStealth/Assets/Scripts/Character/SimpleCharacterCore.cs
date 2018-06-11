@@ -314,11 +314,12 @@ public class SimpleCharacterCore : MonoBehaviour
 				float right_hit_distance = right_hit.distance - 1.0f; // TODO: magic number
 				if (char_stats.velocity.x > 0.0f && right_hit_distance <= Mathf.Abs( char_stats.velocity.x * Time.deltaTime * Time.timeScale ))
 				{
-					char_stats.velocity.x = right_hit_distance / (Time.deltaTime * Time.timeScale);
+					char_stats.velocity.x = 0.0f;
+					this.gameObject.transform.Translate( new Vector3( right_hit_distance, 0.0f, 0.0f ) );
 				}
 
 				// are we touching the right wall?
-				if (IsAlmostZero(right_hit_distance))
+				if ( right_hit_distance <= 0.0f )
 				{
 					char_stats.velocity.x = 0.0f;
 					TouchedWall(right_hit.collider.gameObject);
@@ -358,11 +359,12 @@ public class SimpleCharacterCore : MonoBehaviour
 				float left_hit_distance = left_hit.distance - 1.0f;  // TODO: magic number
 				if (char_stats.velocity.x < 0.0f && left_hit.distance <= Mathf.Abs (char_stats.velocity.x * Time.deltaTime * Time.timeScale))
 				{
-					char_stats.velocity.x = -left_hit_distance / (Time.deltaTime * Time.timeScale);
+					char_stats.velocity.x = 0.0f;
+					this.gameObject.transform.Translate( new Vector3( -1.0f * left_hit_distance, 0.0f, 0.0f ) );
 				}
 
 				// are we touching the left wall?
-				if (IsAlmostZero(left_hit_distance))
+				if ( left_hit_distance <= 0.0f )
 				{
 					char_stats.velocity.x = 0.0f;
 					TouchedWall(left_hit.collider.gameObject);
@@ -392,7 +394,9 @@ public class SimpleCharacterCore : MonoBehaviour
 			float hit_distance = up_hit.distance - 1.0f; //TODO: magic number
 			if (char_stats.velocity.y > 0.0f && hit_distance <= Mathf.Abs(char_stats.velocity.y * Time.deltaTime * Time.timeScale))
 			{
-				char_stats.velocity.y = hit_distance / (Time.deltaTime * Time.timeScale);
+				//char_stats.velocity.y = hit_distance / (Time.deltaTime * Time.timeScale);
+				char_stats.velocity.y = 0.0f;
+				this.gameObject.transform.Translate( new Vector3( 0.0f, hit_distance, 0.0f ) );
 			}
 
 			// are we touching the ceiling?
