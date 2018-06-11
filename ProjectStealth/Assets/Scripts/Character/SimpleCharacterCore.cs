@@ -352,11 +352,11 @@ public class SimpleCharacterCore : MonoBehaviour
 				}
 			}
 			char_stats.is_touching_vault_obstacle = null;
-			RaycastHit2D leftHit = Physics2D.BoxCast(left_hit_origin, box_size, 0.0f, Vector2.left, 50.0f, CollisionMasks.upwards_collision_mask);
-			if (leftHit.collider != null)
+			RaycastHit2D left_hit = Physics2D.BoxCast(left_hit_origin, box_size, 0.0f, Vector2.left, 50.0f, CollisionMasks.upwards_collision_mask);
+			if (left_hit.collider != null)
 			{
-				float left_hit_distance = leftHit.distance - 1.0f;  // TODO: magic number
-				if (char_stats.velocity.x < 0.0f && leftHit.distance <= Mathf.Abs (char_stats.velocity.x * Time.deltaTime * Time.timeScale))
+				float left_hit_distance = left_hit.distance - 1.0f;  // TODO: magic number
+				if (char_stats.velocity.x < 0.0f && left_hit.distance <= Mathf.Abs (char_stats.velocity.x * Time.deltaTime * Time.timeScale))
 				{
 					char_stats.velocity.x = -left_hit_distance / (Time.deltaTime * Time.timeScale);
 				}
@@ -365,13 +365,13 @@ public class SimpleCharacterCore : MonoBehaviour
 				if (IsAlmostZero(left_hit_distance))
 				{
 					char_stats.velocity.x = 0.0f;
-					TouchedWall(leftHit.collider.gameObject);
-					CollisionType left_hit_collision_type = leftHit.collider.GetComponent<CollisionType>();
+					TouchedWall(left_hit.collider.gameObject);
+					CollisionType left_hit_collision_type = left_hit.collider.GetComponent<CollisionType>();
 					if (left_hit_collision_type != null)
 					{
 					    if (left_hit_collision_type.VaultObstacle == true && char_stats.IsGrounded)
 						{
-							char_stats.is_touching_vault_obstacle = leftHit.collider;
+							char_stats.is_touching_vault_obstacle = left_hit.collider;
 						}
 					}
 				}

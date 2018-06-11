@@ -19,7 +19,10 @@ public class CharacterAnimationLogic : MonoBehaviour
     // Update is called once per frame
     void Update ()
     {
-		animator.SetBool("jumping", char_stats.IsInMidair);
+        if (char_stats.current_master_state == CharEnums.MasterState.DefaultState)
+        {
+            animator.SetBool("jumping", char_stats.IsInMidair);
+        }
         CoverLogic();
         SneakingLogic();
         CrouchLogic();
@@ -69,6 +72,11 @@ public class CharacterAnimationLogic : MonoBehaviour
 		}
     }
 
+    public void SetCrouch()
+    {
+        animator.SetBool("crouching", true);
+    }
+
     // Triggers are called within the character scripts
     public void JumpTrigger()
     {
@@ -85,6 +93,7 @@ public class CharacterAnimationLogic : MonoBehaviour
     public void WallGrabTrigger()
     {
 		animator.SetTrigger("wall_grab_trigger");
+        animator.SetBool("sneaking", false);
     }
 
     public void WallClimb()
@@ -121,6 +130,11 @@ public class CharacterAnimationLogic : MonoBehaviour
     public void WallClimbUpTrigger()
     {
 		animator.SetTrigger("wall_to_ground");
+    }
+
+    public void WallClimbDownTrigger()
+    {
+
     }
 }
 

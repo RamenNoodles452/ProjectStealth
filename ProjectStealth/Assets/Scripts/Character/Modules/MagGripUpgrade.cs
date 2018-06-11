@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using UnityEditor;
 
 // Handles wall climbing
 public class MagGripUpgrade : MonoBehaviour 
@@ -20,7 +21,7 @@ public class MagGripUpgrade : MonoBehaviour
 
     //Mag Grip variables
 	public Collider2D grab_collider; // = null; //private
-    public enum ClimbState { NotClimb, WallClimb, CeilingClimb };
+    public enum ClimbState { NotClimb, WallClimb, CeilingClimb, Transition };
     public ClimbState current_climb_state = ClimbState.NotClimb;
     private ClimbState transitioning_to_state = ClimbState.NotClimb; // used when bzr curving to a new climb state
 
@@ -152,8 +153,8 @@ public class MagGripUpgrade : MonoBehaviour
         {
             float colliderTop = hit.collider.bounds.max.y;
             float colliderBottom = hit.collider.bounds.min.y;
-            float characterTop = char_stats.char_collider.bounds.max.y;
-            float characterBottom = char_stats.char_collider.bounds.min.y;
+            float characterTop = char_stats.char_collider.bounds.max.y + 0.5f;
+            float characterBottom = char_stats.char_collider.bounds.min.y - 0.5f;
 
             // stop at the edges of the surface
             float ledgeDistanceTop = colliderTop - characterTop;
@@ -186,6 +187,9 @@ public class MagGripUpgrade : MonoBehaviour
 
     void ClimbMovementInput()
     {
+        float characterTop = char_stats.char_collider.bounds.max.y + 0.5f;
+        float characterBottom = char_stats.char_collider.bounds.min.y - 0.5f;
+
         if (grab_collider)
         {
             LedgeLook();
@@ -213,16 +217,17 @@ public class MagGripUpgrade : MonoBehaviour
             //ledge climb logic
             else if (is_overlooking_ledge && input_manager.JumpInputInst) 
             {
-                // if we're looking below
-                if (grab_collider.bounds.min.y == char_stats.char_collider.bounds.min.y)
+                // if we're looking below, drop
+                if (grab_collider.bounds.min.y == characterBottom)
                 {
                     StopClimbing();
                     char_anims.DropFromWallTrigger();
                 }
-                // if we're looking above
-                else if (grab_collider.bounds.max.y == char_stats.char_collider.bounds.max.y)
+                // if we're looking above, climb up
+                else if (grab_collider.bounds.max.y == characterTop)
                 {
-                    SetupLedgeClimb(current_climb_state);
+                    WallToGroundStart();
+                    //SetupLedgeClimb(current_climb_state);
                 }
                 else
 				{
@@ -265,6 +270,34 @@ public class MagGripUpgrade : MonoBehaviour
         wall_grab_delay_timer = 0.0f;
         //set the master state to the default state. It'll transition into any other state from there. 
 		char_stats.current_master_state = CharEnums.MasterState.DefaultState;
+    }
+
+    void WallToGroundStart()
+    {
+        input_manager.JumpInputInst = false;
+        input_manager.JumpInput = false;
+        input_manager.InputOverride = true;
+        // variable sterilazation
+        char_stats.is_jumping = false;
+
+        char_anims.WallClimbUpTrigger();
+        current_climb_state = ClimbState.Transition;
+
+        char_stats.is_crouching = true;
+        char_stats.is_on_ground = true;
+        char_anims.SetCrouch();
+    }
+
+    public void WallToGroundStop()
+    {
+        current_climb_state = ClimbState.NotClimb;
+        is_climbing_ledge = false;
+        input_manager.InputOverride = false;
+        is_overlooking_ledge = false;
+        is_against_ledge = false;
+
+        char_stats.current_master_state = CharEnums.MasterState.DefaultState;
+        char_stats.current_move_state = CharEnums.MoveState.IsSneaking;
     }
 
     /// <summary>
