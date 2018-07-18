@@ -1207,7 +1207,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75c326c0a9b4a4b70977fa1be315e4b8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  wall_climb: 1
+  wall_climb: 0
   fall_through: 0
   vault_obstacle: 1
   walk_off_left: 1

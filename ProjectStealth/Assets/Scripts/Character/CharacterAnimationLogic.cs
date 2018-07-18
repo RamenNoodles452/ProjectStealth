@@ -23,6 +23,7 @@ public class CharacterAnimationLogic : MonoBehaviour
         {
             animator.SetBool("jumping", char_stats.IsInMidair);
         }
+
         CoverLogic();
         SneakingLogic();
         CrouchLogic();
@@ -89,6 +90,11 @@ public class CharacterAnimationLogic : MonoBehaviour
 		animator.SetTrigger("jump_descend");
     }
 
+    public void ResetJumpDescend()
+    {
+        animator.ResetTrigger("jump_descend");
+    }
+
     // Triggers are called within the character scripts
     public void WallGrabTrigger()
     {
@@ -107,7 +113,7 @@ public class CharacterAnimationLogic : MonoBehaviour
             animator.SetBool("wall_climb", false);
         }
     }
-    //TODO: make a wall slide animation
+
     public void WallSlide()
     {
         if (char_stats.current_master_state == CharEnums.MasterState.ClimbState && char_stats.velocity.y < 0)
@@ -127,14 +133,15 @@ public class CharacterAnimationLogic : MonoBehaviour
     }
 
     //triggers when a character climbs up from a wall
-    public void WallClimbUpTrigger()
+    public void WallToGroundTrigger()
     {
 		animator.SetTrigger("wall_to_ground");
     }
 
-    public void WallClimbDownTrigger()
+    //triggers when a character climbs to the wall from the ground
+    public void GroundToWallTrigger()
     {
-
+        animator.SetTrigger("ground_to_wall");
     }
 }
 

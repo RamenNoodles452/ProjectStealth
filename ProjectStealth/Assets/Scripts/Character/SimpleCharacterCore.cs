@@ -85,7 +85,8 @@ public class SimpleCharacterCore : MonoBehaviour
 			if (fallthrough == true)
 			{
 				transform.Translate( Vector3.down ); // move 1 pixel down.
-				fallthrough = false;
+                char_anims.FallTrigger();
+                fallthrough = false;
 			}
 		}
     }
@@ -322,8 +323,7 @@ public class SimpleCharacterCore : MonoBehaviour
 				if ( right_hit_distance <= 0.0f )
 				{
 					char_stats.velocity.x = 0.0f;
-					TouchedWall(right_hit.collider.gameObject);
-
+                    TouchedWall(right_hit.collider.gameObject);
 					CollisionType right_hit_collision_type = right_hit.collider.GetComponent<CollisionType>();
 					if ( right_hit_collision_type != null )
 					{
@@ -495,11 +495,13 @@ public class SimpleCharacterCore : MonoBehaviour
 				{
 					char_stats.is_on_ground = true;
 					char_stats.jump_turned = false;
-				}
+                    char_stats.on_ground_collider = down_hit.collider;
+                }
 			}
 			else
 			{
-				FallingLogic();
+                char_stats.on_ground_collider = null;
+                FallingLogic();
 			}
 			//Fallthrough platforms
 			if (fallthrough == true)
@@ -655,7 +657,6 @@ public class SimpleCharacterCore : MonoBehaviour
             {
                 //trigger fallthrough
                 fallthrough = true;
-                char_anims.FallTrigger();
             }
             else
             {
@@ -771,7 +772,7 @@ public class SimpleCharacterCore : MonoBehaviour
 
 		Vector2 size = new Vector2( collider.size.x, collider.size.y );
 		RaycastHit2D hit = Physics2D.BoxCast( this.gameObject.transform.position, size, 0.0f, change, change.magnitude, CollisionMasks.all_collision_mask );
-		if ( hit != null )
+		if ( hit != false )
 		{
 			if ( hit.collider != null )
 			{

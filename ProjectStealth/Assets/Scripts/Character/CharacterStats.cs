@@ -10,7 +10,9 @@ public class CharacterStats : MonoBehaviour
     public CharEnums.MoveState   current_move_state   = CharEnums.MoveState.IsWalking;
 	public CharEnums.MoveState   previous_move_state  = CharEnums.MoveState.IsWalking;
 
-	// Collision geometry
+    // Collision geometry
+    public Collider2D on_ground_collider = null; // the geometry the character is standing on. null if not standing on anything
+
     [HideInInspector]
     public BoxCollider2D char_collider; // defaults: offset[0,-2] size [26,40]
     [HideInInspector]
