@@ -772,28 +772,23 @@ public class SimpleCharacterCore : MonoBehaviour
 
 		Vector2 size = new Vector2( collider.size.x, collider.size.y );
 		RaycastHit2D hit = Physics2D.BoxCast( this.gameObject.transform.position, size, 0.0f, change, change.magnitude, CollisionMasks.all_collision_mask );
-		if ( hit != false )
-		{
-			if ( hit.collider != null )
-			{
-				if ( change.magnitude == 0.0f ) 
-				{
-					Debug.Log( "Don't be a troll." );
-					return;
-				}
 
-				//Debug.Log ((hit.distance / change.magnitude - 1.0f) * change);
-				//Debug.Log (hit.distance);
-				this.gameObject.transform.position += (hit.distance / change.magnitude - 1.0f) * change; //TODO: magic number
-			}
-			else
+		if ( hit.collider != null )
+		{
+			if ( change.magnitude == 0.0f ) 
 			{
-				this.gameObject.transform.position += change;
+				Debug.Log( "Don't be a troll." );
+				return;
 			}
+
+			//Debug.Log ((hit.distance / change.magnitude - 1.0f) * change);
+			//Debug.Log (hit.distance);
+			this.gameObject.transform.position += (hit.distance / change.magnitude - 1.0f) * change; //TODO: magic number
 		}
 		else
 		{
-		    this.gameObject.transform.position += change;
+			this.gameObject.transform.position += change;
 		}
+
 	}
 }
