@@ -19,17 +19,22 @@ public class CharacterAnimationLogic : MonoBehaviour
     // Update is called once per frame
     void Update ()
     {
-		animator.SetBool("jumping", char_stats.IsInMidair);
+        if (char_stats.current_master_state == CharEnums.MasterState.DefaultState)
+        {
+            animator.SetBool("jumping", char_stats.IsInMidair);
+        }
+
         CoverLogic();
         SneakingLogic();
         CrouchLogic();
-	}
+        WallClimb();
+        WallSlide();
+    }
 
     private void SneakingLogic()
     {
 		if (char_stats.IsGrounded)
         {
-            
 			if (char_stats.current_move_state == CharEnums.MoveState.IsSneaking)
             {
                 if (char_stats.velocity.x != 0.0f)
@@ -68,37 +73,57 @@ public class CharacterAnimationLogic : MonoBehaviour
 		}
     }
 
+    public void SetCrouch()
+    {
+        animator.SetBool("crouching", true);
+    }
+
+    // Triggers are called within the character scripts
     public void JumpTrigger()
     {
 		animator.SetTrigger("jump_ascend");
     }
 
+    // Triggers are called within the character scripts
     public void FallTrigger()
     {
 		animator.SetTrigger("jump_descend");
     }
 
-    public void WallClimbTrigger()
+    public void ResetJumpDescend()
     {
-		animator.SetTrigger("wall_grab_trigger");
+        animator.ResetTrigger("jump_descend");
     }
 
-    // TODO: hook up wall climb anim
-    public void WallAscend()
+    // Triggers are called within the character scripts
+    public void WallGrabTrigger()
+    {
+		animator.SetTrigger("wall_grab_trigger");
+        animator.SetBool("sneaking", false);
+    }
+
+    public void WallClimb()
     {
         if (char_stats.current_master_state == CharEnums.MasterState.ClimbState && char_stats.velocity.y > 0)
         {
-			animator.SetBool("wall_ascend", true);
+            animator.SetBool("wall_climb", true);
         }
         else
         {
-			animator.SetBool("wall_ascend", false);
+            animator.SetBool("wall_climb", false);
         }
     }
-    //TODO: make a wall slide animation
-    public void WallDescend()
-    {
 
+    public void WallSlide()
+    {
+        if (char_stats.current_master_state == CharEnums.MasterState.ClimbState && char_stats.velocity.y < 0)
+        {
+            animator.SetBool("wall_slide", true);
+        }
+        else
+        {
+            animator.SetBool("wall_slide", false);
+        }
     }
 
     //triggers when a character dropps from a wall by moving down to the end of the wall and pressing down + jump
@@ -108,9 +133,15 @@ public class CharacterAnimationLogic : MonoBehaviour
     }
 
     //triggers when a character climbs up from a wall
-    public void WallClimbUpTrigger()
+    public void WallToGroundTrigger()
     {
 		animator.SetTrigger("wall_to_ground");
+    }
+
+    //triggers when a character climbs to the wall from the ground
+    public void GroundToWallTrigger()
+    {
+        animator.SetTrigger("ground_to_wall");
     }
 }
 

@@ -10,21 +10,20 @@ public class CharacterStats : MonoBehaviour
     public CharEnums.MoveState   current_move_state   = CharEnums.MoveState.IsWalking;
 	public CharEnums.MoveState   previous_move_state  = CharEnums.MoveState.IsWalking;
 
-	// Collision geometry
+    // Collision geometry
+    public Collider2D on_ground_collider = null; // the geometry the character is standing on. null if not standing on anything
+
     [HideInInspector]
     public BoxCollider2D char_collider; // defaults: offset[0,-2] size [26,40]
     [HideInInspector]
-    public Vector2 STANDING_COLLIDER_SIZE    = new Vector2(26.0f,  40.0f);
+    public Vector2 STANDING_COLLIDER_SIZE = new Vector2(21.0f, 39.0f);
     [HideInInspector]
-    public Vector2 STANDING_COLLIDER_OFFSET  = new Vector2( 0.0f,  -2.0f);
+    public Vector2 STANDING_COLLIDER_OFFSET = new Vector2(0.0f, -2.0f); // the collider box needs to be offset from center
     [HideInInspector]
-    public Vector2 CROUCHING_COLLIDER_SIZE   = new Vector2(26.0f,  20.0f);
+    public Vector2 CROUCHING_COLLIDER_SIZE = new Vector2(21.0f, 19.0f);
     [HideInInspector]
-    public Vector2 CROUCHING_COLLIDER_OFFSET = new Vector2( 0.0f, -12.0f);
+    public Vector2 CROUCHING_COLLIDER_OFFSET = new Vector2(0.0f, -12.0f); // the collider box needs to be offset from center
 
-	public float WALK_SPEED  =  60.0f; //used for cutscenes for PC, guards will walk when not alerted (pixels per fixed update frame)
-	public float SNEAK_SPEED = 120.0f; //default speed, enemies that were walking will use this speed when on guard
-	public float RUN_SPEED   = 270.0f;
     public Vector2 velocity;
     [HideInInspector]
     public Vector2 acceleration; //this changes based on if a character is mid air or not.

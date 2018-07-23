@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using UnityEditor;
 
 // Handles wall climbing
 public class MagGripUpgrade : MonoBehaviour 
@@ -20,18 +21,16 @@ public class MagGripUpgrade : MonoBehaviour
 
     //Mag Grip variables
 	public Collider2D grab_collider; // = null; //private
-    public enum ClimbState { NotClimb, WallClimb, CeilingClimb };
+    public enum ClimbState { NotClimb, WallClimb, CeilingClimb, Transition };
     public ClimbState current_climb_state = ClimbState.NotClimb;
-    private ClimbState transitioning_to_state = ClimbState.NotClimb; // used when bzr curving to a new climb state
 
-    private const float WALL_CLIMB_SPEED = 120.0f; // pixels / second
+    private const float WALL_CLIMB_SPEED = 90.0f; // pixels / second
     private const float WALL_SLIDE_SPEED = 180.0f; // pixels / second
 
 	//TODO: do something about duplicate code
     // ledge logic
     private bool is_overlooking_ledge;
     private bool is_against_ledge;
-    private bool is_climbing_ledge;
 
     //consts
 	protected const float JUMP_ACCELERATION = 240.0f; // base accel for jump off the wall with no input (pixels / second / second)
@@ -75,27 +74,7 @@ public class MagGripUpgrade : MonoBehaviour
             }
 		}
 
-        if (is_climbing_ledge)
-        {
-            transform.position = mov_lib.BezierCurveMovement(char_stats.bezier_distance, char_stats.bezier_start_position, char_stats.bezier_end_position, char_stats.bezier_curve_position);
-            if (char_stats.bezier_distance < 1.0f)
-			{
-				char_stats.bezier_distance = char_stats.bezier_distance + Time.deltaTime * Time.timeScale * 5.0f; //...what? WHAT? WAT!? 
-			}
-            else 
-            {
-                is_climbing_ledge = false;
-                current_climb_state = transitioning_to_state;
-                input_manager.InputOverride = false;
-                if (current_climb_state == ClimbState.NotClimb)
-                {
-                    is_overlooking_ledge = false;
-                    is_against_ledge = false;
-                    char_stats.current_master_state = CharEnums.MasterState.DefaultState;
-                }
-            }
-        }
-        else if (current_climb_state == ClimbState.WallClimb)
+        if (current_climb_state == ClimbState.WallClimb)
         {
             ClimbHorizontalVelocity();
             ClimbVerticalVelocity();
@@ -152,8 +131,8 @@ public class MagGripUpgrade : MonoBehaviour
         {
             float colliderTop = hit.collider.bounds.max.y;
             float colliderBottom = hit.collider.bounds.min.y;
-            float characterTop = char_stats.char_collider.bounds.max.y;
-            float characterBottom = char_stats.char_collider.bounds.min.y;
+            float characterTop = char_stats.char_collider.bounds.max.y + 0.5f;
+            float characterBottom = char_stats.char_collider.bounds.min.y - 0.5f;
 
             // stop at the edges of the surface
             float ledgeDistanceTop = colliderTop - characterTop;
@@ -186,6 +165,9 @@ public class MagGripUpgrade : MonoBehaviour
 
     void ClimbMovementInput()
     {
+        float characterTop = char_stats.char_collider.bounds.max.y + 0.5f;
+        float characterBottom = char_stats.char_collider.bounds.min.y - 0.5f;
+
         if (grab_collider)
         {
             LedgeLook();
@@ -213,16 +195,16 @@ public class MagGripUpgrade : MonoBehaviour
             //ledge climb logic
             else if (is_overlooking_ledge && input_manager.JumpInputInst) 
             {
-                // if we're looking below
-                if (grab_collider.bounds.min.y == char_stats.char_collider.bounds.min.y)
+                // if we're looking below, drop
+                if (grab_collider.bounds.min.y == characterBottom)
                 {
                     StopClimbing();
                     char_anims.DropFromWallTrigger();
                 }
-                // if we're looking above
-                else if (grab_collider.bounds.max.y == char_stats.char_collider.bounds.max.y)
+                // if we're looking above, climb up
+                else if (grab_collider.bounds.max.y == characterTop)
                 {
-                    SetupLedgeClimb(current_climb_state);
+                    WallToGroundStart();
                 }
                 else
 				{
@@ -267,60 +249,85 @@ public class MagGripUpgrade : MonoBehaviour
 		char_stats.current_master_state = CharEnums.MasterState.DefaultState;
     }
 
-    /// <summary>
-    /// This function sets up the BZR curve that actually moves the character around ledge corners
-    /// </summary>
-    /// <param name="startingState"></param>
-    /// <param name="climbObject"></param>
-    void SetupLedgeClimb(ClimbState startingState, Collider2D climbObject = null)
+    void WallToGroundStart()
     {
-        grab_collider = climbObject;
         input_manager.JumpInputInst = false;
+        input_manager.JumpInput = false;
         input_manager.InputOverride = true;
-        // translate body to on the ledge
-        char_stats.bezier_distance = 0.0f;
-        char_stats.bezier_start_position = (Vector2)char_stats.char_collider.bounds.center - char_stats.char_collider.offset;
-
         // variable sterilazation
         char_stats.is_jumping = false;
+        char_stats.is_on_ground = true;
 
-        if (startingState == ClimbState.NotClimb)
+
+        char_anims.WallToGroundTrigger();
+        current_climb_state = ClimbState.Transition;
+
+        char_stats.is_crouching = false;
+        char_stats.CrouchingHitBox();
+        char_anims.SetCrouch();
+    }
+
+    public void WallToGroundStop()
+    {
+        current_climb_state = ClimbState.NotClimb;
+        input_manager.InputOverride = false;
+        is_overlooking_ledge = false;
+        is_against_ledge = false;
+
+        
+        if (input_manager.VerticalAxis >= 0.0f)
         {
-			if (char_stats.facing_direction == CharEnums.FacingDirection.Right)
-            {
-                char_stats.bezier_end_position = new Vector2(climbObject.bounds.max.x - char_stats.char_collider.offset.x + char_stats.char_collider.bounds.extents.x + 0.01f, climbObject.bounds.max.y - char_stats.char_collider.offset.y - char_stats.char_collider.bounds.extents.y);
-                char_stats.bezier_curve_position = new Vector2(char_stats.char_collider.bounds.center.x + char_stats.char_collider.bounds.extents.x * 2, char_stats.char_collider.bounds.center.y + char_stats.char_collider.size.y);
-            }
-            else
-            {
-                char_stats.bezier_end_position = new Vector2(climbObject.bounds.min.x - char_stats.char_collider.offset.x - char_stats.char_collider.bounds.extents.x - 0.01f, climbObject.bounds.max.y - char_stats.char_collider.offset.y - char_stats.char_collider.bounds.extents.y);
-                char_stats.bezier_curve_position = new Vector2(char_stats.char_collider.bounds.center.x - char_stats.char_collider.bounds.extents.x * 2, char_stats.char_collider.bounds.center.y + char_stats.char_collider.size.y);
-            }
-            transitioning_to_state = ClimbState.WallClimb;
-			char_stats.AboutFace();
-            player_script.SetFacing();
-            char_anims.WallClimbTrigger();
+            char_stats.StandingHitBox();
         }
-        else if (startingState == ClimbState.WallClimb)
+
+        char_stats.current_master_state = CharEnums.MasterState.DefaultState;
+        char_stats.current_move_state = CharEnums.MoveState.IsSneaking;
+        grab_collider = null;
+    }
+
+    void GroundToWallStart()
+    {
+        char_anims.ResetJumpDescend();
+        if (char_stats.facing_direction == CharEnums.FacingDirection.Left)
         {
-			if (char_stats.facing_direction == CharEnums.FacingDirection.Right)
-            {
-                char_stats.bezier_end_position = new Vector2(char_stats.char_collider.bounds.center.x - char_stats.char_collider.offset.x + char_stats.char_collider.bounds.size.x, char_stats.char_collider.bounds.center.y - char_stats.char_collider.offset.y + char_stats.char_collider.bounds.size.y);
-                char_stats.bezier_curve_position = new Vector2(char_stats.char_collider.bounds.center.x - char_stats.char_collider.bounds.extents.x, char_stats.char_collider.bounds.center.y + char_stats.char_collider.size.y * 2);
-            }
-            else
-            {
-                char_stats.bezier_end_position = new Vector2(char_stats.char_collider.bounds.center.x - char_stats.char_collider.offset.x - char_stats.char_collider.bounds.size.x, char_stats.char_collider.bounds.center.y - char_stats.char_collider.offset.y + char_stats.char_collider.bounds.size.y);
-                char_stats.bezier_curve_position = new Vector2(char_stats.char_collider.bounds.center.x + char_stats.char_collider.bounds.extents.x, char_stats.char_collider.bounds.center.y + char_stats.char_collider.size.y * 2);
-            }
-            transitioning_to_state = ClimbState.NotClimb;
-            char_anims.WallClimbUpTrigger();
+            char_stats.facing_direction = CharEnums.FacingDirection.Right;
+            sprite_renderer.flipX = false;
         }
-        is_climbing_ledge = true;
+        else
+        {
+            char_stats.facing_direction = CharEnums.FacingDirection.Left;
+            sprite_renderer.flipX = true;
+        }
+        input_manager.JumpInputInst = false;
+        input_manager.JumpInput = false;
+        input_manager.InputOverride = true;
+        // variable sterilazation
+        char_stats.is_jumping = false;
+        char_anims.GroundToWallTrigger();
+        current_climb_state = ClimbState.Transition;
+
+        char_stats.is_crouching = false;
+        char_stats.is_on_ground = false;
+        grab_collider = char_stats.on_ground_collider;
+    }
+
+    public void GroundToWallStop()
+    {
+        current_climb_state = ClimbState.WallClimb;
+        input_manager.InputOverride = false;
+        is_overlooking_ledge = false;
+        is_against_ledge = false;
+
+        char_stats.current_master_state = CharEnums.MasterState.ClimbState;
+        char_stats.current_move_state = CharEnums.MoveState.IsSneaking;
+        char_stats.velocity.x = 0.0f;
+
+        char_stats.ResetJump();
+        char_stats.StandingHitBox();
     }
 
     /// <summary>
-    /// Function that initiates a wallclimb from a standing on the ground against a ledge
+    /// Function that initiates a wallclimb from a crouching on the ground against a ledge
     /// </summary>
     public void WallClimbFromLedge()
     {
@@ -346,7 +353,7 @@ public class MagGripUpgrade : MonoBehaviour
             if (grabCheck.collider == downHit.collider && downHit.collider.gameObject.GetComponent<CollisionType>().WallClimb)
             {
                 char_stats.current_master_state = CharEnums.MasterState.ClimbState;
-                SetupLedgeClimb(current_climb_state, downHit.collider);
+                GroundToWallStart();
             }
             else
             {
@@ -414,7 +421,8 @@ public class MagGripUpgrade : MonoBehaviour
                             // assign the grab_collider now that the grab is actually happening
                             grab_collider = collisionObject.GetComponent<Collider2D>();
                             //trigger the signal to start the wall climb animation
-                            char_anims.WallClimbTrigger();
+                            char_anims.WallGrabTrigger();
+                            char_anims.ResetJumpDescend();
                         }
                     }
                 }

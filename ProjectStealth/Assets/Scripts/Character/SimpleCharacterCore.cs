@@ -85,7 +85,8 @@ public class SimpleCharacterCore : MonoBehaviour
 			if (fallthrough == true)
 			{
 				transform.Translate( Vector3.down ); // move 1 pixel down.
-				fallthrough = false;
+                char_anims.FallTrigger();
+                fallthrough = false;
 			}
 		}
     }
@@ -118,12 +119,12 @@ public class SimpleCharacterCore : MonoBehaviour
                 //movement stuff
                 if (char_stats.IsWalking)
 				{
-                    char_stats.velocity.x = char_stats.WALK_SPEED * input_manager.HorizontalAxis;
+                    char_stats.velocity.x = WALK_SPEED * input_manager.HorizontalAxis;
 				}
                 else if (char_stats.IsSneaking)
                 {
                     // if current speed is greater than sneak speed, then decel to sneak speed.
-                    if (Mathf.Abs(char_stats.velocity.x) > char_stats.SNEAK_SPEED)
+                    if (Mathf.Abs(char_stats.velocity.x) > SNEAK_SPEED)
                     {
 						IncreaseMagnitude( ref char_stats.velocity.x, - DRAG * Time.deltaTime * Time.timeScale );
                     }
@@ -131,7 +132,7 @@ public class SimpleCharacterCore : MonoBehaviour
                     {
 						// TODO: FIX BUG?: smooth?
 						// If a character is moving with 50% axis input, they'll smooth to the sneak speed, then snap to half of it. That seems silly.
-                        char_stats.velocity.x = char_stats.SNEAK_SPEED * input_manager.HorizontalAxis;
+                        char_stats.velocity.x = SNEAK_SPEED * input_manager.HorizontalAxis;
                     }
                 }
                 else if (char_stats.IsRunning)
@@ -141,7 +142,7 @@ public class SimpleCharacterCore : MonoBehaviour
 						(char_stats.acceleration.x < 0.0f && char_stats.velocity.x > 0.0f) || 
 						(char_stats.acceleration.x > 0.0f && char_stats.velocity.x < 0.0f))
                     {
-                        if (Mathf.Abs(char_stats.velocity.x) > char_stats.SNEAK_SPEED)
+                        if (Mathf.Abs(char_stats.velocity.x) > SNEAK_SPEED)
                         {
                             //print("SKID BOIS");
 							IncreaseMagnitude( ref char_stats.velocity.x, - DRAG * Time.deltaTime * Time.timeScale );
@@ -156,7 +157,7 @@ public class SimpleCharacterCore : MonoBehaviour
                         char_stats.velocity.x += char_stats.acceleration.x * Time.deltaTime * Time.timeScale;
 					}
 
-                    char_stats.velocity.x = Mathf.Clamp(char_stats.velocity.x, -char_stats.RUN_SPEED, char_stats.RUN_SPEED);
+                    char_stats.velocity.x = Mathf.Clamp(char_stats.velocity.x, -RUN_SPEED, RUN_SPEED);
                 }
             }
         }
@@ -164,7 +165,7 @@ public class SimpleCharacterCore : MonoBehaviour
         {
             if (char_stats.jump_turned)
 			{
-                HorizontalJumpVelNoAccel(char_stats.SNEAK_SPEED);
+                HorizontalJumpVelNoAccel(SNEAK_SPEED);
 			}
             else
             {
@@ -226,11 +227,11 @@ public class SimpleCharacterCore : MonoBehaviour
     {
         if (char_stats.acceleration.x < 0.0f && char_stats.velocity.x >= 0.0f)
         {
-            char_stats.velocity.x = -char_stats.SNEAK_SPEED;
+            char_stats.velocity.x = -SNEAK_SPEED;
         }
         else if (char_stats.acceleration.x > 0.0f && char_stats.velocity.x <= 0.0f)
         {
-            char_stats.velocity.x = char_stats.SNEAK_SPEED;
+            char_stats.velocity.x = SNEAK_SPEED;
         }
         else
         {
@@ -314,15 +315,15 @@ public class SimpleCharacterCore : MonoBehaviour
 				float right_hit_distance = right_hit.distance - 1.0f; // TODO: magic number
 				if (char_stats.velocity.x > 0.0f && right_hit_distance <= Mathf.Abs( char_stats.velocity.x * Time.deltaTime * Time.timeScale ))
 				{
-					char_stats.velocity.x = right_hit_distance / (Time.deltaTime * Time.timeScale);
+					char_stats.velocity.x = 0.0f;
+					this.gameObject.transform.Translate( new Vector3( right_hit_distance, 0.0f, 0.0f ) );
 				}
 
 				// are we touching the right wall?
-				if (IsAlmostZero(right_hit_distance))
+				if ( right_hit_distance <= 0.0f )
 				{
 					char_stats.velocity.x = 0.0f;
-					TouchedWall(right_hit.collider.gameObject);
-
+                    TouchedWall(right_hit.collider.gameObject);
 					CollisionType right_hit_collision_type = right_hit.collider.GetComponent<CollisionType>();
 					if ( right_hit_collision_type != null )
 					{
@@ -352,26 +353,27 @@ public class SimpleCharacterCore : MonoBehaviour
 				}
 			}
 			char_stats.is_touching_vault_obstacle = null;
-			RaycastHit2D leftHit = Physics2D.BoxCast(left_hit_origin, box_size, 0.0f, Vector2.left, 50.0f, CollisionMasks.upwards_collision_mask);
-			if (leftHit.collider != null)
+			RaycastHit2D left_hit = Physics2D.BoxCast(left_hit_origin, box_size, 0.0f, Vector2.left, 50.0f, CollisionMasks.upwards_collision_mask);
+			if (left_hit.collider != null)
 			{
-				float left_hit_distance = leftHit.distance - 1.0f;  // TODO: magic number
-				if (char_stats.velocity.x < 0.0f && leftHit.distance <= Mathf.Abs (char_stats.velocity.x * Time.deltaTime * Time.timeScale))
+				float left_hit_distance = left_hit.distance - 1.0f;  // TODO: magic number
+				if (char_stats.velocity.x < 0.0f && left_hit.distance <= Mathf.Abs (char_stats.velocity.x * Time.deltaTime * Time.timeScale))
 				{
-					char_stats.velocity.x = -left_hit_distance / (Time.deltaTime * Time.timeScale);
+					char_stats.velocity.x = 0.0f;
+					this.gameObject.transform.Translate( new Vector3( -1.0f * left_hit_distance, 0.0f, 0.0f ) );
 				}
 
 				// are we touching the left wall?
-				if (IsAlmostZero(left_hit_distance))
+				if ( left_hit_distance <= 0.0f )
 				{
 					char_stats.velocity.x = 0.0f;
-					TouchedWall(leftHit.collider.gameObject);
-					CollisionType left_hit_collision_type = leftHit.collider.GetComponent<CollisionType>();
+					TouchedWall(left_hit.collider.gameObject);
+					CollisionType left_hit_collision_type = left_hit.collider.GetComponent<CollisionType>();
 					if (left_hit_collision_type != null)
 					{
 					    if (left_hit_collision_type.VaultObstacle == true && char_stats.IsGrounded)
 						{
-							char_stats.is_touching_vault_obstacle = leftHit.collider;
+							char_stats.is_touching_vault_obstacle = left_hit.collider;
 						}
 					}
 				}
@@ -392,7 +394,9 @@ public class SimpleCharacterCore : MonoBehaviour
 			float hit_distance = up_hit.distance - 1.0f; //TODO: magic number
 			if (char_stats.velocity.y > 0.0f && hit_distance <= Mathf.Abs(char_stats.velocity.y * Time.deltaTime * Time.timeScale))
 			{
-				char_stats.velocity.y = hit_distance / (Time.deltaTime * Time.timeScale);
+				//char_stats.velocity.y = hit_distance / (Time.deltaTime * Time.timeScale);
+				char_stats.velocity.y = 0.0f;
+				this.gameObject.transform.Translate( new Vector3( 0.0f, hit_distance, 0.0f ) );
 			}
 
 			// are we touching the ceiling?
@@ -491,11 +495,13 @@ public class SimpleCharacterCore : MonoBehaviour
 				{
 					char_stats.is_on_ground = true;
 					char_stats.jump_turned = false;
-				}
+                    char_stats.on_ground_collider = down_hit.collider;
+                }
 			}
 			else
 			{
-				FallingLogic();
+                char_stats.on_ground_collider = null;
+                FallingLogic();
 			}
 			//Fallthrough platforms
 			if (fallthrough == true)
@@ -619,14 +625,14 @@ public class SimpleCharacterCore : MonoBehaviour
 			}
 
             // running automatically starts at the sneaking speed and accelerates from there
-            if (start_run == true && input_manager.HorizontalAxis > 0.0f && Mathf.Abs(char_stats.velocity.x) < char_stats.SNEAK_SPEED)
+            if (start_run == true && input_manager.HorizontalAxis > 0.0f && Mathf.Abs(char_stats.velocity.x) < SNEAK_SPEED)
             {
-                char_stats.velocity.x = char_stats.SNEAK_SPEED;
+                char_stats.velocity.x = SNEAK_SPEED;
                 start_run = false;
             }
-            else if (start_run == true && input_manager.HorizontalAxis < 0.0f && Mathf.Abs(char_stats.velocity.x) < char_stats.SNEAK_SPEED)
+            else if (start_run == true && input_manager.HorizontalAxis < 0.0f && Mathf.Abs(char_stats.velocity.x) < SNEAK_SPEED)
             {
-                char_stats.velocity.x = -char_stats.SNEAK_SPEED;
+                char_stats.velocity.x = -SNEAK_SPEED;
                 start_run = false;
             }
         }
@@ -651,7 +657,6 @@ public class SimpleCharacterCore : MonoBehaviour
             {
                 //trigger fallthrough
                 fallthrough = true;
-                char_anims.FallTrigger();
             }
             else
             {
@@ -767,28 +772,23 @@ public class SimpleCharacterCore : MonoBehaviour
 
 		Vector2 size = new Vector2( collider.size.x, collider.size.y );
 		RaycastHit2D hit = Physics2D.BoxCast( this.gameObject.transform.position, size, 0.0f, change, change.magnitude, CollisionMasks.all_collision_mask );
-		if ( hit != null )
-		{
-			if ( hit.collider != null )
-			{
-				if ( change.magnitude == 0.0f ) 
-				{
-					Debug.Log( "Don't be a troll." );
-					return;
-				}
 
-				//Debug.Log ((hit.distance / change.magnitude - 1.0f) * change);
-				//Debug.Log (hit.distance);
-				this.gameObject.transform.position += (hit.distance / change.magnitude - 1.0f) * change; //TODO: magic number
-			}
-			else
+		if ( hit.collider != null )
+		{
+			if ( change.magnitude == 0.0f ) 
 			{
-				this.gameObject.transform.position += change;
+				Debug.Log( "Don't be a troll." );
+				return;
 			}
+
+			//Debug.Log ((hit.distance / change.magnitude - 1.0f) * change);
+			//Debug.Log (hit.distance);
+			this.gameObject.transform.position += (hit.distance / change.magnitude - 1.0f) * change; //TODO: magic number
 		}
 		else
 		{
-		    this.gameObject.transform.position += change;
+			this.gameObject.transform.position += change;
 		}
+
 	}
 }

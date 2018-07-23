@@ -33,9 +33,9 @@ public class Player : SimpleCharacterCore
 		base.Start ();
 
 		//walk and run vars
-		WALK_SPEED = 1.0f; //used for cutscenes with Alice
-        SNEAK_SPEED = 2.0f; //PC's default speed
-        RUN_SPEED = 4.5f;
+		WALK_SPEED = 60.0f; //used for cutscenes with Val
+        SNEAK_SPEED = 120.0f; //PC's default speed
+        RUN_SPEED = 270.0f;
         char_stats.current_move_state = CharEnums.MoveState.IsSneaking;
 
         mag_grip = GetComponent<MagGripUpgrade>();
@@ -89,7 +89,7 @@ public class Player : SimpleCharacterCore
             //Cloak
             if ( input_manager.CloakInputInst )
             {
-                player_stats.Cloak();
+               player_stats.Cloak();
             }
 
             // base mag grip checks

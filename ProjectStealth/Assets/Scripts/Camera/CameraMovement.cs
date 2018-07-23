@@ -12,7 +12,7 @@ public class CameraMovement : MonoBehaviour
 
     private void Awake()
     {
-        focal_target = GameObject.Find("CameraFocalPoint").transform;
+        focal_target = GameObject.Find("PlayerCharacter/CameraFocalPoint").transform;
     }
 
     // Use this for initialization
@@ -28,7 +28,6 @@ public class CameraMovement : MonoBehaviour
     void Update ()
     {
         //transform.position = focal_target.position;
-
         if (focal_target)
         {
             #region clamp
@@ -71,6 +70,7 @@ public class CameraMovement : MonoBehaviour
             }
             #endregion
 
+            //smoothly move the camera to the focal point
 			Vector3 point = cam.WorldToViewportPoint( clamped_focal_target );
 			Vector3 delta = clamped_focal_target - cam.ViewportToWorldPoint( new Vector3( 0.5f, 0.5f, point.z ) );
             Vector3 destination = transform.position + delta;

@@ -13,10 +13,11 @@ public class UserInputManager : IInputManager
 	// Update is called once per frame
 	void Update () {
 
+        HorizontalAxis = Input.GetAxisRaw("Horizontal");
+        VerticalAxis = Input.GetAxisRaw("Vertical");
         if (InputOverride == false)
         {
-            HorizontalAxis = Input.GetAxisRaw("Horizontal");
-            VerticalAxis = Input.GetAxisRaw("Vertical");
+            
             RunAxis = Input.GetAxisRaw("Run");
 
 
