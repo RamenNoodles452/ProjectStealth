@@ -3,30 +3,30 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // Player lighting effect
-public class SuitLightPulse : MonoBehaviour 
+public class SuitLightPulse : MonoBehaviour
 {
-	#region vars
-	public Light light_reference;
-	private float timer;
-	#endregion
+    #region vars
+    public Light light_reference;
+    private float timer;
+    #endregion
 
-	// Use this for initialization
-	void Start () 
-	{
-		timer = 0.0f;
-	}
-	
-	// Update is called once per frame
-	void Update () 
-	{
-		timer += Time.deltaTime * Time.timeScale;
-		float alpha = 0.6f + 0.4f * Mathf.Sin( timer * 2.0f * Mathf.PI );
+    // Use this for initialization
+    void Start()
+    {
+        timer = 0.0f;
+    }
 
-		Color color = this.GetComponent<SpriteRenderer> ().color;
-		color.a = alpha;
+    // Update is called once per frame
+    void Update()
+    {
+        timer += Time.deltaTime * Time.timeScale;
+        float alpha = 0.6f + 0.4f * Mathf.Sin( timer * 2.0f * Mathf.PI );
 
-		light_reference.intensity = alpha * 5.0f;
+        Color color = this.GetComponent<SpriteRenderer> ().color;
+        color.a = alpha;
 
-		this.GetComponent<SpriteRenderer> ().color = color;
-	}
+        light_reference.intensity = alpha * 5.0f;
+
+        this.GetComponent<SpriteRenderer>().color = color;
+    }
 }

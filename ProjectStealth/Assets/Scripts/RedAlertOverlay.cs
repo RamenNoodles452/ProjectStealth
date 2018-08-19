@@ -15,20 +15,20 @@ public class RedAlertOverlay : MonoBehaviour
     #endregion
 
     // Use this for initialization
-    void Start ()
+    void Start()
     {
         alpha = 0;
         image = GetComponent<Image>();
-	}
-	
-	// Update is called once per frame
-	void Update ()
+    }
+
+    // Update is called once per frame
+    void Update()
     {
         // enabled check
-        if ( ! GameState.instance.is_red_alert ) { alpha = 0.0f; }
+        if ( !GameState.instance.is_red_alert ) { alpha = 0.0f; }
         else
-        { 
-		    if ( fade_in )
+        {
+            if ( fade_in )
             {
                 alpha += increment * Time.deltaTime * Time.timeScale;
                 if ( alpha >= 1.0f ) { alpha = 1.0f; fade_in = false; }
@@ -41,5 +41,5 @@ public class RedAlertOverlay : MonoBehaviour
         }
 
         image.color = new Color( 0.9f, 0.0f, 0.0f, alpha * 0.25f );
-	}
+    }
 }

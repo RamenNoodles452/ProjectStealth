@@ -6,6 +6,6 @@
     // moveState is used by SimpleCharacterCore to determine which movement type is currently being used
     public enum MoveState { IsWalking, IsSneaking, IsRunning };
 
-	// used by CharacterStats and SimpleCharacterCore
-	public enum FacingDirection { Left, Right };
+    // used by CharacterStats and SimpleCharacterCore
+    public enum FacingDirection { Left, Right };
 }

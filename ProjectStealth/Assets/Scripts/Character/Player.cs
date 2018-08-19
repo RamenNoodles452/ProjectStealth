@@ -10,55 +10,55 @@ public class Player : SimpleCharacterCore
     private MagGripUpgrade mag_grip;
     #endregion
 
-    void Awake ()
-	{
+    void Awake()
+    {
         player_stats = GetComponent<PlayerStats>();
 
         if ( Referencer.instance == null )
         {
-            DontDestroyOnLoad(this.gameObject); // Persist across scene changes
+            DontDestroyOnLoad( this.gameObject ); // Persist across scene changes
         }
-        else if (Referencer.instance.player != this && Referencer.instance.player != null)
+        else if ( Referencer.instance.player != this && Referencer.instance.player != null )
         {
             Destroy( this.gameObject ); // NO CLONES!
         }
         else
-        { 
-            DontDestroyOnLoad(this.gameObject); // Persist across scene changes
+        {
+            DontDestroyOnLoad( this.gameObject ); // Persist across scene changes
         }
-	}
+    }
 
-	public override void Start ()
-	{
-		base.Start ();
+    public override void Start()
+    {
+        base.Start();
 
-		//walk and run vars
-		WALK_SPEED = 60.0f; //used for cutscenes with Val
+        //walk and run vars
+        WALK_SPEED = 60.0f; //used for cutscenes with Val
         SNEAK_SPEED = 120.0f; //PC's default speed
         RUN_SPEED = 270.0f;
         char_stats.current_move_state = CharEnums.MoveState.IsSneaking;
 
         mag_grip = GetComponent<MagGripUpgrade>();
-	}
+    }
 
-	void OnDestroy ()
-	{
-		
-	}
+    void OnDestroy()
+    {
 
-	private void LoadInstance ()
-	{
+    }
 
-	}
+    private void LoadInstance()
+    {
 
-	private void StoreInstance ()
-	{
+    }
 
-	}
+    private void StoreInstance()
+    {
 
-	public override void Update ()
-	{
-        if (char_stats.current_master_state == CharEnums.MasterState.DefaultState)
+    }
+
+    public override void Update()
+    {
+        if ( char_stats.current_master_state == CharEnums.MasterState.DefaultState )
         {
             base.Update();
 
@@ -89,16 +89,16 @@ public class Player : SimpleCharacterCore
             //Cloak
             if ( input_manager.CloakInputInst )
             {
-               player_stats.Cloak();
+                player_stats.Cloak();
             }
 
             // base mag grip checks
-            if (player_stats.acquired_mag_grip)
+            if ( player_stats.acquired_mag_grip )
             {
                 // if we want to grab down onto the wall from the ledge
-				if (is_overlooking_ledge) // && we're standing on a grabbable surface?
+                if ( is_overlooking_ledge ) // && we're standing on a grabbable surface?
                 {
-					if (!char_stats.IsInMidair && input_manager.JumpInputInst)
+                    if ( !char_stats.IsInMidair && input_manager.JumpInputInst )
                     {
                         // do we want to climb down?
                         mag_grip.WallClimbFromLedge();
@@ -106,7 +106,7 @@ public class Player : SimpleCharacterCore
                 }
             }
         }
-	}
+    }
 
     public override void LateUpdate()
     {
@@ -114,13 +114,13 @@ public class Player : SimpleCharacterCore
         base.LateUpdate();
     }
 
-	public override void FixedUpdate()
-	{
-        if (char_stats.current_master_state == CharEnums.MasterState.DefaultState)
+    public override void FixedUpdate()
+    {
+        if ( char_stats.current_master_state == CharEnums.MasterState.DefaultState )
         {
             base.FixedUpdate();
-        }    
-	}
+        }
+    }
 
     /// <summary>
     /// at the player level, we have to take into looking over the ledge from wall climbs as well
@@ -130,17 +130,17 @@ public class Player : SimpleCharacterCore
         base.LookingOverLedge();
     }
 
-    public override void TouchedWall(GameObject collisionObject)
+    public override void TouchedWall( GameObject collisionObject )
     {
-        mag_grip.InitiateWallGrab(collisionObject.GetComponent<Collider2D>());
+        mag_grip.InitiateWallGrab( collisionObject.GetComponent<Collider2D>() );
     }
 
-    public override void TouchedCeiling(GameObject collisionObject)
+    public override void TouchedCeiling( GameObject collisionObject )
     {
-        mag_grip.InitiateCeilingGrab(collisionObject.GetComponent<Collider2D>());
+        mag_grip.InitiateCeilingGrab( collisionObject.GetComponent<Collider2D>() );
     }
 
-     /// <returns>The coordinates of the center point of the player (in pixels)</returns>
+    /// <returns>The coordinates of the center point of the player (in pixels)</returns>
     public Vector2 CenterPoint()
     {
         BoxCollider2D collider = this.gameObject.GetComponent<BoxCollider2D>();
@@ -154,10 +154,10 @@ public class Player : SimpleCharacterCore
     public bool IsEvading() { return player_stats.IsEvading(); }
 
     /// <returns>The player's current amount of shields</returns>
-    public float GetShields() {  return player_stats.GetShields(); }
+    public float GetShields() { return player_stats.GetShields(); }
 
     /// <returns>The player's maximum amount of shields</returns>
-    public float GetShieldsMax() {  return player_stats.GetShieldsMax(); }
+    public float GetShieldsMax() { return player_stats.GetShieldsMax(); }
 
     /// <returns>The player's current amount of energy</returns>
     public float GetEnergy() { return player_stats.GetEnergy(); }

@@ -9,15 +9,15 @@ public class KillBox : MonoBehaviour
     Player player;
     public BoxCollider2D bound_box;
 
-	// Use this for initialization
-	void Start ()
+    // Use this for initialization
+    void Start()
     {
         player = Referencer.instance.player; //GameObject.Find("PlayerCharacter").GetComponent<Player>(); //bad
         bound_box = this.gameObject.GetComponent<BoxCollider2D>();
-	}
-	
-	// Update is called once per frame
-	void Update ()
+    }
+
+    // Update is called once per frame
+    void Update()
     {
         if ( player == null )
         {
@@ -33,7 +33,7 @@ public class KillBox : MonoBehaviour
         float miny = bound_box.transform.position.y + bound_box.offset.y - bound_box.size.y / 2.0f;
         float maxy = bound_box.transform.position.y + bound_box.offset.y + bound_box.size.y / 2.0f;
 
-        if ( playerCenter.x >=  minx && playerCenter.x <= maxx && playerCenter.y >= miny && playerCenter.y <= maxy)
+        if ( playerCenter.x >= minx && playerCenter.x <= maxx && playerCenter.y >= miny && playerCenter.y <= maxy )
         {
             //ok
         }
@@ -42,5 +42,5 @@ public class KillBox : MonoBehaviour
             Debug.Log( "Player went outside the map." );
             player.Kill(); //may need to specify animation
         }
-	}
+    }
 }

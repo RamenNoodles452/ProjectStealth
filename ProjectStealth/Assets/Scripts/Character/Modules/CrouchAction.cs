@@ -19,9 +19,9 @@ public class CrouchAction : MonoBehaviour
 
     void Update()
     {
-		if (char_stats.IsGrounded && char_stats.current_move_state == CharEnums.MoveState.IsSneaking && input_manager.VerticalAxis < 0.0f) //TODO: we really need to expose a stopped API.
+        if ( char_stats.IsGrounded && char_stats.current_move_state == CharEnums.MoveState.IsSneaking && input_manager.VerticalAxis < 0.0f ) //TODO: we really need to expose a stopped API.
         {
-            if (char_stats.is_crouching == false)
+            if ( char_stats.is_crouching == false )
             {
                 char_stats.is_crouching = true;
                 char_stats.CrouchingHitBox();
@@ -29,7 +29,7 @@ public class CrouchAction : MonoBehaviour
         }
         else
         {
-            if (char_stats.is_crouching)
+            if ( char_stats.is_crouching )
             {
                 char_stats.is_crouching = false;
                 char_stats.StandingHitBox();

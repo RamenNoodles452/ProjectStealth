@@ -45,11 +45,11 @@ public class PlayerStats : MonoBehaviour
     private float EVADE_RECOVERY_TIME = 0.10f;
     private float evade_recovery_counter = 0.15f;
 
-	//TODO: evade speed in direction, backstep from neutral (2 states here) chord with direction
-	// aerial 4 directional dodge movement (no iframes)
-	// sliders for total time, windup time, i frames (not for aerial), recovery time / skip for enqueued windup, speed in pixels per second.
-	// disable normal movement when dodging
-	// don't collide with enemies while dodging
+    //TODO: evade speed in direction, backstep from neutral (2 states here) chord with direction
+    // aerial 4 directional dodge movement (no iframes)
+    // sliders for total time, windup time, i frames (not for aerial), recovery time / skip for enqueued windup, speed in pixels per second.
+    // disable normal movement when dodging
+    // don't collide with enemies while dodging
     #endregion
 
     #region Cloak
@@ -77,8 +77,8 @@ public class PlayerStats : MonoBehaviour
     // Noise Prefab: Set in Editor
     public GameObject noise_prefab;
 
-	private CharacterStats char_stats;
-	private float walk_animation_timer;
+    private CharacterStats char_stats;
+    private float walk_animation_timer;
     #endregion
 
     #region stat accessors
@@ -109,13 +109,13 @@ public class PlayerStats : MonoBehaviour
     }
     #endregion
 
-	/// <summary>
-	/// Sets the animation timer for noise generation when the player starts walking
-	/// </summary>
-	public void StartWalking()
-	{
-		walk_animation_timer = 0.15f;
-	}
+    /// <summary>
+    /// Sets the animation timer for noise generation when the player starts walking
+    /// </summary>
+    public void StartWalking()
+    {
+        walk_animation_timer = 0.15f;
+    }
 
     /// <summary>
     /// Sets location to respawn at
@@ -199,11 +199,11 @@ public class PlayerStats : MonoBehaviour
         shield = shield_max;
 
         // TODO: interrupt everything, stop animations, reset all that
-		//reset state from climbing, etc.
-		if ( Referencer.instance.player.GetComponent<CharacterStats>().current_master_state == CharEnums.MasterState.ClimbState )
-		{
-			Referencer.instance.player.GetComponent<MagGripUpgrade>().StopClimbing();
-		}
+        //reset state from climbing, etc.
+        if ( Referencer.instance.player.GetComponent<CharacterStats>().current_master_state == CharEnums.MasterState.ClimbState )
+        {
+            Referencer.instance.player.GetComponent<MagGripUpgrade>().StopClimbing();
+        }
 
         // reset movement
         char_stats = this.gameObject.GetComponent<CharacterStats>();
@@ -226,7 +226,7 @@ public class PlayerStats : MonoBehaviour
             silencer -= 1.0f;
         }
         else
-        { 
+        {
             // Go loud
             GameObject noise_obj = GameObject.Instantiate( noise_prefab, this.gameObject.transform.position, Quaternion.identity );
             Noise noise = noise_obj.GetComponent<Noise>();
@@ -404,7 +404,7 @@ public class PlayerStats : MonoBehaviour
         {
             // Delay before regen begins
             shield_delay_counter += Time.deltaTime * Time.timeScale;
-			if ( shield_delay_counter >= SHIELD_REGENERATION_DELAY )
+            if ( shield_delay_counter >= SHIELD_REGENERATION_DELAY )
             {
                 is_regenerating = true;
                 // play recharge sound?
@@ -413,11 +413,11 @@ public class PlayerStats : MonoBehaviour
         #endregion
 
         #region Evade
-		if ( is_evade_winding_up )
+        if ( is_evade_winding_up )
         {
             //Debug.Log( "Evade windup" );
             evade_windup_counter += Time.deltaTime * Time.timeScale;
-			if ( evade_windup_counter >= EVADE_WINDUP_TIME )
+            if ( evade_windup_counter >= EVADE_WINDUP_TIME )
             {
                 is_evade_winding_up = false;
                 StartIFrames();
@@ -440,7 +440,7 @@ public class PlayerStats : MonoBehaviour
         {
             //Debug.Log("Evade recovery");
             evade_recovery_counter += Time.deltaTime * Time.timeScale;
-			if ( evade_recovery_counter >= EVADE_RECOVERY_TIME )
+            if ( evade_recovery_counter >= EVADE_RECOVERY_TIME )
             {
                 is_evade_recovering = false;
                 is_evading = false;
@@ -457,7 +457,7 @@ public class PlayerStats : MonoBehaviour
         #region Cloaking
         if ( is_cloaked )
         {
-			energy = Mathf.Max( energy - CLOAK_DRAIN_PER_SECOND * Time.deltaTime * Time.timeScale, 0.0f );
+            energy = Mathf.Max( energy - CLOAK_DRAIN_PER_SECOND * Time.deltaTime * Time.timeScale, 0.0f );
             if ( energy <= 0.0f )
             {
                 is_cloaked = false;
@@ -481,44 +481,44 @@ public class PlayerStats : MonoBehaviour
         }
         #endregion
 
-		#region Walking
-		if ( char_stats.IsGrounded && 
-			(char_stats.current_move_state == CharEnums.MoveState.IsWalking || char_stats.current_move_state == CharEnums.MoveState.IsRunning) )
-		{
-			walk_animation_timer += Time.deltaTime; // t_scale SHOULD be respected? But also need to update animation to play slower.
-			if ( walk_animation_timer >= 0.35f )
-			{
-				walk_animation_timer -= 0.35f;
-				// make noise
-				GameObject noise_obj = GameObject.Instantiate( noise_prefab, this.gameObject.transform.position + new Vector3( 0.0f, -20.0f, 0.0f ), Quaternion.identity );
-				Noise noise = noise_obj.GetComponent<Noise>();
-				noise.lifetime = 0.2f; // seconds
-				if ( char_stats.current_move_state == CharEnums.MoveState.IsWalking )
-				{
-				  noise.radius = 25.0f;
-				}
-				else if ( char_stats.current_move_state == CharEnums.MoveState.IsRunning )
-				{
-					noise.radius = 50.0f;
-				}
-			}
-		}
-		#endregion
+        #region Walking
+        if ( char_stats.IsGrounded &&
+            ( char_stats.current_move_state == CharEnums.MoveState.IsWalking || char_stats.current_move_state == CharEnums.MoveState.IsRunning ) )
+        {
+            walk_animation_timer += Time.deltaTime; // t_scale SHOULD be respected? But also need to update animation to play slower.
+            if ( walk_animation_timer >= 0.35f )
+            {
+                walk_animation_timer -= 0.35f;
+                // make noise
+                GameObject noise_obj = GameObject.Instantiate( noise_prefab, this.gameObject.transform.position + new Vector3( 0.0f, -20.0f, 0.0f ), Quaternion.identity );
+                Noise noise = noise_obj.GetComponent<Noise>();
+                noise.lifetime = 0.2f; // seconds
+                if ( char_stats.current_move_state == CharEnums.MoveState.IsWalking )
+                {
+                    noise.radius = 25.0f;
+                }
+                else if ( char_stats.current_move_state == CharEnums.MoveState.IsRunning )
+                {
+                    noise.radius = 50.0f;
+                }
+            }
+        }
+        #endregion
         #endregion
 
         // Cheat codes
         // TODO: remove
-        if (Input.GetKeyDown(KeyCode.M))
+        if ( Input.GetKeyDown( KeyCode.M ) )
         {
-            if (acquired_mag_grip)
+            if ( acquired_mag_grip )
             {
                 acquired_mag_grip = false;
             }
             else
-            { 
+            {
                 acquired_mag_grip = true;
             }
         }
     }
-	
+
 }
