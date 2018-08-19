@@ -61,6 +61,8 @@ public class SimpleCharacterCore : MonoBehaviour
         jump_grace_period = false;
         jump_grace_period_timer = JUMP_GRACE_PERIOD_TIME;
         fallthrough = false;
+
+        SetFacing(); // fix initialization errors
     }
 
     // Called each frame
