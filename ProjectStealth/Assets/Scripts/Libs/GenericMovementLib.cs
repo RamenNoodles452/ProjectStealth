@@ -21,6 +21,8 @@ public class GenericMovementLib : MonoBehaviour
 
     // this function takes input as a string because animation event calling is rather limited in its capabilities 
     // dating this incase it gets better (June/2018)
+    // No no no!
+    /*
     public void MoveOffset(string input)
     {
         Vector3 offset = MoveOffsetStringParse(input);
@@ -34,4 +36,5 @@ public class GenericMovementLib : MonoBehaviour
         int yoffset = Int32.Parse(split_string[1]);
         return new Vector3(xoffset, yoffset, 0);
     }
+    */
 }
