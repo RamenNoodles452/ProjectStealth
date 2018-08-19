@@ -25,27 +25,39 @@ public class CharacterAnimationLogic : MonoBehaviour
         }
 
         CoverLogic();
+        RunningLogic();
         SneakingLogic();
         CrouchLogic();
         WallClimb();
         WallSlide();
     }
 
+    // This is temporary & may not solve all problems. Once the animator has run states, adjust this accordingly.
+    private void RunningLogic()
+    {
+        if ( char_stats.IsInMidair ) { return; }
+        if ( char_stats.current_move_state != CharEnums.MoveState.IsRunning ) { return; }
+        if ( char_stats.velocity.x != 0.0f )
+        {
+            animator.SetBool( "sneaking", true ); // TODO: replace
+        }
+        else
+        {
+            animator.SetBool( "sneaking", false ); // TODO: replace
+        }
+    }
+
     private void SneakingLogic()
     {
-		if (char_stats.IsGrounded)
+        if ( char_stats.IsInMidair ) { return; }
+		if ( char_stats.current_move_state != CharEnums.MoveState.IsSneaking ) { return; }
+        if (char_stats.velocity.x != 0.0f)
         {
-			if (char_stats.current_move_state == CharEnums.MoveState.IsSneaking)
-            {
-                if (char_stats.velocity.x != 0.0f)
-                {
-					animator.SetBool("sneaking", true);
-                }
-                else
-                {
-					animator.SetBool("sneaking", false);
-                }
-            }
+			animator.SetBool("sneaking", true);
+        }
+        else
+        {
+			animator.SetBool("sneaking", false);
         }
     }
 
