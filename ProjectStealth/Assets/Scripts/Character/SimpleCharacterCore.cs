@@ -43,6 +43,8 @@ public class SimpleCharacterCore : MonoBehaviour
     protected bool fallthrough;
 
     private const float APPROXIMATE_EQUALITY_MARGIN = 0.001f; //Mathf.Epsilon;
+    private const float AERIAL_SIZE_INCREASE = 10.0f; // pixels added to collision box height while in midair, to avoid corner clipping
+    private const float ONE_PIXEL_BUFFER = 1.0f;
 
     private Queue<Vector3> applied_moves;
     #endregion
@@ -284,101 +286,81 @@ public class SimpleCharacterCore : MonoBehaviour
 
     private void CheckCollisionHorizontal()
     {
-        // box used to collide against horizontal objects. Extend the hitbox vertically while in the air to avoid corner clipping
-        Vector2 box_size;
-        if (char_stats.IsGrounded) 
+        if ( char_stats.velocity.x == 0.0f ) { return; }
+
+        Vector2 collision_box_size, collision_box_center, direction;
+        SetupHorizontalCollision( out collision_box_center, out collision_box_size, out direction );
+        char_stats.is_touching_vault_obstacle = null;
+
+        RaycastHit2D hit = Physics2D.BoxCast( collision_box_center, collision_box_size, 0.0f, direction, 50.0f, CollisionMasks.upwards_collision_mask );
+        if ( hit.collider != null )
         {
-            box_size = new Vector2 (1.0f, char_stats.char_collider.bounds.size.y); // 1px x height box
+            float hit_distance = hit.distance - ONE_PIXEL_BUFFER;
+            if ( hit_distance <= Mathf.Abs( char_stats.velocity.x * Time.deltaTime * Time.timeScale ) )
+            {
+                // we touched a wall
+                Vector3 gap;
+                if ( char_stats.velocity.x > 0.0f ) { gap = new Vector3(  hit_distance, 0.0f, 0.0f ); }
+                else                                { gap = new Vector3( -hit_distance, 0.0f, 0.0f ); }
+                this.gameObject.transform.Translate( gap );
+                char_stats.velocity.x = 0.0f;
+                OnBumpWall();
+                TouchedWall( hit.collider.gameObject );
+                CollisionType hit_collision_type = hit.collider.GetComponent<CollisionType>();
+                if ( hit_collision_type != null )
+                {
+                    if ( hit_collision_type.VaultObstacle == true && char_stats.IsGrounded )
+                    {
+                        char_stats.is_touching_vault_obstacle = hit.collider;
+                    }
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Sets up the collision box used to collide against objects horizontally.
+    /// </summary>
+    /// <param name="center">The centerpoint of the hitbox</param>
+    /// <param name="size">The dimensions of the hitbox</param>
+    /// <param name="direction">A unit vector indicating the direction of motion (left or right?)</param>
+    private void SetupHorizontalCollision( out Vector2 center, out Vector2 size, out Vector2 direction )
+    {
+        // Set collision box size
+        if ( char_stats.IsGrounded )
+        {
+            size = new Vector2( 1.0f, char_stats.char_collider.bounds.size.y ); // 1px x height box
         }
         else
         {
-            box_size = new Vector2 (1.0f, char_stats.char_collider.bounds.size.y + 10.0f); // this expands 5 pixels in each direction from the middle. //TODO: magic number refactor
+            // Extend the hitbox vertically while in the air to avoid corner clipping
+            size = new Vector2( 1.0f, char_stats.char_collider.bounds.size.y + AERIAL_SIZE_INCREASE ); // this expands 5 pixels in each direction from the middle.
+            // NOTE: This means levels should be designed such that the minimum height of a space is the player character's height + AERIAL_SIZE_INCREASE
         }
 
-        // raycast to collide right
-        if (char_stats.velocity.x > 0.0f)
+        // Set center + direction
+        if ( char_stats.velocity.x > 0.0f )
         {
-            Vector2 right_hit_origin = new Vector2(char_stats.char_collider.bounds.max.x - box_size.x, char_stats.char_collider.bounds.center.y);
-            if (char_stats.IsInMidair)
-            {
-                if (char_stats.velocity.y > 0.0f) 
-                {
-                    right_hit_origin = new Vector2 (char_stats.char_collider.bounds.max.x - box_size.x, char_stats.char_collider.bounds.center.y + 5.0f); // TODO: magic numbers
-                }
-                else
-                {
-                    right_hit_origin = new Vector2(char_stats.char_collider.bounds.max.x - box_size.x, char_stats.char_collider.bounds.center.y - 5.0f); //TODO: magic numbers
-                }
-            }
-            char_stats.is_touching_vault_obstacle = null;
-            RaycastHit2D right_hit = Physics2D.BoxCast(right_hit_origin, box_size, 0.0f, Vector2.right, 50.0f, CollisionMasks.upwards_collision_mask);
-            if (right_hit.collider != null)
-            {
-                float right_hit_distance = right_hit.distance - 1.0f; // TODO: magic number
-                if (char_stats.velocity.x > 0.0f && right_hit_distance <= Mathf.Abs( char_stats.velocity.x * Time.deltaTime * Time.timeScale ))
-                {
-                    char_stats.velocity.x = 0.0f;
-                    this.gameObject.transform.Translate( new Vector3( right_hit_distance, 0.0f, 0.0f ) );
-                }
-
-                // are we touching the right wall?
-                if ( right_hit_distance <= 0.0f )
-                {
-                    char_stats.velocity.x = 0.0f;
-                    TouchedWall(right_hit.collider.gameObject);
-                    CollisionType right_hit_collision_type = right_hit.collider.GetComponent<CollisionType>();
-                    if ( right_hit_collision_type != null )
-                    {
-                        if (right_hit_collision_type.VaultObstacle == true && char_stats.IsGrounded) 
-                        {
-                            char_stats.is_touching_vault_obstacle = right_hit.collider;
-                        }
-                    }
-                }
-            }
+            center = new Vector2( char_stats.char_collider.bounds.max.x - size.x, char_stats.char_collider.bounds.center.y );
+            direction = Vector2.right;
+        }
+        else
+        {
+            center = new Vector2( char_stats.char_collider.bounds.min.x + size.x, char_stats.char_collider.bounds.center.y );
+            direction = Vector2.left;
         }
 
-        // raycast to collide left
-        // TODO: REFACTOR. DRY violation
-        else if (char_stats.velocity.x < 0.0f)
+        // Adjust the hitbox
+        // If moving upwards, we want the additional hitbox area to be above the player. If moving downwards, we want it below.
+        if ( char_stats.IsInMidair )
         {
-            Vector2 left_hit_origin = new Vector2(char_stats.char_collider.bounds.min.x + box_size.x, char_stats.char_collider.bounds.center.y);
-            if (char_stats.IsInMidair)
+            if ( char_stats.velocity.y > 0.0f )
             {
-                if (char_stats.velocity.y > 0.0f) 
-                {
-                    left_hit_origin = new Vector2 (char_stats.char_collider.bounds.min.x + box_size.x, char_stats.char_collider.bounds.center.y + 5.0f); // TODO: magic number
-                }
-                else 
-                {
-                    left_hit_origin = new Vector2 (char_stats.char_collider.bounds.min.x + box_size.x, char_stats.char_collider.bounds.center.y - 5.0f); //TODO: magic number
-                }
+                center += new Vector2( 0.0f, AERIAL_SIZE_INCREASE / 2.0f );
             }
-            char_stats.is_touching_vault_obstacle = null;
-            RaycastHit2D left_hit = Physics2D.BoxCast(left_hit_origin, box_size, 0.0f, Vector2.left, 50.0f, CollisionMasks.upwards_collision_mask);
-            if (left_hit.collider != null)
+            else
             {
-                float left_hit_distance = left_hit.distance - 1.0f;  // TODO: magic number
-                if (char_stats.velocity.x < 0.0f && left_hit.distance <= Mathf.Abs (char_stats.velocity.x * Time.deltaTime * Time.timeScale))
-                {
-                    char_stats.velocity.x = 0.0f;
-                    this.gameObject.transform.Translate( new Vector3( -1.0f * left_hit_distance, 0.0f, 0.0f ) );
-                }
-
-                // are we touching the left wall?
-                if ( left_hit_distance <= 0.0f )
-                {
-                    char_stats.velocity.x = 0.0f;
-                    TouchedWall(left_hit.collider.gameObject);
-                    CollisionType left_hit_collision_type = left_hit.collider.GetComponent<CollisionType>();
-                    if (left_hit_collision_type != null)
-                    {
-                        if (left_hit_collision_type.VaultObstacle == true && char_stats.IsGrounded)
-                        {
-                            char_stats.is_touching_vault_obstacle = left_hit.collider;
-                        }
-                    }
-                }
+                center -= new Vector2( 0.0f, AERIAL_SIZE_INCREASE / 2.0f );
             }
         }
     }
@@ -393,10 +375,9 @@ public class SimpleCharacterCore : MonoBehaviour
         RaycastHit2D up_hit = Physics2D.BoxCast(up_hit_origin, box_size, 0.0f, Vector2.up, 50.0f, CollisionMasks.upwards_collision_mask);
         if (up_hit.collider != null)
         {
-            float hit_distance = up_hit.distance - 1.0f; //TODO: magic number
+            float hit_distance = up_hit.distance - ONE_PIXEL_BUFFER;
             if (char_stats.velocity.y > 0.0f && hit_distance <= Mathf.Abs(char_stats.velocity.y * Time.deltaTime * Time.timeScale))
             {
-                //char_stats.velocity.y = hit_distance / (Time.deltaTime * Time.timeScale);
                 char_stats.velocity.y = 0.0f;
                 this.gameObject.transform.Translate( new Vector3( 0.0f, hit_distance, 0.0f ) );
             }
@@ -422,7 +403,7 @@ public class SimpleCharacterCore : MonoBehaviour
             bool touch_ground = true; // this is to prevent the game from thinking you touched the ground when you're gonna slip off the side when falling
             CollisionType down_hit_collision_type = down_hit.transform.gameObject.GetComponent<CollisionType>();
 
-            float hit_distance = down_hit.distance - 1.0f; //TODO: magic number
+            float hit_distance = down_hit.distance - ONE_PIXEL_BUFFER;
             if (char_stats.velocity.y < 0.0f && hit_distance <= Mathf.Abs(char_stats.velocity.y * Time.deltaTime * Time.timeScale))
             {
                 // if the character is about to clip into the environment with the back of their hit box, move them so that they won't clip
@@ -553,6 +534,15 @@ public class SimpleCharacterCore : MonoBehaviour
         }
         char_stats.is_on_ground = false;
         is_against_ledge = false;
+    }
+
+    /// <summary>
+    /// Called when a character bumps into a wall.
+    /// </summary>
+    void OnBumpWall()
+    {
+        // This is currently a hook stub.
+        // TODO: put any sound/animation effects that should happen when the player hits a wall here.
     }
 
     /// <summary>
