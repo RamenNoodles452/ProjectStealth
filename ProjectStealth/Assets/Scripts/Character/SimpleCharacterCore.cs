@@ -576,8 +576,8 @@ public class SimpleCharacterCore : MonoBehaviour
             if ( collision_type != null )
             {
                 // special types of floor can change behaviour.
-                if ( ShuntPlayer( collision_type, hit.collider ) ) { did_touch_ground = false; }
-                CheckFallthroughPlatforms( collision_type, hit.collider );
+                if ( ShuntPlayer( collision_type, hit.collider ) )         { did_touch_ground = false; }
+                if ( FallthroughPlatform( collision_type, hit.collider ) ) { did_touch_ground = false; Debug.Log( "fell" ); }
             }
             else
             {
@@ -631,25 +631,29 @@ public class SimpleCharacterCore : MonoBehaviour
     /// </summary>
     /// <param name="floor_collision_type">The collision type of the floor.</param>
     /// <param name="floor_collider">The collider of the floor.</param>
-    private void CheckFallthroughPlatforms( CollisionType floor_collision_type, Collider2D floor_collider )
+    /// <returns>True if the player fell through a platform, false otherwise.</returns>
+    private bool FallthroughPlatform( CollisionType floor_collision_type, Collider2D floor_collider )
     {
-        if ( ! fallthrough ) { return; } // If the player is definately not falling through the floor, no need.
-        
-        if ( floor_collision_type.Fallthrough )
-        {
-            // make sure that the player character is not straddling a solid platform
-            // issue can't fall down when straddling two fallthrough platforms 
-            //(but there shouldn't be a need to have two passthrough platforms touch, they can just merge into 1)
-            if ( ( floor_collision_type.WalkOffRight && char_stats.char_collider.bounds.max.x > floor_collider.bounds.max.x ) ||
-                 ( floor_collision_type.WalkOffLeft  && char_stats.char_collider.bounds.min.x < floor_collider.bounds.min.x ) )
-            {
-                fallthrough = false;
-            }
-        }
-        else
+        if ( ! fallthrough ) { return false; }    // The player is not falling through the floor.
+
+        if ( ! floor_collision_type.Fallthrough ) // The player cannot pass through this floor.
         {
             fallthrough = false;
+            return false;
         }
+
+        // make sure that the player character is not straddling a solid platform
+        // issue can't fall down when straddling two fallthrough platforms 
+        // (but there shouldn't be a need to have two passthrough platforms touch, they can just merge into 1)
+        if ( ( floor_collision_type.WalkOffRight && char_stats.char_collider.bounds.max.x > floor_collider.bounds.max.x ) ||
+                ( floor_collision_type.WalkOffLeft  && char_stats.char_collider.bounds.min.x < floor_collider.bounds.min.x ) )
+        {
+            fallthrough = false;
+            return false;
+        }
+
+        char_anims.FallTrigger();
+        return true;
     }
 
     /// <summary>
