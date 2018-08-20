@@ -101,54 +101,71 @@ public class SimpleCharacterCore : MonoBehaviour
     /// </summary>
     protected void MovementInput()
     {
-        is_overlooking_ledge = IsOverlookingLedge();
+        RunWalkInput();
+        JumpInput();
+    }
 
+    /// <summary>
+    /// Parses run and walk input, and sets state
+    /// </summary>
+    private void RunWalkInput()
+    {
         if ( input_manager.RunInput )
         {
             char_stats.current_move_state = CharEnums.MoveState.IsRunning;
+            StartRunning();
         }
         else
         {
             char_stats.current_move_state = CharEnums.MoveState.IsSneaking;
         }
+        SetHorizontalAcceleration();
+        is_overlooking_ledge = IsOverlookingLedge();
+    }
 
-        if ( char_stats.current_move_state == CharEnums.MoveState.IsRunning )
+    /// <summary>
+    /// Snaps to minimum running speed when the player presses run.
+    /// </summary>
+    private void StartRunning()
+    {
+        // if the character comes to a full stop, let them start the run again
+        // This also works when turning around
+        if ( char_stats.velocity.x == 0.0f )
         {
-            // if the character comes to a full stop, let them start the run again
-            // This also works when turning around
-            if ( char_stats.velocity.x == 0.0f )
-            {
-                start_run = true;
-                PlayerStats playerStats = GetComponent<PlayerStats> ();
-                playerStats.StartWalking();
-            }
+            start_run = true;
+            PlayerStats playerStats = GetComponent<PlayerStats>();
+            playerStats.StartWalking();
+        }
+        if ( start_run == false ) { return; }
 
-            // running automatically starts at the sneaking speed and accelerates from there
-            if ( start_run == true && input_manager.HorizontalAxis > 0.0f && Mathf.Abs( char_stats.velocity.x ) < SNEAK_SPEED )
-            {
-                char_stats.velocity.x = SNEAK_SPEED;
-                start_run = false;
-            }
-            else if ( start_run == true && input_manager.HorizontalAxis < 0.0f && Mathf.Abs( char_stats.velocity.x ) < SNEAK_SPEED )
-            {
-                char_stats.velocity.x = -SNEAK_SPEED;
-                start_run = false;
-            }
-        }
+        // running automatically starts at the sneaking speed and accelerates from there
+        float sign = 1.0f;
+        if ( input_manager.HorizontalAxis < 0.0f ) { sign = -1.0f; }
 
-        if ( input_manager.HorizontalAxis > 0.0f )
+        if ( Mathf.Abs( char_stats.velocity.x ) < SNEAK_SPEED )
         {
-            char_stats.acceleration.x = ACCELERATION;
+            char_stats.velocity.x = SNEAK_SPEED * sign;
+            start_run = false;
         }
-        else if ( input_manager.HorizontalAxis < 0.0f )
-        {
-            char_stats.acceleration.x = -ACCELERATION;
-        }
-        else
-        {
-            char_stats.acceleration.x = 0.0f;
-        }
+    }
 
+    /// <summary>
+    /// Parses x axis input and sets x axis acceleration
+    /// </summary>
+    private void SetHorizontalAcceleration()
+    {
+        // x accel
+        float multiplier = 0.0f;
+        if      ( input_manager.HorizontalAxis > 0.0f ) { multiplier =  1.0f; }
+        else if ( input_manager.HorizontalAxis < 0.0f ) { multiplier = -1.0f; }
+        char_stats.acceleration.x = ACCELERATION * multiplier;
+    }
+
+    /// <summary>
+    /// Parses jump input and sets jump state
+    /// </summary>
+    private void JumpInput()
+    {
         // Jump logic. Keep the Y velocity constant while holding jump for the duration of JUMP_CONTROL_TIME
         if ( ( jump_grace_period || char_stats.IsGrounded ) && input_manager.JumpInputInst )
         {
@@ -305,6 +322,27 @@ public class SimpleCharacterCore : MonoBehaviour
     }
 
     /// <summary>
+    /// Magnitude increasing function. Adds the increment to value if value is positive.
+    /// Subtracts the increment from value if value is negative.
+    /// </summary>
+    /// <param name="value">The value to add to or subtract from. 
+    ///     The sign of value dictates whether the increment will be added or subtracted. 
+    ///     The result is returned in value.</param>
+    /// <param name="increment">The amount to add to value when value is positive OR ZERO. 
+    ///     The opposite will be added when value is negative.</param>
+    private void IncreaseMagnitude( ref float value, float increment )
+    {
+        if ( value >= 0.0f ) // I guess we'll consider 0 positive?
+        {
+            value += increment;
+        }
+        else if ( value < 0.0f )
+        {
+            value -= increment;
+        }
+    }
+
+    /// <summary>
     /// Snaps the player's horizontal velocity to the given value, in the direction the player is accelerating.
     /// </summary>
     /// <param name="speed">The speed, in pixels per second</param>
@@ -385,27 +423,6 @@ public class SimpleCharacterCore : MonoBehaviour
         if ( char_stats.IsGrounded && IsAlmostZero( char_stats.velocity.y ) )
         {
             char_stats.velocity.y = 0.0f;
-        }
-    }
-
-    /// <summary>
-    /// Magnitude increasing function. Adds the increment to value if value is positive.
-    /// Subtracts the increment from value if value is negative.
-    /// </summary>
-    /// <param name="value">The value to add to or subtract from. 
-    ///     The sign of value dictates whether the increment will be added or subtracted. 
-    ///     The result is returned in value.</param>
-    /// <param name="increment">The amount to add to value when value is positive OR ZERO. 
-    ///     The opposite will be added when value is negative.</param>
-    private void IncreaseMagnitude( ref float value, float increment )
-    {
-        if ( value >= 0.0f ) // I guess we'll consider 0 positive?
-        {
-            value += increment;
-        }
-        else if ( value < 0.0f )
-        {
-            value -= increment;
         }
     }
 
@@ -504,6 +521,7 @@ public class SimpleCharacterCore : MonoBehaviour
     /// <summary>
     /// Checks if y axis movement causes collision with anything, and stops movement if it does.
     /// </summary>
+    // TODO: refactor & split (maybe top/bottom). DRY.
     private void CheckCollisionVertical()
     {
         // Vertical Collision Block
@@ -531,7 +549,7 @@ public class SimpleCharacterCore : MonoBehaviour
         }
 
         // raycast to find the floor
-        // TODO: DRY violation
+        // TODO: refactor, DRY violation
         Vector2 down_hit_origin = new Vector2(char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.min.y + box_size.y);
         RaycastHit2D down_hit = Physics2D.BoxCast(down_hit_origin, box_size, 0.0f, Vector2.down, 50.0f, CollisionMasks.all_collision_mask);
         if ( down_hit.collider != null )
@@ -548,7 +566,8 @@ public class SimpleCharacterCore : MonoBehaviour
             {
                 // if the character is about to clip into the environment with the back of their hit box, move them so that they won't clip
                 if ( down_hit_collision_type != null )
-                {
+                { 
+                    //TODO: DRY violation
                     if ( char_stats.velocity.x > 0.0f && down_hit_collider_right < char_stats.char_collider.bounds.center.x && down_hit_collision_type.WalkOffRight == false )
                     {
                         transform.Translate( down_hit_collider_right - character_left, 0.0f, 0.0f );
