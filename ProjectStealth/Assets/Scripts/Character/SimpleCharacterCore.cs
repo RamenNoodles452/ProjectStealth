@@ -79,17 +79,7 @@ public class SimpleCharacterCore : MonoBehaviour
         Collisions();
         UpdateGracePeriod();
 
-        //move the character after all calculations have been done
-        if ( char_stats.current_master_state == CharEnums.MasterState.DefaultState )
-        {
-            transform.Translate( char_stats.velocity * Time.deltaTime * Time.timeScale );
-            if ( fallthrough == true )
-            {
-                transform.Translate( Vector3.down ); // move 1 pixel down.
-                char_anims.FallTrigger();
-                fallthrough = false;
-            }
-        }
+        ApplyVelocity();
     }
 
     // Called each frame, after update
@@ -662,9 +652,9 @@ public class SimpleCharacterCore : MonoBehaviour
 
         // Over the edge, stop. On the platform, snap to ledge edge.
         if ( distance_to_ledge <= Mathf.Abs( char_stats.velocity.x * Time.deltaTime * Time.timeScale ) )
-        {
+        { 
+            char_stats.velocity.x = 0.0f;
             if ( Mathf.Abs( distance_to_ledge ) == distance_to_ledge ) { transform.Translate( new Vector3( distance_to_ledge * sign, 0.0f, 0.0f ) ); }
-            else { char_stats.velocity.x = 0.0f; }
         }
 
         // track result
@@ -769,6 +759,23 @@ public class SimpleCharacterCore : MonoBehaviour
     }
 
     /// <summary>
+    /// The END GOAL: Actually move the character after all calculations have been done.
+    /// </summary>
+    private void ApplyVelocity()
+    {
+        if ( char_stats.current_master_state == CharEnums.MasterState.DefaultState )
+        {
+            transform.Translate( char_stats.velocity * Time.deltaTime * Time.timeScale );
+            if ( fallthrough == true )
+            {
+                transform.Translate( Vector3.down ); // move 1 pixel down.
+                char_anims.FallTrigger();
+                fallthrough = false;
+            }
+        }
+    }
+
+    /// <summary>
     /// Utility function for objects that move the player.
     /// Will cause them to move, respecting collision.
     /// </summary>
@@ -818,15 +825,11 @@ public class SimpleCharacterCore : MonoBehaviour
                 Debug.Log( "Don't be a troll." );
                 return;
             }
-
-            //Debug.Log ((hit.distance / change.magnitude - 1.0f) * change);
-            //Debug.Log (hit.distance);
             this.gameObject.transform.position += ( hit.distance / change.magnitude - 1.0f ) * change; //TODO: magic number
         }
         else
         {
             this.gameObject.transform.position += change;
         }
-
     }
 }
