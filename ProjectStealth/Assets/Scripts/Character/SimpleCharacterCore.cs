@@ -300,7 +300,7 @@ public class SimpleCharacterCore : MonoBehaviour
 
         Vector2 collision_box_size, collision_box_center, direction;
         SetupHorizontalCollision( out collision_box_center, out collision_box_size, out direction );
-        char_stats.is_touching_vault_obstacle = null;
+        char_stats.touched_vault_obstacle = null;
 
         RaycastHit2D hit = Physics2D.BoxCast( collision_box_center, collision_box_size, 0.0f, direction, 50.0f, CollisionMasks.upwards_collision_mask );
         if ( hit.collider != null )
@@ -314,14 +314,13 @@ public class SimpleCharacterCore : MonoBehaviour
                 else                                { gap = new Vector3( -hit_distance, 0.0f, 0.0f ); }
                 this.gameObject.transform.Translate( gap );
                 char_stats.velocity.x = 0.0f;
-                OnBumpWall();
-                TouchedWall( hit.collider.gameObject );
+                OnTouchWall( hit.collider.gameObject );
                 CollisionType hit_collision_type = hit.collider.GetComponent<CollisionType>();
                 if ( hit_collision_type != null )
                 {
                     if ( hit_collision_type.VaultObstacle == true && char_stats.IsGrounded )
                     {
-                        char_stats.is_touching_vault_obstacle = hit.collider;
+                        char_stats.touched_vault_obstacle = hit.collider;
                     }
                 }
             }
@@ -400,7 +399,7 @@ public class SimpleCharacterCore : MonoBehaviour
             {
                 //stop upward movement
                 char_stats.is_jumping = false;
-                TouchedCeiling(up_hit.collider.gameObject);
+                OnTouchCeiling(up_hit.collider.gameObject);
             }
         }
 
@@ -510,7 +509,7 @@ public class SimpleCharacterCore : MonoBehaviour
         float distance_to_ledge = ONE_PIXEL_BUFFER;
         float sign = 1.0f;
 
-        if ( char_stats.facing_direction == CharEnums.FacingDirection.Left )
+        if ( char_stats.IsFacingLeft() )
         {
             if ( collision_type.WalkOffLeft )    { return; } // player can walk off walk-off-able ledges
             if ( char_stats.velocity.x >= 0.0f ) { return; } // if player is not moving left... (maybe overkill/redundant check)
@@ -553,12 +552,12 @@ public class SimpleCharacterCore : MonoBehaviour
     {
         // character direction logic
         bool turnAround = false;
-        if (char_stats.facing_direction == CharEnums.FacingDirection.Left && input_manager.HorizontalAxis > 0.0f)
+        if (char_stats.IsFacingLeft() && input_manager.HorizontalAxis > 0.0f)
         {
             char_stats.facing_direction = CharEnums.FacingDirection.Right;
             turnAround = true;
         }
-        else if (char_stats.facing_direction == CharEnums.FacingDirection.Right && input_manager.HorizontalAxis < 0.0f)
+        else if (char_stats.IsFacingRight() && input_manager.HorizontalAxis < 0.0f)
         {
             char_stats.facing_direction = CharEnums.FacingDirection.Left;
             turnAround = true;
@@ -586,7 +585,7 @@ public class SimpleCharacterCore : MonoBehaviour
     /// </summary>
     public void SetFacing()
     {
-        if (char_stats.facing_direction == CharEnums.FacingDirection.Left)
+        if ( char_stats.IsFacingLeft() )
         {
             sprite_renderer.flipX = true;
         }
@@ -678,18 +677,16 @@ public class SimpleCharacterCore : MonoBehaviour
     /// <summary>
     /// Called when a character bumps into a wall.
     /// </summary>
-    void OnBumpWall()
-    {
-        // This is currently a hook stub.
-        // TODO: put any sound/animation effects that should happen when the player hits a wall here.
-    }
-
-    public virtual void TouchedWall(GameObject collisionObject)
+    public virtual void OnTouchWall(GameObject collisionObject)
     {
         //base class does nothing with this function. gets overridden at the subclass level to handle such occasions
     }
 
-    public virtual void TouchedCeiling(GameObject collisionObject)
+    /// <summary>
+    /// Called when a character bumps into the ceiling.
+    /// </summary>
+    /// <param name="collisionObject"></param>
+    public virtual void OnTouchCeiling(GameObject collisionObject)
     {
         //base class does nothing with this function. gets overridden at the subclass level to handle such occasions
     }

@@ -39,7 +39,7 @@ public class CharacterStats : MonoBehaviour
     public float jump_input_time;
 
     // Taking cover vars
-    public Collider2D is_touching_vault_obstacle = null;
+    public Collider2D touched_vault_obstacle = null;
     public bool is_taking_cover = false;
 
     // Crouching vars
@@ -178,5 +178,24 @@ public class CharacterStats : MonoBehaviour
             return 1;
         }
         return -1;
+    }
+
+    /// <summary>
+    /// Returns true if the character is facing left.
+    /// </summary>
+    /// <returns>True, if the character is facing left.</returns>
+    public bool IsFacingLeft()
+    {
+        return facing_direction == CharEnums.FacingDirection.Left;
+    }
+
+    /// <summary>
+    /// Returns true if the character is facing right.
+    /// </summary>
+    /// <returns>True, if the character is facing right.</returns>
+    public bool IsFacingRight()
+    {
+        return facing_direction == CharEnums.FacingDirection.Right;
+        // Could use !IsFacingLeft. Provided for readability and completeness' sake.
     }
 }

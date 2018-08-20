@@ -28,16 +28,16 @@ public class PlayerFocalPoint : MonoBehaviour
     {
         if ( focal_point_lock == true )
         {
-            if ( charStats.current_master_state == CharEnums.MasterState.DefaultState && charStats.facing_direction == CharEnums.FacingDirection.Right ||
-                 charStats.current_master_state == CharEnums.MasterState.ClimbState && charStats.facing_direction == CharEnums.FacingDirection.Left )
+            if ( charStats.current_master_state == CharEnums.MasterState.DefaultState && charStats.IsFacingRight() ||
+                 charStats.current_master_state == CharEnums.MasterState.ClimbState && charStats.IsFacingLeft() )
             {
                 if ( focal_point_slider < 1.0f )
                 {
                     focal_point_slider += Time.deltaTime * 2.5f;
                 }
             }
-            else if ( charStats.current_master_state == CharEnums.MasterState.DefaultState && charStats.facing_direction == CharEnums.FacingDirection.Left ||
-                      charStats.current_master_state == CharEnums.MasterState.ClimbState && charStats.facing_direction == CharEnums.FacingDirection.Right )
+            else if ( charStats.current_master_state == CharEnums.MasterState.DefaultState && charStats.IsFacingLeft() ||
+                      charStats.current_master_state == CharEnums.MasterState.ClimbState && charStats.IsFacingRight() )
             {
                 if ( focal_point_slider > 0.0f )
                 {

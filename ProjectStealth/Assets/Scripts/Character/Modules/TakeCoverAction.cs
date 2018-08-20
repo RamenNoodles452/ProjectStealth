@@ -29,9 +29,9 @@ public class TakeCoverAction : MonoBehaviour
 
     void Update()
     {
-        if ( char_stats.is_touching_vault_obstacle && char_stats.IsSneaking &&
-            ( ( char_stats.facing_direction == CharEnums.FacingDirection.Left && input_manager.HorizontalAxis < 0.0f ) ||
-                ( char_stats.facing_direction == CharEnums.FacingDirection.Right && input_manager.HorizontalAxis > 0.0f ) ) ) //TODO: expose left/right API for this
+        if ( char_stats.touched_vault_obstacle != null && char_stats.IsSneaking &&
+            ( ( char_stats.IsFacingLeft() && input_manager.HorizontalAxis < 0.0f ) ||
+                ( char_stats.IsFacingRight() && input_manager.HorizontalAxis > 0.0f ) ) )
         {
             if ( cover_timer < COVER_TIME )
             {

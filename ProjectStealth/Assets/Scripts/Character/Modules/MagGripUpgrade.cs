@@ -8,7 +8,6 @@ public class MagGripUpgrade : MonoBehaviour
     #region vars
     private SpriteRenderer sprite_renderer;
     private IInputManager input_manager;
-    private GenericMovementLib mov_lib;
     private CharacterAnimationLogic char_anims;
 
     //this allows us to reference player stuff like their movement state
@@ -44,7 +43,6 @@ public class MagGripUpgrade : MonoBehaviour
         player_stats    = GetComponent<PlayerStats>();
         char_stats      = GetComponent<CharacterStats>();
         input_manager   = GetComponent<IInputManager>();
-        mov_lib         = GetComponent<GenericMovementLib>();
         char_anims      = GetComponent<CharacterAnimationLogic>();
 
     }
@@ -180,7 +178,7 @@ public class MagGripUpgrade : MonoBehaviour
                 char_stats.jump_input_time = 0.0f;
                 char_stats.AboutFace();
                 char_anims.JumpTrigger();
-                if ( char_stats.facing_direction == CharEnums.FacingDirection.Right )
+                if ( char_stats.IsFacingRight() )
                 {
                     char_stats.acceleration.x = JUMP_ACCELERATION;
                 }
@@ -288,7 +286,7 @@ public class MagGripUpgrade : MonoBehaviour
     void GroundToWallStart()
     {
         char_anims.ResetJumpDescend();
-        if ( char_stats.facing_direction == CharEnums.FacingDirection.Left )
+        if ( char_stats.IsFacingLeft() )
         {
             char_stats.facing_direction = CharEnums.FacingDirection.Right;
             sprite_renderer.flipX = false;
@@ -339,7 +337,7 @@ public class MagGripUpgrade : MonoBehaviour
         {
             //check the ledge to see if it's tall enough to grab onto
             RaycastHit2D grabCheck;
-            if ( char_stats.facing_direction == CharEnums.FacingDirection.Right )
+            if ( char_stats.IsFacingRight() )
             {
                 Vector2 leftPoint = new Vector2(char_stats.char_collider.bounds.center.x + char_stats.char_collider.bounds.size.x, char_stats.char_collider.bounds.min.y - char_stats.char_collider.bounds.size.y);
                 grabCheck = Physics2D.Raycast( leftPoint, Vector2.left, char_stats.char_collider.bounds.size.x );

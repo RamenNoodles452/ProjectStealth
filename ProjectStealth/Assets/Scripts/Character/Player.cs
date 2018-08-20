@@ -130,12 +130,12 @@ public class Player : SimpleCharacterCore
         return base.IsOverlookingLedge();
     }
 
-    public override void TouchedWall( GameObject collisionObject )
+    public override void OnTouchWall( GameObject collisionObject )
     {
         mag_grip.InitiateWallGrab( collisionObject.GetComponent<Collider2D>() );
     }
 
-    public override void TouchedCeiling( GameObject collisionObject )
+    public override void OnTouchCeiling( GameObject collisionObject )
     {
         mag_grip.InitiateCeilingGrab( collisionObject.GetComponent<Collider2D>() );
     }
