@@ -65,7 +65,7 @@ public class SimpleCharacterCore : MonoBehaviour
         jump_grace_period_timer = JUMP_GRACE_PERIOD_TIME;
         fallthrough = false;
 
-        SetFacing(); // fix initialization errors
+        SetFacing();
     }
 
     // Called each frame
@@ -83,7 +83,7 @@ public class SimpleCharacterCore : MonoBehaviour
         if ( char_stats.current_master_state == CharEnums.MasterState.DefaultState )
         {
             transform.Translate( char_stats.velocity * Time.deltaTime * Time.timeScale );
-            if (fallthrough == true)
+            if ( fallthrough == true )
             {
                 transform.Translate( Vector3.down ); // move 1 pixel down.
                 char_anims.FallTrigger();
@@ -102,9 +102,130 @@ public class SimpleCharacterCore : MonoBehaviour
 
     public virtual void FixedUpdate()
     {
-        
+
     }
     #endregion
+
+    /// <summary>
+    /// Parses controller input for walking / running / jumping.
+    /// </summary>
+    protected void MovementInput()
+    {
+        is_overlooking_ledge = IsOverlookingLedge();
+
+        if ( input_manager.RunInput )
+        {
+            char_stats.current_move_state = CharEnums.MoveState.IsRunning;
+        }
+        else
+        {
+            char_stats.current_move_state = CharEnums.MoveState.IsSneaking;
+        }
+
+        if ( char_stats.current_move_state == CharEnums.MoveState.IsRunning )
+        {
+            // if the character comes to a full stop, let them start the run again
+            // This also works when turning around
+            if ( char_stats.velocity.x == 0.0f )
+            {
+                start_run = true;
+                PlayerStats playerStats = GetComponent<PlayerStats> ();
+                playerStats.StartWalking();
+            }
+
+            // running automatically starts at the sneaking speed and accelerates from there
+            if ( start_run == true && input_manager.HorizontalAxis > 0.0f && Mathf.Abs( char_stats.velocity.x ) < SNEAK_SPEED )
+            {
+                char_stats.velocity.x = SNEAK_SPEED;
+                start_run = false;
+            }
+            else if ( start_run == true && input_manager.HorizontalAxis < 0.0f && Mathf.Abs( char_stats.velocity.x ) < SNEAK_SPEED )
+            {
+                char_stats.velocity.x = -SNEAK_SPEED;
+                start_run = false;
+            }
+        }
+
+        if ( input_manager.HorizontalAxis > 0.0f )
+        {
+            char_stats.acceleration.x = ACCELERATION;
+        }
+        else if ( input_manager.HorizontalAxis < 0.0f )
+        {
+            char_stats.acceleration.x = -ACCELERATION;
+        }
+        else
+        {
+            char_stats.acceleration.x = 0.0f;
+        }
+
+        // Jump logic. Keep the Y velocity constant while holding jump for the duration of JUMP_CONTROL_TIME
+        if ( ( jump_grace_period || char_stats.IsGrounded ) && input_manager.JumpInputInst )
+        {
+            if ( input_manager.VerticalAxis < 0.0f )
+            {
+                //trigger fallthrough
+                fallthrough = true;
+            }
+            else
+            {
+                char_stats.is_jumping = true;
+                EndJumpGracePeriod();
+                char_stats.jump_input_time = 0.0f;
+                char_anims.JumpTrigger();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Figures out which way the character should be facing, based on their movement, then sets their facing.
+    /// </summary>
+    private void CalculateDirection()
+    {
+        // character direction logic
+        bool turnAround = false;
+        if ( char_stats.IsFacingLeft() && input_manager.HorizontalAxis > 0.0f )
+        {
+            char_stats.facing_direction = CharEnums.FacingDirection.Right;
+            turnAround = true;
+        }
+        else if ( char_stats.IsFacingRight() && input_manager.HorizontalAxis < 0.0f )
+        {
+            char_stats.facing_direction = CharEnums.FacingDirection.Left;
+            turnAround = true;
+        }
+
+        if ( turnAround )
+        {
+            //Anim.SetBool("TurnAround", true);
+
+            if ( char_stats.IsInMidair )
+            {
+                char_stats.jump_turned = true;
+            }
+        }
+
+        // set Sprite flip
+        if ( char_stats.previous_facing_direction != char_stats.facing_direction )
+        {
+            SetFacing();
+        }
+    }
+
+    /// <summary>
+    /// Makes the player graphically face the correct way.
+    /// </summary>
+    public void SetFacing()
+    {
+        if ( char_stats.IsFacingLeft() )
+        {
+            sprite_renderer.flipX = true;
+        }
+        else
+        {
+            sprite_renderer.flipX = false;
+        }
+    }
 
     /// <summary>
     /// Sets the player's velocity
@@ -120,25 +241,25 @@ public class SimpleCharacterCore : MonoBehaviour
     /// </summary>
     private void SetHorizontalVelocity()
     {
-        if (char_stats.IsGrounded)
+        if ( char_stats.IsGrounded )
         {
-            if (char_stats.is_crouching)
+            if ( char_stats.is_crouching )
             {
                 char_stats.velocity.x = 0.0f;
             }
             else
             {
                 //movement stuff
-                if (char_stats.IsWalking)
+                if ( char_stats.IsWalking )
                 {
                     char_stats.velocity.x = WALK_SPEED * input_manager.HorizontalAxis;
                 }
-                else if (char_stats.IsSneaking)
+                else if ( char_stats.IsSneaking )
                 {
                     // if current speed is greater than sneak speed, then decel to sneak speed.
-                    if (Mathf.Abs(char_stats.velocity.x) > SNEAK_SPEED)
+                    if ( Mathf.Abs( char_stats.velocity.x ) > SNEAK_SPEED )
                     {
-                        IncreaseMagnitude( ref char_stats.velocity.x, - DRAG * Time.deltaTime * Time.timeScale );
+                        IncreaseMagnitude( ref char_stats.velocity.x, -DRAG * Time.deltaTime * Time.timeScale );
                     }
                     else
                     {
@@ -147,17 +268,17 @@ public class SimpleCharacterCore : MonoBehaviour
                         char_stats.velocity.x = SNEAK_SPEED * input_manager.HorizontalAxis;
                     }
                 }
-                else if (char_stats.IsRunning)
+                else if ( char_stats.IsRunning )
                 {
                     //smooth damp to 0 if there's no directional input for running or if you're trying to run the opposite direction
-                    if ( char_stats.acceleration.x == 0.0f || 
-                        (char_stats.acceleration.x < 0.0f && char_stats.velocity.x > 0.0f) || 
-                        (char_stats.acceleration.x > 0.0f && char_stats.velocity.x < 0.0f))
+                    if ( char_stats.acceleration.x == 0.0f ||
+                        ( char_stats.acceleration.x < 0.0f && char_stats.velocity.x > 0.0f ) ||
+                        ( char_stats.acceleration.x > 0.0f && char_stats.velocity.x < 0.0f ) )
                     {
-                        if (Mathf.Abs(char_stats.velocity.x) > SNEAK_SPEED)
+                        if ( Mathf.Abs( char_stats.velocity.x ) > SNEAK_SPEED )
                         {
                             //print("SKID BOIS");
-                            IncreaseMagnitude( ref char_stats.velocity.x, - DRAG * Time.deltaTime * Time.timeScale );
+                            IncreaseMagnitude( ref char_stats.velocity.x, -DRAG * Time.deltaTime * Time.timeScale );
                         }
                         else
                         {
@@ -169,13 +290,13 @@ public class SimpleCharacterCore : MonoBehaviour
                         char_stats.velocity.x += char_stats.acceleration.x * Time.deltaTime * Time.timeScale;
                     }
 
-                    char_stats.velocity.x = Mathf.Clamp(char_stats.velocity.x, -RUN_SPEED, RUN_SPEED);
+                    char_stats.velocity.x = Mathf.Clamp( char_stats.velocity.x, -RUN_SPEED, RUN_SPEED );
                 }
             }
         }
         else // character is in midair
         {
-            if (char_stats.jump_turned)
+            if ( char_stats.jump_turned )
             {
                 SetHorizontalJumpVelocity( SNEAK_SPEED );
             }
@@ -185,9 +306,9 @@ public class SimpleCharacterCore : MonoBehaviour
             }
         }
 
-        char_stats.velocity.x = Mathf.Clamp(char_stats.velocity.x, -MAX_HORIZONTAL_SPEED, MAX_HORIZONTAL_SPEED);
+        char_stats.velocity.x = Mathf.Clamp( char_stats.velocity.x, -MAX_HORIZONTAL_SPEED, MAX_HORIZONTAL_SPEED );
 
-        if (IsAlmostZero(char_stats.velocity.x))
+        if ( IsAlmostZero( char_stats.velocity.x ) )
         {
             char_stats.velocity.x = 0.0f;
         }
@@ -221,7 +342,23 @@ public class SimpleCharacterCore : MonoBehaviour
         {
             char_stats.velocity.x += char_stats.acceleration.x * Time.deltaTime * Time.timeScale;
         }
-        char_stats.velocity.x = Mathf.Clamp(char_stats.velocity.x, -JUMP_HORIZONTAL_SPEED_MAX, JUMP_HORIZONTAL_SPEED_MAX);
+        char_stats.velocity.x = Mathf.Clamp( char_stats.velocity.x, -JUMP_HORIZONTAL_SPEED_MAX, JUMP_HORIZONTAL_SPEED_MAX );
+    }
+
+    /// <summary>
+    /// Returns the minimum x axis jumping speed.
+    /// </summary>
+    public float GetJumpHorizontalSpeedMin()
+    {
+        return JUMP_HORIZONTAL_SPEED_MIN;
+    }
+
+    /// <summary>
+    /// Returns the maximum x axis jumping speed.
+    /// </summary>
+    public float GetJumpHorizontalSpeedMax()
+    {
+        return JUMP_HORIZONTAL_SPEED_MAX;
     }
 
     /// <summary>
@@ -232,10 +369,10 @@ public class SimpleCharacterCore : MonoBehaviour
         char_stats.velocity.y += GRAVITATIONAL_ACCELERATION * Time.deltaTime * Time.timeScale;
 
         //override the vertical velocity if we're in the middle of jumping
-        if (char_stats.is_jumping)
+        if ( char_stats.is_jumping )
         {
             char_stats.jump_input_time = char_stats.jump_input_time + Time.deltaTime * Time.timeScale;
-            if ((input_manager.JumpInput && char_stats.jump_input_time <= JUMP_CONTROL_TIME) || char_stats.jump_input_time <= JUMP_DURATION_MIN)
+            if ( ( input_manager.JumpInput && char_stats.jump_input_time <= JUMP_CONTROL_TIME ) || char_stats.jump_input_time <= JUMP_DURATION_MIN )
             {
                 char_stats.velocity.y = JUMP_VERTICAL_SPEED;
             }
@@ -247,7 +384,7 @@ public class SimpleCharacterCore : MonoBehaviour
         }
 
         // if you turned while jumping, turn off the jump var
-        if (char_stats.jump_turned && char_stats.velocity.y > 0.0f)
+        if ( char_stats.jump_turned && char_stats.velocity.y > 0.0f )
         {
             char_stats.is_jumping = false;
             char_anims.FallTrigger();
@@ -255,7 +392,7 @@ public class SimpleCharacterCore : MonoBehaviour
 
         char_stats.velocity.y = Mathf.Clamp( char_stats.velocity.y, -MAX_VERTICAL_SPEED, MAX_VERTICAL_SPEED );
 
-        if (char_stats.IsGrounded && IsAlmostZero( char_stats.velocity.y ) )
+        if ( char_stats.IsGrounded && IsAlmostZero( char_stats.velocity.y ) )
         {
             char_stats.velocity.y = 0.0f;
         }
@@ -385,10 +522,10 @@ public class SimpleCharacterCore : MonoBehaviour
         // raycast to hit the ceiling
         Vector2 up_hit_origin = new Vector2(char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.max.y - box_size.y);
         RaycastHit2D up_hit = Physics2D.BoxCast(up_hit_origin, box_size, 0.0f, Vector2.up, 50.0f, CollisionMasks.upwards_collision_mask);
-        if (up_hit.collider != null)
+        if ( up_hit.collider != null )
         {
             float hit_distance = up_hit.distance - ONE_PIXEL_BUFFER;
-            if (char_stats.velocity.y > 0.0f && hit_distance <= Mathf.Abs(char_stats.velocity.y * Time.deltaTime * Time.timeScale))
+            if ( char_stats.velocity.y > 0.0f && hit_distance <= Mathf.Abs( char_stats.velocity.y * Time.deltaTime * Time.timeScale ) )
             {
                 char_stats.velocity.y = 0.0f;
                 this.gameObject.transform.Translate( new Vector3( 0.0f, hit_distance, 0.0f ) );
@@ -399,7 +536,7 @@ public class SimpleCharacterCore : MonoBehaviour
             {
                 //stop upward movement
                 char_stats.is_jumping = false;
-                OnTouchCeiling(up_hit.collider.gameObject);
+                OnTouchCeiling( up_hit.collider.gameObject );
             }
         }
 
@@ -407,7 +544,7 @@ public class SimpleCharacterCore : MonoBehaviour
         // TODO: DRY violation
         Vector2 down_hit_origin = new Vector2(char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.min.y + box_size.y);
         RaycastHit2D down_hit = Physics2D.BoxCast(down_hit_origin, box_size, 0.0f, Vector2.down, 50.0f, CollisionMasks.all_collision_mask);
-        if (down_hit.collider != null)
+        if ( down_hit.collider != null )
         {
             float down_hit_collider_left  = down_hit.collider.bounds.min.x;
             float down_hit_collider_right = down_hit.collider.bounds.max.x;
@@ -417,29 +554,29 @@ public class SimpleCharacterCore : MonoBehaviour
             CollisionType down_hit_collision_type = down_hit.transform.gameObject.GetComponent<CollisionType>();
 
             float hit_distance = down_hit.distance - ONE_PIXEL_BUFFER;
-            if (char_stats.velocity.y < 0.0f && hit_distance <= Mathf.Abs(char_stats.velocity.y * Time.deltaTime * Time.timeScale))
+            if ( char_stats.velocity.y < 0.0f && hit_distance <= Mathf.Abs( char_stats.velocity.y * Time.deltaTime * Time.timeScale ) )
             {
                 // if the character is about to clip into the environment with the back of their hit box, move them so that they won't clip
                 if ( down_hit_collision_type != null )
                 {
-                    if (char_stats.velocity.x > 0.0f && down_hit_collider_right < char_stats.char_collider.bounds.center.x && down_hit_collision_type.WalkOffRight == false)
+                    if ( char_stats.velocity.x > 0.0f && down_hit_collider_right < char_stats.char_collider.bounds.center.x && down_hit_collision_type.WalkOffRight == false )
                     {
-                        transform.Translate(down_hit_collider_right - character_left, 0.0f, 0.0f);
+                        transform.Translate( down_hit_collider_right - character_left, 0.0f, 0.0f );
                         touch_ground = false;
                     }
-                    else if (char_stats.velocity.x < 0.0f && down_hit_collider_left > char_stats.char_collider.bounds.center.x && down_hit_collision_type.WalkOffLeft == false)
+                    else if ( char_stats.velocity.x < 0.0f && down_hit_collider_left > char_stats.char_collider.bounds.center.x && down_hit_collision_type.WalkOffLeft == false )
                     {
-                        transform.Translate(-(character_right - down_hit_collider_left), 0.0f, 0.0f);
+                        transform.Translate( -( character_right - down_hit_collider_left ), 0.0f, 0.0f );
                         touch_ground = false;
                     }
                     else // otherwise, touch the ground
                     {
-                        char_stats.velocity.y = -hit_distance / (Time.deltaTime * Time.timeScale);
+                        char_stats.velocity.y = -hit_distance / ( Time.deltaTime * Time.timeScale );
                     }
                 }
                 else
                 {
-                    char_stats.velocity.y = -hit_distance / (Time.deltaTime * Time.timeScale);
+                    char_stats.velocity.y = -hit_distance / ( Time.deltaTime * Time.timeScale );
                 }
             }
             CheckLedgeEnds( down_hit_collision_type, down_hit.collider );
@@ -459,11 +596,11 @@ public class SimpleCharacterCore : MonoBehaviour
                 FallingLogic();
             }
             //Fallthrough platforms
-            if (fallthrough == true)
+            if ( fallthrough == true )
             {
                 if ( down_hit_collision_type != null )
                 {
-                    if (down_hit_collision_type.Fallthrough == false)
+                    if ( down_hit_collision_type.Fallthrough == false )
                     {
                         fallthrough = false;
                     }
@@ -472,8 +609,8 @@ public class SimpleCharacterCore : MonoBehaviour
                         // make sure that the player character is not straddling a solid platform
                         // issue can't fall down when straddling two fallthrough platforms 
                         //(but there shouldn't be a need to have two passthrough platforms touch, they can just merge into 1)
-                        if ((down_hit_collision_type.WalkOffRight && character_right > down_hit_collider_right) ||
-                            (down_hit_collision_type.WalkOffLeft  && character_left  < down_hit_collider_left ))
+                        if ( ( down_hit_collision_type.WalkOffRight && character_right > down_hit_collider_right ) ||
+                             ( down_hit_collision_type.WalkOffLeft && character_left < down_hit_collider_left ) )
                         {
                             fallthrough = false;
                         }
@@ -546,127 +683,6 @@ public class SimpleCharacterCore : MonoBehaviour
     }
 
     /// <summary>
-    /// Figures out which way the character should be facing, based on their movement, then sets their facing.
-    /// </summary>
-    private void CalculateDirection()
-    {
-        // character direction logic
-        bool turnAround = false;
-        if (char_stats.IsFacingLeft() && input_manager.HorizontalAxis > 0.0f)
-        {
-            char_stats.facing_direction = CharEnums.FacingDirection.Right;
-            turnAround = true;
-        }
-        else if (char_stats.IsFacingRight() && input_manager.HorizontalAxis < 0.0f)
-        {
-            char_stats.facing_direction = CharEnums.FacingDirection.Left;
-            turnAround = true;
-        }
-
-        if ( turnAround )
-        {
-            //Anim.SetBool("TurnAround", true);
-
-            if ( char_stats.IsInMidair )
-            {
-                char_stats.jump_turned = true;
-            }
-        }
-
-        // set Sprite flip
-        if (char_stats.previous_facing_direction != char_stats.facing_direction)
-        {
-            SetFacing();
-        }
-    }
-
-    /// <summary>
-    /// Makes the player graphically face the correct way.
-    /// </summary>
-    public void SetFacing()
-    {
-        if ( char_stats.IsFacingLeft() )
-        {
-            sprite_renderer.flipX = true;
-        }
-        else
-        {
-            sprite_renderer.flipX = false;
-        }
-    }
-
-    /// <summary>
-    /// Parses controller input for walking / running / jumping.
-    /// </summary>
-    protected void MovementInput()
-    {
-        is_overlooking_ledge = IsOverlookingLedge();
-
-        if (input_manager.RunInput)
-        {
-            char_stats.current_move_state = CharEnums.MoveState.IsRunning;
-        }
-        else
-        {
-            char_stats.current_move_state = CharEnums.MoveState.IsSneaking;
-        }
-
-        if (char_stats.current_move_state == CharEnums.MoveState.IsRunning)
-        {
-            // if the character comes to a full stop, let them start the run again
-            // This also works when turning around
-            if (char_stats.velocity.x == 0.0f) 
-            {
-                start_run = true;
-                PlayerStats playerStats = GetComponent<PlayerStats> ();
-                playerStats.StartWalking ();
-            }
-
-            // running automatically starts at the sneaking speed and accelerates from there
-            if (start_run == true && input_manager.HorizontalAxis > 0.0f && Mathf.Abs(char_stats.velocity.x) < SNEAK_SPEED)
-            {
-                char_stats.velocity.x = SNEAK_SPEED;
-                start_run = false;
-            }
-            else if (start_run == true && input_manager.HorizontalAxis < 0.0f && Mathf.Abs(char_stats.velocity.x) < SNEAK_SPEED)
-            {
-                char_stats.velocity.x = -SNEAK_SPEED;
-                start_run = false;
-            }
-        }
-        
-        if (input_manager.HorizontalAxis > 0.0f)
-        {
-            char_stats.acceleration.x = ACCELERATION;
-        }
-        else if (input_manager.HorizontalAxis < 0.0f)
-        {
-            char_stats.acceleration.x = -ACCELERATION;
-        }
-        else
-        {
-            char_stats.acceleration.x = 0.0f;
-        }
-
-        // Jump logic. Keep the Y velocity constant while holding jump for the duration of JUMP_CONTROL_TIME
-        if ((jump_grace_period || char_stats.IsGrounded) && input_manager.JumpInputInst)
-        {
-            if (input_manager.VerticalAxis < 0.0f)
-            {
-                //trigger fallthrough
-                fallthrough = true;
-            }
-            else
-            {
-                char_stats.is_jumping = true;
-                EndJumpGracePeriod();
-                char_stats.jump_input_time = 0.0f;
-                char_anims.JumpTrigger();
-            }
-        }
-    }
-
-    /// <summary>
     /// Checks if the character is overlooking a ledge, and sets isLookingOverLedge appropriately.
     /// </summary>
     protected virtual bool IsOverlookingLedge()
@@ -677,7 +693,7 @@ public class SimpleCharacterCore : MonoBehaviour
     /// <summary>
     /// Called when a character bumps into a wall.
     /// </summary>
-    public virtual void OnTouchWall(GameObject collisionObject)
+    public virtual void OnTouchWall( GameObject collisionObject )
     {
         //base class does nothing with this function. gets overridden at the subclass level to handle such occasions
     }
@@ -686,7 +702,7 @@ public class SimpleCharacterCore : MonoBehaviour
     /// Called when a character bumps into the ceiling.
     /// </summary>
     /// <param name="collisionObject"></param>
-    public virtual void OnTouchCeiling(GameObject collisionObject)
+    public virtual void OnTouchCeiling( GameObject collisionObject )
     {
         //base class does nothing with this function. gets overridden at the subclass level to handle such occasions
     }
@@ -724,27 +740,11 @@ public class SimpleCharacterCore : MonoBehaviour
     }
 
     /// <summary>
-    /// Returns the minimum x axis jumping speed.
-    /// </summary>
-    public float GetJumpHorizontalSpeedMin()
-    {
-        return JUMP_HORIZONTAL_SPEED_MIN;
-    }
-
-    /// <summary>
-    /// Returns the maximum x axis jumping speed.
-    /// </summary>
-    public float GetJumpHorizontalSpeedMax()
-    {
-        return JUMP_HORIZONTAL_SPEED_MAX;
-    }
-
-    /// <summary>
     /// Determines whether the specified number is almost zero.
     /// </summary>
     /// <returns><c>true</c> if the number is almost zero; otherwise, <c>false</c>.</returns>
     /// <param name="number">The number to check</param>
-    private bool IsAlmostZero(float number)
+    private bool IsAlmostZero( float number )
     {
         return ApproximatelyEquals( number, 0.0f, APPROXIMATE_EQUALITY_MARGIN );
     }
@@ -756,7 +756,7 @@ public class SimpleCharacterCore : MonoBehaviour
     /// <param name="a">the first number</param>
     /// <param name="b">the second number</param>
     /// <param name="margin_of_error">margin of error</param>
-    private bool ApproximatelyEquals(float a, float b, float margin_of_error )
+    private bool ApproximatelyEquals( float a, float b, float margin_of_error )
     {
         if ( a >= b - margin_of_error && a <= b + margin_of_error )
         {
@@ -802,7 +802,7 @@ public class SimpleCharacterCore : MonoBehaviour
     private void ApplyMoveWithCollision( Vector3 change )
     {
         BoxCollider2D collider = GetComponent<BoxCollider2D>();
-        if ( collider == null ) 
+        if ( collider == null )
         {
             Debug.LogError( "Player doesn't have a collider." );
             return;
@@ -813,7 +813,7 @@ public class SimpleCharacterCore : MonoBehaviour
 
         if ( hit.collider != null )
         {
-            if ( change.magnitude == 0.0f ) 
+            if ( change.magnitude == 0.0f )
             {
                 Debug.Log( "Don't be a troll." );
                 return;
@@ -821,7 +821,7 @@ public class SimpleCharacterCore : MonoBehaviour
 
             //Debug.Log ((hit.distance / change.magnitude - 1.0f) * change);
             //Debug.Log (hit.distance);
-            this.gameObject.transform.position += (hit.distance / change.magnitude - 1.0f) * change; //TODO: magic number
+            this.gameObject.transform.position += ( hit.distance / change.magnitude - 1.0f ) * change; //TODO: magic number
         }
         else
         {
