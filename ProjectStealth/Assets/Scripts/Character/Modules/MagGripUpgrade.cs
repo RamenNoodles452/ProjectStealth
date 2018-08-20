@@ -85,6 +85,7 @@ public class MagGripUpgrade : MonoBehaviour
             //if you climb down and touch the ground, stop climbing
             if ( char_stats.IsGrounded )
             {
+                char_anims.WallSlideTouchGround();
                 StopClimbing();
             }
         }
