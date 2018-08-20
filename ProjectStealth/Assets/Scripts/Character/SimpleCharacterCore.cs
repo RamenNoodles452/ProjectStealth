@@ -447,25 +447,24 @@ public class SimpleCharacterCore : MonoBehaviour
         char_stats.touched_vault_obstacle = null;
 
         RaycastHit2D hit = Physics2D.BoxCast( collision_box_center, collision_box_size, 0.0f, direction, 50.0f, CollisionMasks.upwards_collision_mask );
-        if ( hit.collider != null )
+        if ( hit.collider == null ) { return; }
+        
+        float hit_distance = hit.distance - ONE_PIXEL_BUFFER;
+        if ( hit_distance <= Mathf.Abs( char_stats.velocity.x * Time.deltaTime * Time.timeScale ) )
         {
-            float hit_distance = hit.distance - ONE_PIXEL_BUFFER;
-            if ( hit_distance <= Mathf.Abs( char_stats.velocity.x * Time.deltaTime * Time.timeScale ) )
+            // we touched a wall
+            Vector3 gap;
+            if ( char_stats.velocity.x > 0.0f ) { gap = new Vector3(  hit_distance, 0.0f, 0.0f ); }
+            else                                { gap = new Vector3( -hit_distance, 0.0f, 0.0f ); }
+            this.gameObject.transform.Translate( gap );
+            char_stats.velocity.x = 0.0f;
+            OnTouchWall( hit.collider.gameObject );
+            CollisionType hit_collision_type = hit.collider.GetComponent<CollisionType>();
+            if ( hit_collision_type != null )
             {
-                // we touched a wall
-                Vector3 gap;
-                if ( char_stats.velocity.x > 0.0f ) { gap = new Vector3(  hit_distance, 0.0f, 0.0f ); }
-                else                                { gap = new Vector3( -hit_distance, 0.0f, 0.0f ); }
-                this.gameObject.transform.Translate( gap );
-                char_stats.velocity.x = 0.0f;
-                OnTouchWall( hit.collider.gameObject );
-                CollisionType hit_collision_type = hit.collider.GetComponent<CollisionType>();
-                if ( hit_collision_type != null )
+                if ( hit_collision_type.VaultObstacle == true && char_stats.IsGrounded )
                 {
-                    if ( hit_collision_type.VaultObstacle == true && char_stats.IsGrounded )
-                    {
-                        char_stats.touched_vault_obstacle = hit.collider;
-                    }
+                    char_stats.touched_vault_obstacle = hit.collider;
                 }
             }
         }
@@ -524,117 +523,127 @@ public class SimpleCharacterCore : MonoBehaviour
     // TODO: refactor & split (maybe top/bottom). DRY.
     private void CheckCollisionVertical()
     {
-        // Vertical Collision Block
-        Vector2 box_size = new Vector2(char_stats.char_collider.bounds.size.x, 1.0f); // width x 1 px box
+        CheckCollisionUp();
+        CheckCollisionDown();
+    }
 
-        // raycast to hit the ceiling
-        Vector2 up_hit_origin = new Vector2(char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.max.y - box_size.y);
-        RaycastHit2D up_hit = Physics2D.BoxCast(up_hit_origin, box_size, 0.0f, Vector2.up, 50.0f, CollisionMasks.upwards_collision_mask);
-        if ( up_hit.collider != null )
+    /// <summary>
+    /// Checks if the player will bump their head on the ceiling
+    /// </summary>
+    private void CheckCollisionUp()
+    {
+        if ( char_stats.velocity.y <= 0.0f ) { return; } // immobile or moving down, don't need to check
+
+        Vector2 collision_box_size = new Vector2( char_stats.char_collider.bounds.size.x, 1.0f ); // width x 1 px box
+        Vector2 origin             = new Vector2( char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.max.y - collision_box_size.y );
+        RaycastHit2D hit           = Physics2D.BoxCast( origin, collision_box_size, 0.0f, Vector2.up, 50.0f, CollisionMasks.upwards_collision_mask );
+        if ( hit.collider == null ) { return; }
+
+        float hit_distance = hit.distance - ONE_PIXEL_BUFFER;
+        if ( hit_distance <= Mathf.Abs( char_stats.velocity.y * Time.deltaTime * Time.timeScale ) )
         {
-            float hit_distance = up_hit.distance - ONE_PIXEL_BUFFER;
-            if ( char_stats.velocity.y > 0.0f && hit_distance <= Mathf.Abs( char_stats.velocity.y * Time.deltaTime * Time.timeScale ) )
+            // hit the ceiling, stop upward movement
+            this.gameObject.transform.Translate( new Vector3( 0.0f, hit_distance, 0.0f ) );
+            char_stats.velocity.y = 0.0f;
+            char_stats.is_jumping = false;
+            OnTouchCeiling( hit.collider.gameObject );
+        }
+    }
+
+    /// <summary>
+    /// Checks if the player will hit the floor with their feet
+    /// </summary>
+    private void CheckCollisionDown()
+    {
+        if ( char_stats.velocity.y >= 0.0f ) { return; } // immobile or moving up, don't need to check
+
+        Vector2 collision_box_size = new Vector2( char_stats.char_collider.bounds.size.x, 1.0f ); // width x 1 px box
+        Vector2 origin             = new Vector2( char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.min.y + collision_box_size.y );
+        RaycastHit2D hit           = Physics2D.BoxCast( origin, collision_box_size, 0.0f, Vector2.down, 50.0f, CollisionMasks.all_collision_mask );
+        if ( hit.collider == null ) // if there is no floor, just fall
+        {
+             FallingLogic();
+             return;
+        }
+        
+        CollisionType collision_type = hit.transform.gameObject.GetComponent<CollisionType>();
+        float hit_distance = hit.distance - ONE_PIXEL_BUFFER;
+        if ( hit_distance <= Mathf.Abs( char_stats.velocity.y * Time.deltaTime * Time.timeScale ) )
+        {
+            // hit the floor, stop falling ... probably
+            bool did_touch_ground = true;
+            if ( collision_type != null )
             {
+                // special types of floor can change behaviour.
+                if ( ShuntPlayer( collision_type, hit.collider ) ) { did_touch_ground = false; }
+                CheckFallthroughPlatforms( collision_type, hit.collider );
+            }
+
+            if ( did_touch_ground )
+            {
+                // close the gap between the player's feet and the floor
+                transform.Translate( new Vector3( 0.0f, -1.0f * hit_distance, 0.0f ) );
                 char_stats.velocity.y = 0.0f;
-                this.gameObject.transform.Translate( new Vector3( 0.0f, hit_distance, 0.0f ) );
-            }
-
-            // are we touching the ceiling?
-            if ( IsAlmostZero( hit_distance ) )
-            {
-                //stop upward movement
-                char_stats.is_jumping = false;
-                OnTouchCeiling( up_hit.collider.gameObject );
+                OnTouchGround( hit.collider );
             }
         }
-
-        // raycast to find the floor
-        // TODO: refactor, DRY violation
-        Vector2 down_hit_origin = new Vector2(char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.min.y + box_size.y);
-        RaycastHit2D down_hit = Physics2D.BoxCast(down_hit_origin, box_size, 0.0f, Vector2.down, 50.0f, CollisionMasks.all_collision_mask);
-        if ( down_hit.collider != null )
+        else // didn't collide with anything
         {
-            float down_hit_collider_left  = down_hit.collider.bounds.min.x;
-            float down_hit_collider_right = down_hit.collider.bounds.max.x;
-            float character_left          = char_stats.char_collider.bounds.min.x;
-            float character_right         = char_stats.char_collider.bounds.max.x;
-            bool touch_ground = true; // this is to prevent the game from thinking you touched the ground when you're gonna slip off the side when falling
-            CollisionType down_hit_collision_type = down_hit.transform.gameObject.GetComponent<CollisionType>();
+            char_stats.on_ground_collider = null;
+            FallingLogic();
+        }
+        CheckLedgeEnds( collision_type, hit.collider );
+    }
 
-            float hit_distance = down_hit.distance - ONE_PIXEL_BUFFER;
-            if ( char_stats.velocity.y < 0.0f && hit_distance <= Mathf.Abs( char_stats.velocity.y * Time.deltaTime * Time.timeScale ) )
-            {
-                // if the character is about to clip into the environment with the back of their hit box, move them so that they won't clip
-                if ( down_hit_collision_type != null )
-                { 
-                    //TODO: DRY violation
-                    if ( char_stats.velocity.x > 0.0f && down_hit_collider_right < char_stats.char_collider.bounds.center.x && down_hit_collision_type.WalkOffRight == false )
-                    {
-                        transform.Translate( down_hit_collider_right - character_left, 0.0f, 0.0f );
-                        touch_ground = false;
-                    }
-                    else if ( char_stats.velocity.x < 0.0f && down_hit_collider_left > char_stats.char_collider.bounds.center.x && down_hit_collision_type.WalkOffLeft == false )
-                    {
-                        transform.Translate( -( character_right - down_hit_collider_left ), 0.0f, 0.0f );
-                        touch_ground = false;
-                    }
-                    else // otherwise, touch the ground
-                    {
-                        char_stats.velocity.y = -hit_distance / ( Time.deltaTime * Time.timeScale );
-                    }
-                }
-                else
-                {
-                    char_stats.velocity.y = -hit_distance / ( Time.deltaTime * Time.timeScale );
-                }
-            }
-            CheckLedgeEnds( down_hit_collision_type, down_hit.collider );
+    /// <summary>
+    /// Shunts the player horizontally off the platform if they land on the edge of a non-ledge platform while falling, and makes them continue to fall.
+    /// </summary>
+    /// <param name="floor_collision_type">The collision type of the floor.</param>
+    /// <param name="floor_collider">The collider of the floor.</param>
+    /// <returns>True if the player was shunted off a platform, false otherwise.</returns>
+    private bool ShuntPlayer( CollisionType floor_collision_type, Collider2D floor_collider )
+    {
+        float floor_collider_left  = floor_collider.bounds.min.x;
+        float floor_collider_right = floor_collider.bounds.max.x;
+        float character_left       = char_stats.char_collider.bounds.min.x;
+        float character_right      = char_stats.char_collider.bounds.max.x;
 
-            if ( IsAlmostZero( hit_distance ) )
+        if ( char_stats.velocity.x > 0.0f && floor_collider_right < char_stats.char_collider.bounds.center.x && floor_collision_type.WalkOffRight == false )
+        {
+            transform.Translate( floor_collider_right - character_left, 0.0f, 0.0f );
+            return true;
+        }
+        if ( char_stats.velocity.x < 0.0f && floor_collider_left > char_stats.char_collider.bounds.center.x && floor_collision_type.WalkOffLeft == false )
+        {
+            transform.Translate( -1.0f * ( character_right - floor_collider_left ), 0.0f, 0.0f );
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Checks if the player can fall through the floor, and sets state.
+    /// </summary>
+    /// <param name="floor_collision_type">The collision type of the floor.</param>
+    /// <param name="floor_collider">The collider of the floor.</param>
+    private void CheckFallthroughPlatforms( CollisionType floor_collision_type, Collider2D floor_collider )
+    {
+        if ( ! fallthrough ) { return; } // If the player is definately not falling through the floor, no need.
+        
+        if ( floor_collision_type.Fallthrough )
+        {
+            // make sure that the player character is not straddling a solid platform
+            // issue can't fall down when straddling two fallthrough platforms 
+            //(but there shouldn't be a need to have two passthrough platforms touch, they can just merge into 1)
+            if ( ( floor_collision_type.WalkOffRight && char_stats.char_collider.bounds.max.x > floor_collider.bounds.max.x ) ||
+                 ( floor_collision_type.WalkOffLeft  && char_stats.char_collider.bounds.min.x < floor_collider.bounds.min.x ) )
             {
-                if ( touch_ground )
-                {
-                    char_stats.is_on_ground = true;
-                    char_stats.jump_turned = false;
-                    char_stats.on_ground_collider = down_hit.collider;
-                }
-            }
-            else
-            {
-                char_stats.on_ground_collider = null;
-                FallingLogic();
-            }
-            //Fallthrough platforms
-            if ( fallthrough == true )
-            {
-                if ( down_hit_collision_type != null )
-                {
-                    if ( down_hit_collision_type.Fallthrough == false )
-                    {
-                        fallthrough = false;
-                    }
-                    else
-                    {
-                        // make sure that the player character is not straddling a solid platform
-                        // issue can't fall down when straddling two fallthrough platforms 
-                        //(but there shouldn't be a need to have two passthrough platforms touch, they can just merge into 1)
-                        if ( ( down_hit_collision_type.WalkOffRight && character_right > down_hit_collider_right ) ||
-                             ( down_hit_collision_type.WalkOffLeft && character_left < down_hit_collider_left ) )
-                        {
-                            fallthrough = false;
-                        }
-                    }
-                }
-                else
-                {
-                    //fallthrough = false; //TODO: ? is this right?, or should we do nothing?
-                }
+                fallthrough = false;
             }
         }
-        // if there is no floor, just fall
         else
         {
-            FallingLogic();
+            fallthrough = false;
         }
     }
 
@@ -697,6 +706,17 @@ public class SimpleCharacterCore : MonoBehaviour
     protected virtual bool IsOverlookingLedge()
     {
         return ( is_against_ledge && input_manager.VerticalAxis < 0.0f );
+    }
+
+    /// <summary>
+    /// Called when a character hits the floor. Resets state.
+    /// </summary>
+    /// <param name="ground_collider">The collider of the floor.</param>
+    private void OnTouchGround( Collider2D ground_collider )
+    {
+        char_stats.is_on_ground = true;
+        char_stats.jump_turned = false;
+        char_stats.on_ground_collider = ground_collider;
     }
 
     /// <summary>
