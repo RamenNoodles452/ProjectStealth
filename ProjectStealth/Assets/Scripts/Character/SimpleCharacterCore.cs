@@ -176,6 +176,7 @@ public class SimpleCharacterCore : MonoBehaviour
             }
             else
             {
+                char_stats.is_on_ground = false;
                 char_stats.is_jumping = true;
                 EndJumpGracePeriod();
                 char_stats.jump_input_time = 0.0f;
@@ -577,6 +578,10 @@ public class SimpleCharacterCore : MonoBehaviour
                 // special types of floor can change behaviour.
                 if ( ShuntPlayer( collision_type, hit.collider ) ) { did_touch_ground = false; }
                 CheckFallthroughPlatforms( collision_type, hit.collider );
+            }
+            else
+            {
+                Debug.LogError( "Improper configuration: platform is missing a CollisionType component." );
             }
 
             if ( did_touch_ground )
