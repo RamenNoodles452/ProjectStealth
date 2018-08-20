@@ -123,11 +123,11 @@ public class Player : SimpleCharacterCore
     }
 
     /// <summary>
-    /// at the player level, we have to take into looking over the ledge from wall climbs as well
+    /// at the player level, we have to account for looking over the ledge from wall climbs as well
     /// </summary>
-    public override void LookingOverLedge()
+    protected override bool IsOverlookingLedge()
     {
-        base.LookingOverLedge();
+        return base.IsOverlookingLedge();
     }
 
     public override void TouchedWall( GameObject collisionObject )

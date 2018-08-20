@@ -189,7 +189,7 @@ public class MagGripUpgrade : MonoBehaviour
                     char_stats.acceleration.x = -JUMP_ACCELERATION;
                 }
 
-                player_script.HorizontalJumpVelNoAccel( ( player_script.GetJumpHorizontalSpeedMin() + player_script.GetJumpHorizontalSpeedMax() ) / 2.0f );
+                player_script.SetHorizontalJumpVelocity( ( player_script.GetJumpHorizontalSpeedMin() + player_script.GetJumpHorizontalSpeedMax() ) / 2.0f );
                 player_script.SetFacing();
             }
             //ledge climb logic
