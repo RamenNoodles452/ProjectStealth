@@ -49,6 +49,7 @@ GameObject:
   - component: {fileID: 114378414123521384}
   - component: {fileID: 114216984659136732}
   - component: {fileID: 114315089713002516}
+  - component: {fileID: 114197477181029348}
   m_Layer: 10
   m_Name: PlayerCharacter
   m_TagString: Untagged
@@ -151,7 +152,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1555196157489052}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -290, y: 24, z: -5}
+  m_LocalPosition: {x: 0, y: 0, z: -5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4338403707927870}
@@ -285,6 +286,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   light_reference: {fileID: 108190940550001206}
+--- !u!114 &114197477181029348
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1555196157489052}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7df89676b75850440b8e64db86082b4a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &114216984659136732
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -319,6 +331,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   offset: {x: 0, y: 0, z: 0}
+  char_stats: {fileID: 0}
 --- !u!114 &114321183684658878
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -347,7 +360,7 @@ MonoBehaviour:
   is_jumping: 0
   jump_turned: 0
   jump_input_time: 0
-  is_touching_vault_obstacle: {fileID: 0}
+  touched_vault_obstacle: {fileID: 0}
   is_taking_cover: 0
   is_crouching: 0
   bezier_start_position: {x: 0, y: 0}
