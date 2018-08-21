@@ -407,13 +407,14 @@ public class SimpleCharacterCore : MonoBehaviour
             }
             else
             {
+                // jump has peaked
                 char_stats.is_jumping = false;
                 char_anims.FallTrigger();
             }
         }
 
         // if you turned while jumping, turn off the jump var
-        if ( char_stats.jump_turned && char_stats.velocity.y > 0.0f )
+        if ( char_stats.is_jumping && char_stats.jump_turned && char_stats.velocity.y > 0.0f )
         {
             char_stats.is_jumping = false;
             char_anims.FallTrigger();
@@ -577,7 +578,7 @@ public class SimpleCharacterCore : MonoBehaviour
             {
                 // special types of floor can change behaviour.
                 if ( ShuntPlayer( collision_type, hit.collider ) )         { did_touch_ground = false; }
-                if ( FallthroughPlatform( collision_type, hit.collider ) ) { did_touch_ground = false; Debug.Log( "fell" ); }
+                if ( FallthroughPlatform( collision_type, hit.collider ) ) { did_touch_ground = false; }
             }
             else
             {
@@ -652,7 +653,6 @@ public class SimpleCharacterCore : MonoBehaviour
             return false;
         }
 
-        char_anims.FallTrigger();
         return true;
     }
 
