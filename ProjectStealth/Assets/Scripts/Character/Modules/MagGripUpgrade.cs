@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections;
 using UnityEditor;
 
-// Handles wall climbing
+// Handles wall and ceiling climbing
 public class MagGripUpgrade : MonoBehaviour
 {
     #region vars
@@ -11,7 +11,7 @@ public class MagGripUpgrade : MonoBehaviour
     private CharacterAnimationLogic char_anims;
 
     //this allows us to reference player stuff like their movement state
-    Player player_script; //AVOID CIRCULAR REFERENCING
+    Player player_script;
     PlayerStats player_stats;
     CharacterStats char_stats;
 
@@ -19,11 +19,11 @@ public class MagGripUpgrade : MonoBehaviour
     private float wall_grab_delay_timer = 0.15f;
 
     //Mag Grip variables
-    public Collider2D grab_collider; // = null; //private
+    public Collider2D grab_collider; 
     public enum ClimbState { NotClimb, WallClimb, CeilingClimb, Transition };
     public ClimbState current_climb_state = ClimbState.NotClimb;
 
-    private const float WALL_CLIMB_SPEED = 90.0f; // pixels / second
+    private const float WALL_CLIMB_SPEED = 90.0f;  // pixels / second
     private const float WALL_SLIDE_SPEED = 180.0f; // pixels / second
 
     //TODO: do something about duplicate code
@@ -32,7 +32,7 @@ public class MagGripUpgrade : MonoBehaviour
     private bool is_against_ledge;
 
     //consts
-    protected const float JUMP_ACCELERATION = 240.0f; // base accel for jump off the wall with no input (pixels / second / second)
+    protected const float JUMP_ACCELERATION = 240.0f; // base acceleration for jump off the wall with no input (pixels / second / second)
     #endregion
 
     // Use this for initialization
@@ -44,29 +44,102 @@ public class MagGripUpgrade : MonoBehaviour
         char_stats      = GetComponent<CharacterStats>();
         input_manager   = GetComponent<IInputManager>();
         char_anims      = GetComponent<CharacterAnimationLogic>();
-
     }
 
     // Update is called once per frame
     void Update()
+    {
+        UpdateTimers();
+        ParseInput();
+        MovePlayer();
+    }
+
+    /// <summary>
+    /// Updates timers for time-sensitive inputs
+    /// </summary>
+    private void UpdateTimers()
     {
         //wall grab delay timer
         if ( wall_grab_delay_timer < WALL_GRAB_DELAY )
         {
             wall_grab_delay_timer = wall_grab_delay_timer + Time.deltaTime * Time.timeScale;
         }
+    }
 
+    /// <summary>
+    /// Parses user input
+    /// </summary>
+    private void ParseInput()
+    {
+        if ( char_stats.current_master_state != CharEnums.MasterState.ClimbState ) { return; }
 
-        if ( char_stats.current_master_state == CharEnums.MasterState.ClimbState )
+        if      ( current_climb_state == ClimbState.WallClimb )    { ClimbMovementInput(); }
+        else if ( current_climb_state == ClimbState.CeilingClimb ) { /*CeilingClimbMovementInput();*/ }
+    }
+
+    /// <summary>
+    /// Parses climb movement input.
+    /// </summary>
+    void ClimbMovementInput()
+    {
+        float characterTop = char_stats.char_collider.bounds.max.y + 0.5f;
+        float characterBottom = char_stats.char_collider.bounds.min.y - 0.5f;
+
+        if ( grab_collider == null ) { return; }
+
+        LedgeLook();
+
+        // Jump logic.
+        if ( input_manager.JumpInputInst )
         {
-            if ( current_climb_state == ClimbState.WallClimb )
+            if ( !is_overlooking_ledge )
             {
-                ClimbMovementInput();
+                StopClimbing();
+                char_stats.is_jumping = true;
+                char_stats.jump_input_time = 0.0f;
+                char_stats.AboutFace();
+                char_anims.JumpTrigger();
+                if ( char_stats.IsFacingRight() )
+                {
+                    char_stats.acceleration.x = JUMP_ACCELERATION;
+                }
+                else
+                {
+                    char_stats.acceleration.x = -JUMP_ACCELERATION;
+                }
+
+                player_script.SetHorizontalJumpVelocity( ( player_script.GetJumpHorizontalSpeedMin() + player_script.GetJumpHorizontalSpeedMax() ) / 2.0f );
+                player_script.SetFacing();
             }
-            else if ( current_climb_state == ClimbState.CeilingClimb )
+            //ledge climb logic
+            else if ( is_overlooking_ledge )
             {
+                // if we're looking below, drop
+                if ( grab_collider.bounds.min.y == characterBottom )
+                {
+                    StopClimbing();
+                    char_anims.DropFromWallTrigger();
+                }
+                // if we're looking above, climb up
+                else if ( grab_collider.bounds.max.y == characterTop )
+                {
+                    WallToGroundStart();
+                }
+                else
+                {
+                    Debug.LogError( "The grab_collider object is most likely null. grab_collider.bounds.min.y: " + grab_collider.bounds.min.y );
+                    // TODO: we know this to be false. delete?
+                }
             }
         }
+    }
+
+    /// <summary>
+    /// Moves the player up or down walls, or across ceilings, and handles state transitions.
+    /// </summary>
+    private void MovePlayer()
+    {
+        if ( char_stats.current_master_state != CharEnums.MasterState.ClimbState ) { return; }
 
         if ( current_climb_state == ClimbState.WallClimb )
         {
@@ -81,25 +154,32 @@ public class MagGripUpgrade : MonoBehaviour
             //if you climb down and touch the ground, stop climbing
             if ( char_stats.IsGrounded )
             {
-                Debug.Log("grounded");
                 char_anims.WallSlideTouchGround();
                 StopClimbing();
             }
         }
         else if ( current_climb_state == ClimbState.CeilingClimb )
         {
-
+            //SetVelocity
+            //move
+            //stop conditions
         }
     }
 
+    /// <summary>
+    /// Sets the x-axis velocity while climbing
+    /// </summary>
     private void SetClimbHorizontalVelocity()
     {
-        if ( Mathf.Approximately( char_stats.velocity.x - 1000000, -1000000 ) ) //TODO:
+        if ( Mathf.Approximately( char_stats.velocity.x - 1000000, -1000000 ) ) //TODO: use isalmostzero after rolling it into a util? or DELETE.
         {
             char_stats.velocity.x = 0;
         }
     }
 
+    /// <summary>
+    /// Sets the y-axis velocity while climbing
+    /// </summary>
     private void SetClimbVerticalVelocity()
     {
         if ( input_manager.VerticalAxis > 0.0f )
@@ -161,62 +241,8 @@ public class MagGripUpgrade : MonoBehaviour
     }
 
     /// <summary>
-    /// Parses climb movement input.
+    /// 
     /// </summary>
-    void ClimbMovementInput()
-    {
-        float characterTop = char_stats.char_collider.bounds.max.y + 0.5f;
-        float characterBottom = char_stats.char_collider.bounds.min.y - 0.5f;
-
-        if ( grab_collider == null ) { return; }
-        
-        LedgeLook();
-
-        // Jump logic.
-        if ( input_manager.JumpInputInst )
-        {
-            if ( ! is_overlooking_ledge )
-            {
-                StopClimbing();
-                char_stats.is_jumping = true;
-                char_stats.jump_input_time = 0.0f;
-                char_stats.AboutFace();
-                char_anims.JumpTrigger();
-                if ( char_stats.IsFacingRight() )
-                {
-                    char_stats.acceleration.x = JUMP_ACCELERATION;
-                }
-                else
-                {
-                    char_stats.acceleration.x = -JUMP_ACCELERATION;
-                }
-
-                player_script.SetHorizontalJumpVelocity( ( player_script.GetJumpHorizontalSpeedMin() + player_script.GetJumpHorizontalSpeedMax() ) / 2.0f );
-                player_script.SetFacing();
-            }
-            //ledge climb logic
-            else if ( is_overlooking_ledge )
-            {
-                // if we're looking below, drop
-                if ( grab_collider.bounds.min.y == characterBottom )
-                {
-                    StopClimbing();
-                    char_anims.DropFromWallTrigger();
-                }
-                // if we're looking above, climb up
-                else if ( grab_collider.bounds.max.y == characterTop )
-                {
-                    WallToGroundStart();
-                }
-                else
-                {
-                    Debug.LogError( "The grab_collider object is most likely null. grab_collider.bounds.min.y: " + grab_collider.bounds.min.y );
-                    // TODO: we know this to be false. delete?
-                }
-            }
-        }
-    }
-
     void LedgeLook()
     {
         if ( current_climb_state == ClimbState.WallClimb )
@@ -252,6 +278,9 @@ public class MagGripUpgrade : MonoBehaviour
         char_stats.current_master_state = CharEnums.MasterState.DefaultState;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     void WallToGroundStart()
     {
         input_manager.JumpInputInst = false;
@@ -270,6 +299,9 @@ public class MagGripUpgrade : MonoBehaviour
         char_anims.SetCrouch();
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public void WallToGroundStop()
     {
         current_climb_state = ClimbState.NotClimb;
@@ -288,6 +320,9 @@ public class MagGripUpgrade : MonoBehaviour
         grab_collider = null;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     void GroundToWallStart()
     {
         char_anims.ResetJumpDescend();
@@ -314,6 +349,9 @@ public class MagGripUpgrade : MonoBehaviour
         grab_collider = char_stats.on_ground_collider;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public void GroundToWallStop()
     {
         current_climb_state = ClimbState.WallClimb;
@@ -355,30 +393,23 @@ public class MagGripUpgrade : MonoBehaviour
         }
         grabCheck = Physics2D.Raycast( point, Vector2.right, char_stats.char_collider.bounds.size.x );
 
+        if ( hit.collider == null )               { AbortWallClimbFromLedge(); return; }  // didn't hit anything, too short.
         CollisionType collision_type = hit.collider.gameObject.GetComponent<CollisionType>();
-        bool abort = false;
-        if ( collision_type != null )
-        {
-            if ( grabCheck.collider == hit.collider && collision_type.WallClimb )
-            {
-                char_stats.current_master_state = CharEnums.MasterState.ClimbState;
-                GroundToWallStart();
-            }
-            else
-            {
-                abort = true;
-            }
-        }
-        else
-        {
-            abort = true;
-        }
+        if ( collision_type == null )             { AbortWallClimbFromLedge(); return; }  // invalid configuration
+        if ( ! collision_type.WallClimb )         { AbortWallClimbFromLedge(); return; }  // unclimbable object
+        if ( grabCheck.collider != hit.collider ) { AbortWallClimbFromLedge(); return; }  // hit a different object, too short
 
-        if ( abort )
-        { 
-            char_stats.is_jumping = false;
-            //TODO: head shake animation to notify that the ledge is too short
-        }
+        char_stats.current_master_state = CharEnums.MasterState.ClimbState;
+        GroundToWallStart();
+    }
+
+    /// <summary>
+    /// When climbing a wall from a ledge fails, this is called.
+    /// </summary>
+    private void AbortWallClimbFromLedge()
+    {
+        char_stats.is_jumping = false;
+        //TODO: head shake animation to notify that the ledge is too short
     }
 
     /// <summary>
