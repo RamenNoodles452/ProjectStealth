@@ -161,5 +161,11 @@ public class CharacterAnimationLogic : MonoBehaviour
     {
         animator.SetTrigger( "wall_slide_touch_ground" );
     }
+
+    //triggers when a character grabs the ceiling
+    public void CeilingGrabTrigger()
+    {
+        animator.SetTrigger( "ceiling_grab_trigger" );
+    }
 }
 
