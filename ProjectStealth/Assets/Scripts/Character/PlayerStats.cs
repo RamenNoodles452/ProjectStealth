@@ -30,6 +30,7 @@ public class PlayerStats : MonoBehaviour
     #region Evade
     private bool evade_enqueued = false;
     public float EVADE_COST = 20.0f;
+    private Vector2 evade_direction;
 
     private bool is_evading = false;
 
@@ -38,7 +39,7 @@ public class PlayerStats : MonoBehaviour
     private float evade_windup_counter = 0.0f;
 
     private bool invincible = false;
-    private float INVINCIBILITY_TIME = 0.65f;
+    private float INVINCIBILITY_TIME = 0.3f;
     private float invincibility_counter = 0.0f;
 
     private bool is_evade_recovering = false;
@@ -46,10 +47,10 @@ public class PlayerStats : MonoBehaviour
     private float evade_recovery_counter = 0.15f;
 
     //TODO: evade speed in direction, backstep from neutral (2 states here) chord with direction
-    // aerial 4 directional dodge movement (no iframes)
-    // sliders for total time, windup time, i frames (not for aerial), recovery time / skip for enqueued windup, speed in pixels per second.
-    // disable normal movement when dodging
-    // don't collide with enemies while dodging
+    // [ ] aerial 4 directional dodge movement (no iframes)
+    // [X] sliders for total time, windup time, i frames (not for aerial), recovery time / skip for enqueued windup, speed in pixels per second.
+    // [X] disable normal movement when dodging
+    // [ ] don't collide with enemies while dodging
     #endregion
 
     #region Cloak
@@ -78,6 +79,8 @@ public class PlayerStats : MonoBehaviour
     public GameObject noise_prefab;
 
     private CharacterStats char_stats;
+    private CharacterAnimationLogic char_anims;
+    IInputManager input_manager;
     private float walk_animation_timer;
     #endregion
 
@@ -205,6 +208,8 @@ public class PlayerStats : MonoBehaviour
             Referencer.instance.player.GetComponent<MagGripUpgrade>().StopClimbing();
         }
 
+        input_manager = GetComponent<IInputManager>();
+        char_anims = this.gameObject.GetComponent<CharacterAnimationLogic>();
         // reset movement
         char_stats = this.gameObject.GetComponent<CharacterStats>();
         char_stats.velocity = new Vector2( 0.0f, 0.0f );
@@ -301,11 +306,52 @@ public class PlayerStats : MonoBehaviour
         is_evade_recovering = false;
         evade_recovery_counter = 0.0f;
 
+        // direction
+        Vector2 input_direction = new Vector2( input_manager.HorizontalAxis, input_manager.VerticalAxis );
+        if ( char_stats.IsGrounded )
+        {
+            if ( input_direction.x == 0.0f ) // backstep
+            {
+                evade_direction = new Vector2( -1.0f * char_stats.GetFacingXComponent(), 0.0f );
+            }
+            else if ( input_direction.x > 0.0f )
+            {
+                evade_direction = Vector2.right;
+            }
+            else if ( input_direction.x < 0.0f )
+            {
+                evade_direction = Vector2.left;
+            }
+        }
+        else if ( char_stats.IsInMidair )
+        {
+            if ( input_direction == Vector2.zero )
+            {
+                evade_direction = new Vector2( char_stats.GetFacingXComponent(), 0.0f );
+            }
+            else if ( Mathf.Abs( input_direction.y ) >= Mathf.Abs( input_direction.x ) )
+            {
+                if ( input_direction.y > 0.0f ) { evade_direction = Vector2.up; }
+                else { evade_direction = Vector2.down; }
+            }
+            else
+            {
+                if ( input_direction.x > 0.0f ) { evade_direction = Vector2.right; }
+                else { evade_direction = Vector2.left; }
+            }
+        }
+
         energy -= EVADE_COST;
 
-        // differences for aerial evasion / ground evasion?
         // animate
-        // movement? collision mask changes?
+        if ( char_stats.IsGrounded )
+        {
+            char_anims.DodgeRollTrigger();
+        }
+        else
+        {
+            char_anims.DodgeRollAerialTrigger();
+        }
 
         //return true/false? based on abort / already evading / stuck in recovery / resource insuffiency / success
     }
@@ -314,6 +360,18 @@ public class PlayerStats : MonoBehaviour
     public bool IsEvading()
     {
         return is_evading;
+    }
+
+    /// <summary>
+    /// Moves the player during evasion.
+    /// </summary>
+    private void EvasiveAction()
+    {
+        float speed = 360.0f; // pixels / second
+        if ( char_stats.IsInMidair ) { speed = 360.0f; }
+
+        float scalar = speed * Time.deltaTime * Time.timeScale;
+        GetComponent<SimpleCharacterCore>().MoveWithCollision( new Vector3( scalar * evade_direction.x, scalar * evade_direction.y, 0.0f ) );
     }
 
     #region Cloak
@@ -421,6 +479,7 @@ public class PlayerStats : MonoBehaviour
             {
                 is_evade_winding_up = false;
                 StartIFrames();
+                char_stats.current_master_state = CharEnums.MasterState.EvadeState;
             }
         }
 
@@ -433,6 +492,7 @@ public class PlayerStats : MonoBehaviour
             {
                 invincible = false;
                 is_evade_recovering = true;
+                char_stats.current_master_state = CharEnums.MasterState.DefaultState;
             }
         }
 
@@ -451,6 +511,11 @@ public class PlayerStats : MonoBehaviour
                     Evade();
                 }
             }
+        }
+
+        if ( IsEvading() && ! is_evade_winding_up )
+        {
+            EvasiveAction();
         }
         #endregion
 

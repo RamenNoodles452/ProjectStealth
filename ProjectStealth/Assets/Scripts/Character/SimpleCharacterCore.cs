@@ -73,6 +73,7 @@ public class SimpleCharacterCore : MonoBehaviour
     {
         ApplyMovesWithCollision();
 
+        if ( char_stats.current_master_state != CharEnums.MasterState.DefaultState ) { return; }
         MovementInput();
         CalculateDirection();
         SetVelocity();

@@ -58,9 +58,10 @@ public class Player : SimpleCharacterCore
 
     public override void Update()
     {
+        base.Update();
+
         if ( char_stats.current_master_state == CharEnums.MasterState.DefaultState )
         {
-            base.Update();
 
             //Evade
             if ( input_manager.EvadeInputInst )

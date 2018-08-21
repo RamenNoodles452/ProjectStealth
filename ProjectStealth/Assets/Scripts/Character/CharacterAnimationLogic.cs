@@ -138,34 +138,46 @@ public class CharacterAnimationLogic : MonoBehaviour
         }
     }
 
-    //triggers when a character dropps from a wall by moving down to the end of the wall and pressing down + jump
+    // triggers when a character dropps from a wall by moving down to the end of the wall and pressing down + jump
     public void DropFromWallTrigger()
     {
         animator.SetTrigger( "drop_from_wall" );
     }
 
-    //triggers when a character climbs up from a wall
+    // triggers when a character climbs up from a wall
     public void WallToGroundTrigger()
     {
         animator.SetTrigger( "wall_to_ground" );
     }
 
-    //triggers when a character climbs to the wall from the ground
+    // triggers when a character climbs to the wall from the ground
     public void GroundToWallTrigger()
     {
         animator.SetTrigger( "ground_to_wall" );
     }
 
-    //triggers when a character slides down the wall and touches the ground
+    // triggers when a character slides down the wall and touches the ground
     public void WallSlideTouchGround()
     {
         animator.SetTrigger( "wall_slide_touch_ground" );
     }
 
-    //triggers when a character grabs the ceiling
+    // triggers when a character grabs the ceiling
     public void CeilingGrabTrigger()
     {
         animator.SetTrigger( "ceiling_grab_trigger" );
+    }
+
+    // triggers when a character dodge rolls on the ground
+    public void DodgeRollTrigger()
+    {
+        animator.SetTrigger( "dodge_roll_trigger" );
+    }
+
+    // triggers when a character dodge rolls in midair
+    public void DodgeRollAerialTrigger()
+    {
+        animator.SetTrigger( "dodge_roll_aerial_trigger" );
     }
 }
 
