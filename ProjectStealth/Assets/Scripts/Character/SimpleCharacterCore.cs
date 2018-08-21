@@ -349,8 +349,9 @@ public class SimpleCharacterCore : MonoBehaviour
     /// <param name="speed">The speed, in pixels per second</param>
     public void SetHorizontalJumpVelocity( float speed )
     {
-        float sign = 1.0f;
-        if ( char_stats.acceleration.x < 0.0f ) { sign = -1.0f; }
+        float sign = 0.0f;
+        if      ( char_stats.acceleration.x < 0.0f ) { sign = -1.0f; }
+        else if ( char_stats.acceleration.x > 0.0f ) { sign =  1.0f; }
         char_stats.velocity.x = Mathf.Clamp( speed * sign, -JUMP_HORIZONTAL_SPEED_MAX, JUMP_HORIZONTAL_SPEED_MAX );
     }
 
@@ -417,7 +418,7 @@ public class SimpleCharacterCore : MonoBehaviour
         if ( char_stats.is_jumping && char_stats.jump_turned && char_stats.velocity.y > 0.0f )
         {
             char_stats.is_jumping = false;
-            char_anims.FallTrigger();
+            char_anims.FallTrigger(); // only want to call this once per jump.
         }
 
         char_stats.velocity.y = Mathf.Clamp( char_stats.velocity.y, -MAX_VERTICAL_SPEED, MAX_VERTICAL_SPEED );
