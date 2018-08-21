@@ -875,7 +875,10 @@ public class SimpleCharacterCore : MonoBehaviour
                 Debug.Log( "Don't be a troll." );
                 return;
             }
-            this.gameObject.transform.position += ( hit.distance / change.magnitude - 1.0f ) * change; //TODO: magic number
+
+            this.gameObject.transform.position += new Vector3( 
+                ( hit.distance - ONE_PIXEL_BUFFER ) * Mathf.Cos( Mathf.Atan2( change.y, change.x ) ), 
+                ( hit.distance - ONE_PIXEL_BUFFER ) * Mathf.Sin( Mathf.Atan2( change.y, change.x) ), 0.0f );
         }
         else
         {
