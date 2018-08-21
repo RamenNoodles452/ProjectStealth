@@ -55,10 +55,6 @@ public class MagGripUpgrade : MonoBehaviour
         {
             wall_grab_delay_timer = wall_grab_delay_timer + Time.deltaTime * Time.timeScale;
         }
-        else
-        {
-            wall_grab_delay_timer = WALL_GRAB_DELAY;
-        }
 
 
         if ( char_stats.current_master_state == CharEnums.MasterState.ClimbState )
@@ -74,8 +70,8 @@ public class MagGripUpgrade : MonoBehaviour
 
         if ( current_climb_state == ClimbState.WallClimb )
         {
-            ClimbHorizontalVelocity();
-            ClimbVerticalVelocity();
+            SetClimbHorizontalVelocity();
+            SetClimbVerticalVelocity();
             player_script.Collisions();
             ClimbVerticalEdgeDetect();
 
@@ -85,6 +81,7 @@ public class MagGripUpgrade : MonoBehaviour
             //if you climb down and touch the ground, stop climbing
             if ( char_stats.IsGrounded )
             {
+                Debug.Log("grounded");
                 char_anims.WallSlideTouchGround();
                 StopClimbing();
             }
@@ -95,7 +92,7 @@ public class MagGripUpgrade : MonoBehaviour
         }
     }
 
-    void ClimbHorizontalVelocity()
+    private void SetClimbHorizontalVelocity()
     {
         if ( Mathf.Approximately( char_stats.velocity.x - 1000000, -1000000 ) ) //TODO:
         {
@@ -103,7 +100,7 @@ public class MagGripUpgrade : MonoBehaviour
         }
     }
 
-    void ClimbVerticalVelocity()
+    private void SetClimbVerticalVelocity()
     {
         if ( input_manager.VerticalAxis > 0.0f )
         {
@@ -159,20 +156,26 @@ public class MagGripUpgrade : MonoBehaviour
         else
         {
             Debug.LogError( "Can't find collider when climbing against a wall. This shouldn't happen" );
+            StopClimbing(); // err with grace.
         }
     }
 
+    /// <summary>
+    /// Parses climb movement input.
+    /// </summary>
     void ClimbMovementInput()
     {
         float characterTop = char_stats.char_collider.bounds.max.y + 0.5f;
         float characterBottom = char_stats.char_collider.bounds.min.y - 0.5f;
 
-        if ( grab_collider )
-        {
-            LedgeLook();
+        if ( grab_collider == null ) { return; }
+        
+        LedgeLook();
 
-            // Jump logic.
-            if ( !is_overlooking_ledge && input_manager.JumpInputInst )
+        // Jump logic.
+        if ( input_manager.JumpInputInst )
+        {
+            if ( ! is_overlooking_ledge )
             {
                 StopClimbing();
                 char_stats.is_jumping = true;
@@ -192,7 +195,7 @@ public class MagGripUpgrade : MonoBehaviour
                 player_script.SetFacing();
             }
             //ledge climb logic
-            else if ( is_overlooking_ledge && input_manager.JumpInputInst )
+            else if ( is_overlooking_ledge )
             {
                 // if we're looking below, drop
                 if ( grab_collider.bounds.min.y == characterBottom )
@@ -208,6 +211,7 @@ public class MagGripUpgrade : MonoBehaviour
                 else
                 {
                     Debug.LogError( "The grab_collider object is most likely null. grab_collider.bounds.min.y: " + grab_collider.bounds.min.y );
+                    // TODO: we know this to be false. delete?
                 }
             }
         }
@@ -326,105 +330,119 @@ public class MagGripUpgrade : MonoBehaviour
     }
 
     /// <summary>
-    /// Function that initiates a wallclimb from a crouching on the ground against a ledge
+    /// Function that initiates a wallclimb from crouching on the ground against a ledge
     /// </summary>
     public void WallClimbFromLedge()
     {
-        // This is kinda inefficient as it is redundant code from the collision detection...
-        Vector2 verticalBoxSize = new Vector2(char_stats.char_collider.bounds.size.x - 0.1f, 0.1f);
-        Vector2 downHitOrigin = new Vector2(char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.center.y - char_stats.char_collider.bounds.extents.y + 0.1f);
-        RaycastHit2D downHit = Physics2D.BoxCast(downHitOrigin, verticalBoxSize, 0.0f, Vector2.down, 25.0f, CollisionMasks.all_collision_mask);
-        if ( downHit.collider != null )
+        Vector2 box_size = new Vector2(char_stats.char_collider.bounds.size.x - 0.1f, 0.1f);
+        Vector2 origin = new Vector2(char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.center.y - char_stats.char_collider.bounds.extents.y + 0.1f);
+        RaycastHit2D hit = Physics2D.BoxCast(origin, box_size, 0.0f, Vector2.down, 25.0f, CollisionMasks.all_collision_mask);
+        if ( hit.collider == null ) { return; }
+        
+        //check the ledge to see if it's tall enough to grab onto
+        RaycastHit2D grabCheck;
+        Vector2 point;
+        Vector2 direction;
+        if ( char_stats.IsFacingRight() )
         {
-            //check the ledge to see if it's tall enough to grab onto
-            RaycastHit2D grabCheck;
-            if ( char_stats.IsFacingRight() )
-            {
-                Vector2 leftPoint = new Vector2(char_stats.char_collider.bounds.center.x + char_stats.char_collider.bounds.size.x, char_stats.char_collider.bounds.min.y - char_stats.char_collider.bounds.size.y);
-                grabCheck = Physics2D.Raycast( leftPoint, Vector2.left, char_stats.char_collider.bounds.size.x );
-            }
-            else
-            {
-                Vector2 rightPoint = new Vector2(char_stats.char_collider.bounds.center.x - char_stats.char_collider.bounds.size.x, char_stats.char_collider.bounds.min.y - char_stats.char_collider.bounds.size.y);
-                grabCheck = Physics2D.Raycast( rightPoint, Vector2.right, char_stats.char_collider.bounds.size.x );
-            }
+            point = new Vector2(char_stats.char_collider.bounds.center.x + char_stats.char_collider.bounds.size.x, char_stats.char_collider.bounds.min.y - char_stats.char_collider.bounds.size.y);
+            direction = Vector2.left;
+        }
+        else
+        {
+            point = new Vector2(char_stats.char_collider.bounds.center.x - char_stats.char_collider.bounds.size.x, char_stats.char_collider.bounds.min.y - char_stats.char_collider.bounds.size.y);
+            direction = Vector2.right;
+        }
+        grabCheck = Physics2D.Raycast( point, Vector2.right, char_stats.char_collider.bounds.size.x );
 
-            if ( grabCheck.collider == downHit.collider && downHit.collider.gameObject.GetComponent<CollisionType>().WallClimb )
+        CollisionType collision_type = hit.collider.gameObject.GetComponent<CollisionType>();
+        bool abort = false;
+        if ( collision_type != null )
+        {
+            if ( grabCheck.collider == hit.collider && collision_type.WallClimb )
             {
                 char_stats.current_master_state = CharEnums.MasterState.ClimbState;
                 GroundToWallStart();
             }
             else
             {
-                char_stats.is_jumping = false;
-                //TODO: head shake animation to notify that the ledge is too short
-
+                abort = true;
             }
+        }
+        else
+        {
+            abort = true;
+        }
+
+        if ( abort )
+        { 
+            char_stats.is_jumping = false;
+            //TODO: head shake animation to notify that the ledge is too short
         }
     }
 
     /// <summary>
-    /// if the player jumps into a wall and meet requirements, grab onto it if they meet requirements
+    /// if the player jumps into a wall, grab onto it if they meet requirements
     /// </summary>
-    /// <param name="collisionObject"></param>
-    public void InitiateWallGrab( Collider2D collisionObject )
+    /// <param name="collisionObject">The collider of the object we might want to grab onto</param>
+    public void InitiateWallGrab( Collider2D collision_object )
     {
-        if ( player_stats.acquired_mag_grip && collisionObject.gameObject.GetComponent<CollisionType>().WallClimb )
+        // Validation
+        if ( ! player_stats.acquired_mag_grip )           { return; } // can't climb without this upgrade
+        CollisionType collision_type = collision_object.gameObject.GetComponent<CollisionType>();
+        if ( collision_type == null )                     { return; } // invalid config
+        if ( ! collision_type.WallClimb )                 { return; } // unclimbable
+        if ( current_climb_state != ClimbState.NotClimb ) { return; } // don't start climbing if you already are
+        if ( ! char_stats.IsInMidair )                    { return; } // need to be in midair
+        if ( wall_grab_delay_timer < WALL_GRAB_DELAY )    { return; } // wait for it
+
+        // only grab the wall if we aren't popping out under it or over it
+        if ( collision_object.bounds.min.y <= char_stats.char_collider.bounds.min.y )
         {
-            if ( current_climb_state == ClimbState.NotClimb )
+            // if character is a bit too above the ledge, bump them down till they're directly under it
+            // if this block is commented out, then the character will not snap directly to the ledge if slightly above it and will slide down till they grab on
+            /*
+            if (collisionObject.bounds.max.y < char_stats.char_collider.bounds.max.y)
             {
-                if ( char_stats.IsInMidair && current_climb_state == ClimbState.NotClimb && wall_grab_delay_timer == WALL_GRAB_DELAY )
+                // check to see if the wall we're gonna be offsetting against is too short.
+                RaycastHit2D predictionCast;
+                float offsetDistance = char_stats.char_collider.bounds.max.y - collisionObject.bounds.max.y;
+                Vector2 predictionCastOrigin = new Vector2(char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.min.y - offsetDistance);
+                if (collisionObject.bounds.center.x < char_stats.char_collider.bounds.center.x)
+                    predictionCast = Physics2D.Raycast(predictionCastOrigin, Vector2.left, char_stats.char_collider.bounds.size.x, CollisionMasks.AllCollisionMask);
+                else
+                    predictionCast = Physics2D.Raycast(predictionCastOrigin, Vector2.right, char_stats.char_collider.bounds.size.x, CollisionMasks.AllCollisionMask);
+
+                if (predictionCast.collider == collisionObject)
+                    transform.Translate(0.0f, -(char_stats.char_collider.bounds.max.y - collisionObject.bounds.max.y), 0.0f);
+            }
+            */
+            // if we're good to grab, get everything in order
+            if ( collision_object.bounds.max.y >= char_stats.char_collider.bounds.max.y )
+            {
+                char_stats.ResetJump();
+                current_climb_state = ClimbState.WallClimb;
+                char_stats.current_master_state = CharEnums.MasterState.ClimbState;
+
+                // variable sets to prevent weird turning when grabbing onto a wall
+                // if the wall is to our left
+                if ( collision_object.bounds.center.x < char_stats.char_collider.bounds.center.x )
                 {
-                    // only grab the wall if we aren't popping out under it or over it
-                    if ( collisionObject.bounds.min.y <= char_stats.char_collider.bounds.min.y )
-                    {
-                        // if character is a bit too above the ledge, bump them down till they're directly under it
-                        // if this block is commented out, then the character will not snap directly to the ledge if slightly above it and will slide down till they grab on
-                        /*
-                        if (collisionObject.bounds.max.y < char_stats.char_collider.bounds.max.y)
-                        {
-                            // check to see if the wall we're gonna be offsetting against is too short.
-                            RaycastHit2D predictionCast;
-                            float offsetDistance = char_stats.char_collider.bounds.max.y - collisionObject.bounds.max.y;
-                            Vector2 predictionCastOrigin = new Vector2(char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.min.y - offsetDistance);
-                            if (collisionObject.bounds.center.x < char_stats.char_collider.bounds.center.x)
-                                predictionCast = Physics2D.Raycast(predictionCastOrigin, Vector2.left, char_stats.char_collider.bounds.size.x, CollisionMasks.AllCollisionMask);
-                            else
-                                predictionCast = Physics2D.Raycast(predictionCastOrigin, Vector2.right, char_stats.char_collider.bounds.size.x, CollisionMasks.AllCollisionMask);
-
-                            if (predictionCast.collider == collisionObject)
-                                transform.Translate(0.0f, -(char_stats.char_collider.bounds.max.y - collisionObject.bounds.max.y), 0.0f);
-                        }
-                        */
-                        // if we're good to grab, get everything in order
-                        if ( collisionObject.bounds.max.y >= char_stats.char_collider.bounds.max.y )
-                        {
-                            char_stats.ResetJump();
-                            current_climb_state = ClimbState.WallClimb;
-                            char_stats.current_master_state = CharEnums.MasterState.ClimbState;
-
-                            // variable sets to prevent weird turning when grabbing onto a wall
-                            // if the wall is to our left
-                            if ( collisionObject.bounds.center.x < char_stats.char_collider.bounds.center.x )
-                            {
-                                char_stats.facing_direction = CharEnums.FacingDirection.Left;
-                                sprite_renderer.flipX = true;
-                            }
-                            // if the wall is to our right
-                            else
-                            {
-                                char_stats.facing_direction = CharEnums.FacingDirection.Right;
-                                sprite_renderer.flipX = false;
-                            }
-                            char_stats.velocity.x = 0.0f;
-                            // assign the grab_collider now that the grab is actually happening
-                            grab_collider = collisionObject.GetComponent<Collider2D>();
-                            //trigger the signal to start the wall climb animation
-                            char_anims.WallGrabTrigger();
-                            char_anims.ResetJumpDescend();
-                        }
-                    }
+                    char_stats.facing_direction = CharEnums.FacingDirection.Left;
+                    sprite_renderer.flipX = true;
                 }
+                // if the wall is to our right
+                else
+                {
+                    char_stats.facing_direction = CharEnums.FacingDirection.Right;
+                    sprite_renderer.flipX = false;
+                }
+                char_stats.velocity.x = 0.0f;
+                // assign the grab_collider now that the grab is actually happening
+                grab_collider = collision_object.GetComponent<Collider2D>();
+                //trigger the signal to start the wall climb animation
+                char_anims.WallGrabTrigger();
+                char_anims.ResetJumpDescend();
             }
         }
     }
@@ -432,21 +450,25 @@ public class MagGripUpgrade : MonoBehaviour
     /// <summary>
     /// if the player jumps into a ceiling and meet requirements, grab onto it if they meet requirements
     /// </summary>
-    /// <param name="collisionObject"></param>
-    public void InitiateCeilingGrab( Collider2D collisionObject )
+    /// <param name="collision_object">The collider of the object we might want to grab onto</param>
+    public void InitiateCeilingGrab( Collider2D collision_object )
     {
-        if ( player_stats.acquired_mag_grip && collisionObject.gameObject.GetComponent<CollisionType>().CeilingClimb )
-        {
-            if ( current_climb_state == ClimbState.NotClimb )
-            {
-                if ( char_stats.IsInMidair && current_climb_state == ClimbState.NotClimb && wall_grab_delay_timer == WALL_GRAB_DELAY )
-                {
-                    // TODO: Ceiling grab
-                    // only grab the ceiling if we aren't popping out over the side
-                    //if (collisionObject.bounds.min.y <= char_stats.char_collider.bounds.min.y)
+        // Validation
+        if ( ! player_stats.acquired_mag_grip )           { return; } // need the upgrade to do this TODO: separate wall and ceiling upgrades into 2 bools
+        CollisionType collision_type = collision_object.gameObject.GetComponent<CollisionType>();
+        if ( collision_type == null )                     { return; } // invalid config
+        if ( ! collision_type.CeilingClimb )              { return; } // unclimbable
+        if ( current_climb_state != ClimbState.NotClimb ) { return; } // don't start climbing if you already are
+        if ( ! char_stats.IsInMidair )                    { return; } // need to be in midair
+        if ( wall_grab_delay_timer < WALL_GRAB_DELAY )    { return; } // wait for it
 
-                }
-            }
-        }
+        // TODO: Ceiling grab
+        // only grab the ceiling if we aren't popping out over the side
+        //if (collisionObject.bounds.min.y <= char_stats.char_collider.bounds.min.y)
+
+        //char_stats.velocity.x = 0.0f;
+        //char_stats.velocity.y = 0.0f;
+        //grab_collider = collision_object.GetComponent<Collider2D>();
+        //char_anims.CeilingGrabTrigger();
     }
 }

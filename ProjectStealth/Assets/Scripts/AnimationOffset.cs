@@ -5,10 +5,18 @@ using UnityEngine;
 public class AnimationOffset : MonoBehaviour
 {
     public Vector3 offset;
+    public CharacterStats char_stats;
 
     public void MoveByOffset()
     {
-        transform.position += offset;
+        float sign = 1.0f;
+        if ( char_stats.IsFacingLeft() ) { sign = -1.0f; }
+        transform.position += new Vector3( offset.x * sign, offset.y, offset.z );
+    }
+
+    private void Awake()
+    {
+        char_stats = GetComponent<CharacterStats>();
     }
 
     // Use this for initialization

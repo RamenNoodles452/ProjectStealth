@@ -159,7 +159,7 @@ public class CharacterAnimationLogic : MonoBehaviour
     //triggers when a character slides down the wall and touches the ground
     public void WallSlideTouchGround()
     {
-        animator.SetTrigger("wall_slide_touch_ground");
+        animator.SetTrigger( "wall_slide_touch_ground" );
     }
 }
 
