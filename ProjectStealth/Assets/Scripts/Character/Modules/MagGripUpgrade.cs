@@ -257,7 +257,7 @@ public class MagGripUpgrade : MonoBehaviour
         input_manager.JumpInputInst = false;
         input_manager.JumpInput = false;
         input_manager.InputOverride = true;
-        // variable sterilazation
+        // variable sterilization
         char_stats.is_jumping = false;
         char_stats.is_on_ground = true;
 
@@ -304,7 +304,7 @@ public class MagGripUpgrade : MonoBehaviour
         input_manager.JumpInputInst = false;
         input_manager.JumpInput = false;
         input_manager.InputOverride = true;
-        // variable sterilazation
+        // variable sterilization
         char_stats.is_jumping = false;
         char_anims.GroundToWallTrigger();
         current_climb_state = ClimbState.Transition;
