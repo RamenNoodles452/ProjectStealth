@@ -833,12 +833,8 @@ public class SimpleCharacterCore : MonoBehaviour
     public void MoveWithCollision( Vector3 change )
     {
         applied_moves.Enqueue( change );
-        // What's with this?
-        // Control-based player collision sets player velocity to the exact amount to touch and not go through a wall, and applies it later on when a player would hit a wall.
-        // ANY player positional manipulation that takes place before velocity is applied could cause the player to phase through a wall, so we store it and apply later.
-
-        // NOTE: other scripts that apply movement to the player anywhere other than here could cause problems due to lack of ordering guarantees (maggrip, vault).
-        //       these will typically be fine if the player has NO OTHER MOVEMENT applied to them.
+        // There used to be all sorts of bugs because we set velocities in multiple places rather than translating to touch walls and setting velocity to 0.
+        // Now that everything just checks collision and translates, it all works out, and this is the prefferred method of applying external motion, not the ONLY ALLOWED one.
     }
 
     /// <summary>
