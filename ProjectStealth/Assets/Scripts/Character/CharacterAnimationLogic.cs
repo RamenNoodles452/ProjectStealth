@@ -107,6 +107,11 @@ public class CharacterAnimationLogic : MonoBehaviour
         animator.ResetTrigger( "jump_descend" );
     }
 
+    public void FallthoughTrigger()
+    {
+        animator.SetTrigger( "fallthrough" );
+    }
+
     // Triggers are called within the character scripts
     public void WallGrabTrigger()
     {

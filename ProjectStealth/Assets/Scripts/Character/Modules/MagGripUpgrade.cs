@@ -344,7 +344,6 @@ public class MagGripUpgrade : MonoBehaviour
         char_anims.GroundToWallTrigger();
         current_climb_state = ClimbState.Transition;
 
-        char_stats.is_crouching = false;
         char_stats.is_on_ground = false;
         grab_collider = char_stats.on_ground_collider;
     }
@@ -365,6 +364,7 @@ public class MagGripUpgrade : MonoBehaviour
 
         char_stats.ResetJump();
         char_stats.StandingHitBox();
+        char_stats.is_crouching = false;
     }
 
     /// <summary>

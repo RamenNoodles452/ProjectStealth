@@ -827,8 +827,8 @@ public class SimpleCharacterCore : MonoBehaviour
             if ( fallthrough == true )
             {
                 transform.Translate( Vector3.down ); // move 1 pixel down.
-                char_anims.FallTrigger();
                 fallthrough = false;
+                char_anims.FallthoughTrigger();
             }
         }
     }
