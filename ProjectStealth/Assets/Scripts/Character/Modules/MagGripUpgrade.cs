@@ -393,8 +393,6 @@ public class MagGripUpgrade : MonoBehaviour
         }
         grabCheck = Physics2D.Raycast( point, direction, char_stats.char_collider.bounds.size.x );
 
-        Debug.Log( "chekc" );
-
         if ( grabCheck.collider == null )         { AbortWallClimbFromLedge(); return; }  // didn't hit anything, too short.
         if ( hit.collider == null )               { AbortWallClimbFromLedge(); return; }  // no floor.
         CollisionType collision_type = hit.collider.gameObject.GetComponent<CollisionType>();
@@ -403,8 +401,6 @@ public class MagGripUpgrade : MonoBehaviour
 
         Debug.Log( grabCheck.collider.gameObject.transform.position );
         if ( grabCheck.collider != hit.collider ) { AbortWallClimbFromLedge(); return; }  // hit a different object, too short
-
-        Debug.Log( "pass" );
 
         char_stats.current_master_state = CharEnums.MasterState.ClimbState;
         GroundToWallStart();
