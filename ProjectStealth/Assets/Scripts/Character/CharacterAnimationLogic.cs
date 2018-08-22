@@ -10,14 +10,14 @@ public class CharacterAnimationLogic : MonoBehaviour
     #endregion
 
     // Use this for initialization
-    void Start()
+    void Start ()
     {
-        animator = GetComponent<Animator>();
+        animator   = GetComponent<Animator>();
         char_stats = GetComponent<CharacterStats>();
     }
 
     // Update is called once per frame
-    void Update()
+    void Update ()
     {
         if ( char_stats.current_master_state == CharEnums.MasterState.DefaultState )
         {
