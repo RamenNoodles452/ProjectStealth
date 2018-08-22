@@ -45,7 +45,7 @@ public class SimpleCharacterCore : MonoBehaviour
 
     private const float APPROXIMATE_EQUALITY_MARGIN = 0.001f; //Mathf.Epsilon;
     private const float AERIAL_SIZE_INCREASE = 10.0f; // pixels added to collision box height while in midair, to avoid corner clipping
-    private const float ONE_PIXEL_BUFFER = 1.0f;
+    private const float ONE_PIXEL_BUFFER = 0.495f; // 0.005f; is minimum physics step, for some reason this makes player position line up on the pixel.
 
     private Queue<Vector3> applied_moves;
     #endregion
@@ -461,6 +461,7 @@ public class SimpleCharacterCore : MonoBehaviour
             if ( char_stats.velocity.x > 0.0f ) { gap = new Vector3(  hit_distance, 0.0f, 0.0f ); }
             else                                { gap = new Vector3( -hit_distance, 0.0f, 0.0f ); }
             this.gameObject.transform.Translate( gap );
+
             char_stats.velocity.x = 0.0f;
             OnTouchWall( hit.collider.gameObject );
             CollisionType hit_collision_type = hit.collider.GetComponent<CollisionType>();
