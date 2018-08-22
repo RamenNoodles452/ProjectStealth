@@ -12,34 +12,34 @@ public class TakeCoverAction : MonoBehaviour
     /// is_taking_cover
     /// </summary>
 
-	#region vars
+    #region vars
     private CharacterStats char_stats;
     private IInputManager input_manager;
 
     private float cover_timer;
     private const float COVER_TIME = 0.10f; //seconds
-	#endregion
+    #endregion
 
-    void Start ()
+    void Start()
     {
-        char_stats    = GetComponent<CharacterStats>();
+        char_stats = GetComponent<CharacterStats>();
         input_manager = GetComponent<IInputManager>();
-        cover_timer   = 0.0f;
+        cover_timer = 0.0f;
     }
-	
-	void Update ()
+
+    void Update()
     {
-		if (char_stats.is_touching_vault_obstacle && char_stats.IsSneaking &&
-			((char_stats.facing_direction == CharEnums.FacingDirection.Left && input_manager.HorizontalAxis < 0.0f) || 
-				(char_stats.facing_direction == CharEnums.FacingDirection.Right && input_manager.HorizontalAxis > 0.0f))) //TODO: expose left/right API for this
+        if ( char_stats.touched_vault_obstacle != null && char_stats.IsSneaking &&
+            ( ( char_stats.IsFacingLeft() && input_manager.HorizontalAxis < 0.0f ) ||
+                ( char_stats.IsFacingRight() && input_manager.HorizontalAxis > 0.0f ) ) )
         {
-            if (cover_timer < COVER_TIME)
+            if ( cover_timer < COVER_TIME )
             {
                 cover_timer += Time.deltaTime * Time.timeScale;
             }
-            if (cover_timer >= COVER_TIME)
+            if ( cover_timer >= COVER_TIME )
             {
-                if (char_stats.is_taking_cover == false)
+                if ( char_stats.is_taking_cover == false )
                 {
                     char_stats.is_taking_cover = true;
                     char_stats.CrouchingHitBox();
@@ -49,7 +49,7 @@ public class TakeCoverAction : MonoBehaviour
         else
         {
             cover_timer = 0.0f;
-            if (char_stats.is_taking_cover)
+            if ( char_stats.is_taking_cover )
             {
                 char_stats.is_taking_cover = false;
                 char_stats.StandingHitBox();

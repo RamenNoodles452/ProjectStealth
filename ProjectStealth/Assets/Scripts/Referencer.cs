@@ -20,14 +20,14 @@ public class Referencer : MonoBehaviour
     // Pre-initialization
     private void Awake()
     {
-        if (instance == null)
+        if ( instance == null )
         {
             instance = this;
             RegisterPlayer();
         }
-        else if (instance != this)
+        else if ( instance != this )
         {
-            Debug.LogError("Uh oh! Someone tried to create multiple instances of the master referencer!");
+            Debug.LogError( "Uh oh! Someone tried to create multiple instances of the master referencer!" );
         }
     }
 
@@ -38,7 +38,7 @@ public class Referencer : MonoBehaviour
 
     public void RegisterPlayer()
     {
-        player = GameObject.Find("PlayerCharacter").GetComponent<Player>();
+        player = GameObject.Find( "PlayerCharacter" ).GetComponent<Player>();
     }
 
     /// <summary>
@@ -71,7 +71,7 @@ public class Referencer : MonoBehaviour
     /// To be called by each enemy on awake when a scene is loaded.
     /// </summary>
     /// <param name="enemy">The enemy to cache a reference to</param>
-    public void RegisterEnemy(GameObject enemy)
+    public void RegisterEnemy( GameObject enemy )
     {
         enemies.Add( enemy );
     }
@@ -110,14 +110,14 @@ public class Referencer : MonoBehaviour
     }
 
     // Use this for initialization
-    void Start ()
+    void Start()
     {
-		
-	}
-	
-	// Update is called once per frame
-	void Update ()
+
+    }
+
+    // Update is called once per frame
+    void Update()
     {
-		
-	}
+
+    }
 }

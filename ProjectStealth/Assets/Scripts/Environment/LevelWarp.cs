@@ -12,22 +12,22 @@ public class LevelWarp : MonoBehaviour
     #endregion
 
     // Use this for initialization
-    void Start ()
+    void Start()
     {
-		
-	}
-	
-	// Update is called once per frame
-	void Update ()
-    {
-		
-	}
 
-    void OnTriggerEnter2D(Collider2D collision)
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+
+    }
+
+    void OnTriggerEnter2D( Collider2D collision )
     {
         if ( collision.GetComponent<Player>() != null )
         {
-            Debug.Log("Move to another level!");
+            Debug.Log( "Move to another level!" );
             GameState.instance.WarpToLevel( level_name, warp_position );
         }
     }
