@@ -97,9 +97,9 @@ public class Player : SimpleCharacterCore
             if ( player_stats.acquired_mag_grip )
             {
                 // if we want to grab down onto the wall from the ledge
-                if ( is_overlooking_ledge ) // && we're standing on a grabbable surface?
+                if ( abuts_facing_sticky_ledge ) // && we're standing on a grabbable surface?
                 {
-                    if ( !char_stats.IsInMidair && input_manager.JumpInputInst )
+                    if ( ! char_stats.IsInMidair && input_manager.JumpInputInst )
                     {
                         // do we want to climb down?
                         mag_grip.WallClimbFromLedge();
@@ -124,11 +124,11 @@ public class Player : SimpleCharacterCore
     }
 
     /// <summary>
-    /// at the player level, we have to account for looking over the ledge from wall climbs as well
+    /// at the player level, we have to account for touching while crouched and facing the ledge from wall climbs as well
     /// </summary>
-    protected override bool IsOverlookingLedge()
+    protected override bool IsCrouchedAbuttingFacingStickyLedge()
     {
-        return base.IsOverlookingLedge();
+        return base.IsCrouchedAbuttingFacingStickyLedge();
     }
 
     public override void OnTouchWall( GameObject collisionObject )

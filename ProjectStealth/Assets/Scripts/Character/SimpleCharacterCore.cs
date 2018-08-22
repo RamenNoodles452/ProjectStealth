@@ -39,7 +39,7 @@ public class SimpleCharacterCore : MonoBehaviour
     private bool start_run;                // prevents wonky shit from happening if you turn around during a run
 
     // ledge logic
-    protected bool is_overlooking_ledge;
+    protected bool abuts_facing_sticky_ledge; // if the player is at and facing the edge of a platform (which can't be walked off and if they're not running)
     protected bool is_against_ledge;
     protected bool fallthrough;
 
@@ -121,7 +121,7 @@ public class SimpleCharacterCore : MonoBehaviour
             char_stats.current_move_state = CharEnums.MoveState.IsSneaking;
         }
         SetHorizontalAcceleration();
-        is_overlooking_ledge = IsOverlookingLedge();
+        abuts_facing_sticky_ledge = IsCrouchedAbuttingFacingStickyLedge();
     }
 
     /// <summary>
@@ -600,7 +600,7 @@ public class SimpleCharacterCore : MonoBehaviour
             char_stats.on_ground_collider = null;
             FallingLogic();
         }
-        CheckLedgeEnds( collision_type, hit.collider );
+        CheckPlatformEdge( collision_type, hit.collider ); // TODO: move to horizontal collision, get floor collision data to it efficiently somehow.
     }
 
     /// <summary>
@@ -659,45 +659,53 @@ public class SimpleCharacterCore : MonoBehaviour
     }
 
     /// <summary>
-    /// Stops players at the edge of a ledge.
+    /// Stops players at the edge of a ledge, and sets state for edge-sensitive actions.
     /// </summary>
-    /// <param name="collision_type">Collision type of the platform which may be a ledge.</param>
-    /// <param name="ledge_collider">Collider of the platform which may be a ledge.</param>
-    private void CheckLedgeEnds( CollisionType collision_type, Collider2D ledge_collider )
+    /// <param name="collision_type">Collision type of the floor platform which we may be at the edge of.</param>
+    /// <param name="collider">Collider of the floor platform which we may be at the edge of.</param>
+    private void CheckPlatformEdge( CollisionType collision_type, Collider2D collider )
     {
-        //This logic allows characters to walk over connected platforms
-        // Stop players at the edge of a ledge
         is_against_ledge = false;
         if ( collision_type == null ) { return; } // no ledge
         if ( char_stats.IsInMidair )  { return; } // player can jump over ledges
         if ( char_stats.current_move_state == CharEnums.MoveState.IsRunning ) { return; } // player can run off ledges
 
-        float distance_to_ledge = ONE_PIXEL_BUFFER;
-        float sign = 1.0f;
-
+        float distance_to_edge;
         if ( char_stats.IsFacingLeft() )
         {
-            if ( collision_type.WalkOffLeft )    { return; } // player can walk off walk-off-able ledges
-            if ( char_stats.velocity.x >= 0.0f ) { return; } // if player is not moving left... (maybe overkill/redundant check)
-            sign = -1.0f;
-            distance_to_ledge = char_stats.char_collider.bounds.min.x - ledge_collider.bounds.min.x;
+            if ( collision_type.WalkOffLeft )  { return; } // player can walk off walk-off-able ledges (allows characters to walk over connected platforms)
+            distance_to_edge = char_stats.char_collider.bounds.min.x - collider.bounds.min.x;
         }
         else
         {
-            if ( collision_type.WalkOffRight )   { return; } // player can walk off walk-off-able ledges
-            if ( char_stats.velocity.x <= 0.0f ) { return; } // if player is not moving right... (maybe overkill/redundant check)
-            distance_to_ledge = ledge_collider.bounds.max.x - char_stats.char_collider.bounds.max.x;
+            if ( collision_type.WalkOffRight ) { return; } // player can walk off walk-off-able ledges
+            distance_to_edge = collider.bounds.max.x - char_stats.char_collider.bounds.max.x;
         }
+
+        // Stop players at the edge of a ledge
+        SnapToEdge( distance_to_edge );
+
+        // Is the player abutting and facing a sticky (not slippery) edge?
+        is_against_ledge = ( distance_to_edge < ONE_PIXEL_BUFFER );
+    }
+
+    /// <summary>
+    /// Snaps the player to the edge of a platform. 
+    /// For use with platforms players can't walk off, and if players aren't running.
+    /// </summary>
+    /// <param name="distance_to_edge">The distance to the edge</param>
+    private void SnapToEdge( float distance_to_edge )
+    {
+        float sign = 1.0f;
+        if ( char_stats.IsFacingLeft() ) { sign = -1.0f; }
+        if ( char_stats.velocity.x * sign <= 0.0f ) { return; } // if player is not moving in the direction they are facing and toward the edge
 
         // Over the edge, stop. On the platform, snap to ledge edge.
-        if ( distance_to_ledge <= Mathf.Abs( char_stats.velocity.x * Time.deltaTime * Time.timeScale ) )
-        { 
+        if ( distance_to_edge <= Mathf.Abs( char_stats.velocity.x * Time.deltaTime * Time.timeScale ) )
+        {
             char_stats.velocity.x = 0.0f;
-            if ( Mathf.Abs( distance_to_ledge ) == distance_to_ledge ) { transform.Translate( new Vector3( distance_to_ledge * sign, 0.0f, 0.0f ) ); }
+            if ( Mathf.Abs( distance_to_edge ) == distance_to_edge ) { transform.Translate( new Vector3( distance_to_edge * sign, 0.0f, 0.0f ) ); }
         }
-
-        // track result
-        is_against_ledge = ( distance_to_ledge < ONE_PIXEL_BUFFER );
     }
 
     /// <summary>
@@ -712,11 +720,11 @@ public class SimpleCharacterCore : MonoBehaviour
     }
 
     /// <summary>
-    /// Checks if the character is overlooking a ledge, and sets isLookingOverLedge appropriately.
+    /// Checks if the character is crouched while touching and facing a sticky (not slippery) edge.
     /// </summary>
-    protected virtual bool IsOverlookingLedge()
+    protected virtual bool IsCrouchedAbuttingFacingStickyLedge()
     {
-        return ( is_against_ledge && input_manager.VerticalAxis < 0.0f );
+        return ( is_against_ledge && char_stats.is_crouching );
     }
 
     /// <summary>

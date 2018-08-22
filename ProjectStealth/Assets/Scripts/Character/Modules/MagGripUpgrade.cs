@@ -28,8 +28,8 @@ public class MagGripUpgrade : MonoBehaviour
 
     //TODO: do something about duplicate code
     // ledge logic
-    private bool is_overlooking_ledge;
-    private bool is_against_ledge;
+    private bool is_overlooking_ledge; //TODO: consider renaming more descriptively
+    private bool is_against_ledge;     //TODO: consider renaming more descriptively
 
     //consts
     protected const float JUMP_ACCELERATION = 240.0f; // base acceleration for jump off the wall with no input (pixels / second / second)
@@ -92,7 +92,7 @@ public class MagGripUpgrade : MonoBehaviour
         // Jump logic.
         if ( input_manager.JumpInputInst )
         {
-            if ( !is_overlooking_ledge )
+            if ( ! is_overlooking_ledge )
             {
                 StopClimbing();
                 char_stats.is_jumping = true;
@@ -391,13 +391,20 @@ public class MagGripUpgrade : MonoBehaviour
             point = new Vector2(char_stats.char_collider.bounds.center.x - char_stats.char_collider.bounds.size.x, char_stats.char_collider.bounds.min.y - char_stats.char_collider.bounds.size.y);
             direction = Vector2.right;
         }
-        grabCheck = Physics2D.Raycast( point, Vector2.right, char_stats.char_collider.bounds.size.x );
+        grabCheck = Physics2D.Raycast( point, direction, char_stats.char_collider.bounds.size.x );
 
-        if ( hit.collider == null )               { AbortWallClimbFromLedge(); return; }  // didn't hit anything, too short.
+        Debug.Log( "chekc" );
+
+        if ( grabCheck.collider == null )         { AbortWallClimbFromLedge(); return; }  // didn't hit anything, too short.
+        if ( hit.collider == null )               { AbortWallClimbFromLedge(); return; }  // no floor.
         CollisionType collision_type = hit.collider.gameObject.GetComponent<CollisionType>();
         if ( collision_type == null )             { AbortWallClimbFromLedge(); return; }  // invalid configuration
         if ( ! collision_type.WallClimb )         { AbortWallClimbFromLedge(); return; }  // unclimbable object
+
+        Debug.Log( grabCheck.collider.gameObject.transform.position );
         if ( grabCheck.collider != hit.collider ) { AbortWallClimbFromLedge(); return; }  // hit a different object, too short
+
+        Debug.Log( "pass" );
 
         char_stats.current_master_state = CharEnums.MasterState.ClimbState;
         GroundToWallStart();
