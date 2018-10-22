@@ -91,7 +91,9 @@ public class UIDialogue : MonoBehaviour
 
         character.gameObject.SetActive( true );
         text.gameObject.SetActive( true );
-        character.text = current_line.character;
+
+        if ( current_line.character != null ) { character.text = current_line.character + ":"; }
+        else { character.text = ""; }
         text.text = current_line.text;
     }
 
