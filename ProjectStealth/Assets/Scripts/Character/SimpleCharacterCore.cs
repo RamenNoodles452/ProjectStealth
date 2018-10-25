@@ -456,13 +456,6 @@ public class SimpleCharacterCore : MonoBehaviour
         float hit_distance = hit.distance - ONE_PIXEL_BUFFER;
         if ( hit_distance <= Mathf.Abs( char_stats.velocity.x * Time.deltaTime * Time.timeScale ) )
         {
-            // we touched a wall
-            Vector3 gap;
-            if ( char_stats.velocity.x > 0.0f ) { gap = new Vector3(  hit_distance, 0.0f, 0.0f ); }
-            else                                { gap = new Vector3( -hit_distance, 0.0f, 0.0f ); }
-            this.gameObject.transform.Translate( gap );
-            char_stats.velocity.x = 0.0f;
-            OnTouchWall( hit.collider.gameObject );
             CollisionType hit_collision_type = hit.collider.GetComponent<CollisionType>();
             if ( hit_collision_type != null )
             {
@@ -470,7 +463,15 @@ public class SimpleCharacterCore : MonoBehaviour
                 {
                     char_stats.touched_vault_obstacle = hit.collider;
                 }
+                if ( ! hit_collision_type.IsBlocking ) { return; }
             }
+            // we touched a wall
+            Vector3 gap;
+            if ( char_stats.velocity.x > 0.0f ) { gap = new Vector3(  hit_distance, 0.0f, 0.0f ); }
+            else                                { gap = new Vector3( -hit_distance, 0.0f, 0.0f ); }
+            this.gameObject.transform.Translate( gap );
+            char_stats.velocity.x = 0.0f;
+            OnTouchWall( hit.collider.gameObject );
         }
     }
 
@@ -546,6 +547,11 @@ public class SimpleCharacterCore : MonoBehaviour
         float hit_distance = hit.distance - ONE_PIXEL_BUFFER;
         if ( hit_distance <= Mathf.Abs( char_stats.velocity.y * Time.deltaTime * Time.timeScale ) )
         {
+            CollisionType collision_type = hit.transform.gameObject.GetComponent<CollisionType>();
+            if ( collision_type != null )
+            {
+                if ( ! collision_type.IsBlocking ) { return; }
+            }
             // hit the ceiling, stop upward movement
             this.gameObject.transform.Translate( new Vector3( 0.0f, hit_distance, 0.0f ) );
             char_stats.velocity.y = 0.0f;
@@ -578,6 +584,7 @@ public class SimpleCharacterCore : MonoBehaviour
             bool did_touch_ground = true;
             if ( collision_type != null )
             {
+                if ( ! collision_type.IsBlocking ) { return; }
                 // special types of floor can change behaviour.
                 if ( ShuntPlayer( collision_type, hit.collider ) )         { did_touch_ground = false; }
                 if ( FallthroughPlatform( collision_type, hit.collider ) ) { did_touch_ground = false; }
