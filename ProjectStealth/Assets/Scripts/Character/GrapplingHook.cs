@@ -7,8 +7,8 @@ public class GrapplingHook : MonoBehaviour
 {
     #region vars
     private const float MAX_RANGE      = 300.0f; // pixels
-    private const float LAUNCH_SPEED   = 800.0f; // pixels per second
-    private const float RETRACT_SPEED  = 400.0f; // pixels per second
+    private const float LAUNCH_SPEED   = 960.0f; // pixels per second
+    private const float RETRACT_SPEED  = 480.0f; // pixels per second
 
     private float distance_to_target   = 0.0f;
     private float distance_from_target = 0.0f;
@@ -16,7 +16,7 @@ public class GrapplingHook : MonoBehaviour
     private bool  is_retracting        = false;
     private float angle;
     private Vector2 target;
-    private Player player_script;
+    //private Player player_script;
     private PlayerStats player_stats;
     private CharacterStats char_stats;
     private GameObject hook_instance;
@@ -24,6 +24,8 @@ public class GrapplingHook : MonoBehaviour
 
     [SerializeField]
     private GameObject hook_prefab;
+    [SerializeField]
+    private GameObject chain_prefab;
     [SerializeField]
     private GameObject noise_prefab;
     [SerializeField]
@@ -33,7 +35,7 @@ public class GrapplingHook : MonoBehaviour
     // Use this for initialization
     void Start ()
     {
-        player_script = GetComponent<Player>();
+        //player_script = GetComponent<Player>();
         player_stats  = GetComponent<PlayerStats>();
         char_stats    = GetComponent<CharacterStats>();
     }
@@ -81,6 +83,15 @@ public class GrapplingHook : MonoBehaviour
         distance_to_target   = hit.distance;
         distance_from_target = 0.0f;
         // TODO: consider snapping to a predefined position on a predefined designed hookshottable object. Makes edge case handling easier.
+        // The alternative best way for static geometry would be to raycast from the 4 corners of the player hitbox, and if the center ray works,
+        // fire the hookshot, attach, and retract it. Then STOP when you reach the distance where a corner ray hit an obstacle.
+        // won't work vs. moving platforms well, so might need to do collision checks every frame (or ignore them?).
+        BoxCollider2D box = hit.collider.GetComponent<BoxCollider2D>();
+        if ( box != null )
+        {
+            target = box.bounds.center;
+            distance_to_target = Vector2.Distance( character_position, box.bounds.center );
+        }
 
         if      ( hit_good_surface ) { StartGrapple( target ); }
         else if ( hit_enemy )        { GetOverHere(); }
@@ -89,7 +100,6 @@ public class GrapplingHook : MonoBehaviour
 
     private void StartGrapple( Vector2 target )
     {
-        Debug.Log( "Grapple started" );
         char_stats.current_master_state = CharEnums.MasterState.RappelState; // turn off default move behaviour.
         this.target = target;
         is_on = true;
@@ -97,13 +107,13 @@ public class GrapplingHook : MonoBehaviour
 
         Vector3 character_position_3D = char_stats.char_collider.bounds.center;
         Vector2 character_position = new Vector2( character_position_3D.x, character_position_3D.y );
-        angle = Mathf.Atan2( ( target.y - character_position.y ), target.x - character_position.x );
-        Quaternion quaternion = Quaternion.Euler( 0.0f, 0.0f, angle );
-        distance_to_target = Mathf.Sqrt( Mathf.Pow( target.x - character_position.x, 2.0f ) + Mathf.Pow( target.y - character_position.y, 2.0f ) );
+        angle = Mathf.Atan2( target.y - character_position.y, target.x - character_position.x );
+        Quaternion quaternion = Quaternion.Euler( 0.0f, 0.0f, angle * Mathf.Rad2Deg );
+        distance_to_target = Vector2.Distance(target, character_position); 
         distance_from_target = 0.0f;
 
-        hook_instance  = GameObject.Instantiate( hook_prefab, character_position, quaternion );
-        //chain_instance = GameObject.Instantiate( chain_prefab, character_position, quaternion );
+        hook_instance  = GameObject.Instantiate( hook_prefab,  character_position, quaternion );
+        chain_instance = GameObject.Instantiate( chain_prefab, character_position, quaternion );
     }
 
     /// <summary>
@@ -138,7 +148,9 @@ public class GrapplingHook : MonoBehaviour
             }
             distance_from_target += scale;
 
-            hook_instance.transform.position += scale * new Vector3( Mathf.Cos( angle ), 1.0f * Mathf.Sin( angle ), 0.0f );
+            hook_instance.transform.position += scale * new Vector3( Mathf.Cos( angle ), Mathf.Sin( angle ), 0.0f );
+            chain_instance.transform.position += scale * 0.5f * new Vector3( Mathf.Cos( angle ), Mathf.Sin( angle ), 0.0f );
+            chain_instance.GetComponent<SpriteRenderer>().size = new Vector2( chain_instance.GetComponent<SpriteRenderer>().size.x + scale * 1.0f, 7.0f );
         }
         else
         {
@@ -155,8 +167,19 @@ public class GrapplingHook : MonoBehaviour
             }
             else
             {
-                gameObject.transform.position += scale * new Vector3( Mathf.Cos( angle ), 1.0f * Mathf.Sin( angle ), 0.0f );
+                gameObject.transform.position += scale * new Vector3( Mathf.Cos( angle ), Mathf.Sin( angle ), 0.0f );
+                chain_instance.transform.position += scale * 0.5f * new Vector3( Mathf.Cos( angle ), Mathf.Sin( angle ), 0.0f );
+                chain_instance.GetComponent<SpriteRenderer>().size = new Vector2( chain_instance.GetComponent<SpriteRenderer>().size.x - scale * 1.0f, 7.0f );
             }
         }
+    }
+
+    public void ResetState()
+    {
+        is_on = false;
+        is_retracting = false;
+        if ( hook_instance != null )  { GameObject.Destroy( hook_instance ); }
+        if ( chain_instance != null ) { GameObject.Destroy( chain_instance ); }
+        char_stats.current_master_state = CharEnums.MasterState.DefaultState;
     }
 }

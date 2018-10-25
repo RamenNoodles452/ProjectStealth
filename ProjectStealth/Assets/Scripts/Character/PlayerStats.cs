@@ -207,6 +207,10 @@ public class PlayerStats : MonoBehaviour
         {
             Referencer.instance.player.GetComponent<MagGripUpgrade>().StopClimbing();
         }
+        if ( Referencer.instance.player.GetComponent<CharacterStats>().current_master_state == CharEnums.MasterState.RappelState )
+        {
+            Referencer.instance.player.GetComponent<GrapplingHook>().ResetState();
+        }
 
         input_manager = GetComponent<IInputManager>();
         char_anims = this.gameObject.GetComponent<CharacterAnimationLogic>();
