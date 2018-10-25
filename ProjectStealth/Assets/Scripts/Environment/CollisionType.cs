@@ -1,49 +1,96 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+// Determines collision behaviour of an object.
 public class CollisionType : MonoBehaviour 
 {
+    #region vars
     [SerializeField]
-    private bool wall_climb = true;
+    private bool is_blocking = true;
+
     [SerializeField]
-    private bool fall_through = false;
+    private bool can_climb_side = false;
     [SerializeField]
-    private bool vault_obstacle = false;
-    private bool ceiling_climb = false;
+    private bool can_climb_bottom = false;
+    [SerializeField]
+    private bool can_fall_through = false;
+    [SerializeField]
+    private bool can_vault_over = false;
 
-    // these are env objects that are of the same level that characters can smoothly transition over to
-    // or can be simply used to allow the character to walk off the object (such as obstacles)
-    public bool walk_off_left = false;
-    public bool walk_off_right = false;
+    [SerializeField]
+    private bool can_hookshot_to = false;
 
-    public bool WallClimb
-    {
-        get { return wall_climb; }
-    }
-    // This is used for down+jumping through floors
-    // To jump up through passable floors CollisionMasks.UpwardsCollisionMask
-    public bool Fallthrough
-    {
-        get { return fall_through; }
-    }
-    public bool VaultObstacle
-    {
-        get { return vault_obstacle; }
-    }
+    [SerializeField]
+    private bool can_walk_off_left_edge = false;
+    [SerializeField]
+    private bool can_walk_off_right_edge = false;
+    #endregion
 
-    // This is to know when the player should latch onto the ceiling to crawl around on
-    public bool CeilingClimb
+    /// <summary>
+    /// Can the player down + jump to pass through the floor?
+    /// </summary>
+    public bool CanFallthrough
     {
-        get { return ceiling_climb; }
+        /// To jump up through passable floors use CollisionMasks.UpwardsCollisionMask
+        get { return can_fall_through; }
     }
 
-
-    public bool WalkOffLeft
+    /// <summary>
+    /// Can you vault over the object?
+    /// </summary>
+    public bool CanVaultOver
     {
-        get { return walk_off_left; }
+        get { return can_vault_over; }
     }
-    public bool WalkOffRight
+
+    /// <summary>
+    /// Can the sides of this object be climbed?
+    /// </summary>
+    public bool IsWallClimbable
     {
-        get { return walk_off_right; }
+        get { return can_climb_side; }
+    }
+
+    /// <summary>
+    /// Can the player latch onto the bottom of the object (ceiling) and crawl around?
+    /// </summary>
+    public bool IsCeilingClimbable
+    {
+        get { return can_climb_bottom; }
+    }
+
+    /// <summary>
+    /// Can the player walk off the object's left edge?
+    /// (Also used to cross between adjoining objects)
+    /// </summary>
+    public bool CanWalkOffLeftEdge
+    {
+        get { return can_walk_off_left_edge; }
+    }
+
+    /// <summary>
+    /// Can the player walk off the object's right edge?
+    /// (Also used to cross between adjoining objects)
+    /// </summary>
+    public bool CanWalkOffRightEdge
+    {
+        get { return can_walk_off_right_edge; }
+    }
+
+    /// <summary>
+    /// Can the player pull themselves to this object with the hookshot?
+    /// </summary>
+    public bool CanHookshotTo
+    {
+        get { return can_hookshot_to; }
+    }
+
+    /// <summary>
+    ///  Is this blocking? (use no for "background" objects and unset for destructible objects)
+    /// </summary>
+    public bool IsBlocking
+    {
+        get { return is_blocking; }
+        set { is_blocking = value; }
     }
 }

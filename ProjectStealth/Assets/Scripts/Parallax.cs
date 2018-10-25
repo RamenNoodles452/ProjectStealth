@@ -16,7 +16,18 @@ public class Parallax : MonoBehaviour
     void Start()
     {
 #if UNITY_EDITOR
-        if ( transform.position.z < 0.0f || transform.position.z > MAX_DEPTH )
+        bool is_in_range = true;
+        if ( transform.position.z < 0.0f )
+        {
+            transform.position = new Vector3( transform.position.x, transform.position.y, 0.0f );
+            is_in_range = false;
+        }
+        if ( transform.position.z > MAX_DEPTH )
+        {
+            transform.position = new Vector3( transform.position.x, transform.position.y, MAX_DEPTH );
+            is_in_range = false;
+        }
+        if ( ! is_in_range )
         {
             Debug.LogError( "Background parallax object's z coordinates are out of range" );
         }
