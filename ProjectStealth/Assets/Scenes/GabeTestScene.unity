@@ -6878,7 +6878,7 @@ GameObject:
   - component: {fileID: 848089245}
   - component: {fileID: 848089248}
   - component: {fileID: 848089247}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Hookshottable
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6938,8 +6938,8 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 848089244}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -244, y: 361, z: -6}
-  m_LocalScale: {x: 10, y: 20, z: 1}
+  m_LocalPosition: {x: -237, y: 372, z: -6}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 2075719123}
   m_RootOrder: 1
@@ -6986,7 +6986,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 26, y: 41}
   m_EdgeRadius: 0
 --- !u!1 &853811259
 GameObject:
@@ -12131,6 +12131,26 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 200, y: 24}
   m_Pivot: {x: 0, y: 1}
+--- !u!1 &1228470108 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1555196157489052, guid: 2058a5c2cfe3c8142a6215ac2206418a,
+    type: 2}
+  m_PrefabInternal: {fileID: 1673625369}
+--- !u!114 &1228470125
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1228470108}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33780b96c5794bc4d8ed594e010771c3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hook_prefab: {fileID: 1557396245808332, guid: 5fa6219ace4385346bf92f8b1ded800f,
+    type: 2}
+  noise_prefab: {fileID: 0}
+  spark_prefab: {fileID: 0}
 --- !u!1 &1247681905
 GameObject:
   m_ObjectHideFlags: 0
@@ -32176,7 +32196,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1852316732}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -212, y: 128, z: 0}
+  m_LocalPosition: {x: -925, y: 209, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 2075719123}
@@ -32734,3 +32754,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2befd5f9beace9d4d94d707c03c32dac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  period: 1
+  minimum_brightness: 0.1
