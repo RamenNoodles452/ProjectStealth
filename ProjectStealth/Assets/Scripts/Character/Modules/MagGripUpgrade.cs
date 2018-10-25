@@ -11,9 +11,9 @@ public class MagGripUpgrade : MonoBehaviour
     private CharacterAnimationLogic char_anims;
 
     //this allows us to reference player stuff like their movement state
-    Player player_script;
-    PlayerStats player_stats;
-    CharacterStats char_stats;
+    private Player player_script;
+    private PlayerStats player_stats;
+    private CharacterStats char_stats;
 
     private const float WALL_GRAB_DELAY = 0.15f;
     private float wall_grab_delay_timer = 0.15f;
