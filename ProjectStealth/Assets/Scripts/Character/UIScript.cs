@@ -156,7 +156,7 @@ public class UIScript : MonoBehaviour
     {
         float duration = 2.25f; // seconds for a full bar length (90px) animation cycle
         float speed = Time.deltaTime * Time.timeScale;
-        if ( player_stats.IsAdrenalRushing ) { speed = speed * 8.0f; } // up animation speed while adrenal rush is active.
+        if ( player_stats.IsAdrenalRushing ) { speed = speed * 16.0f; } // up animation speed while adrenal rush is active.
 
         AnimateOverlay( duration, speed, player.GetEnergy() / player.GetEnergyMax(), energy_bar.rectTransform.position.x, ref energy_overlay_timer, 
             ref energy_overlays[ 0 ], ref energy_overlays[ 1 ], ref energy_overlay_mask );
@@ -242,6 +242,10 @@ public class UIScript : MonoBehaviour
             {
                 is_energy_blinking = false;
             }
+        }
+        else if ( player_stats.IsAdrenalRushing )
+        {
+            energy_outline.color = new Color( 0.0f, 1.0f, 0.35f, 0.35f );
         }
         else
         {
