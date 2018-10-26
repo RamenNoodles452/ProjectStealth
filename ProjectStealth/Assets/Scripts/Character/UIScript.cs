@@ -23,6 +23,12 @@ public class UIScript : MonoBehaviour
     private Image shield_overlay_cap;
     [SerializeField]
     private Image shield_loss;
+    [SerializeField]
+    private Image shield_loss_background;
+    [SerializeField]
+    private Image[] shield_underlays;
+    [SerializeField]
+    private Image shield_underlay_mask;
     private Color shield_bar_default_color          = new Color( 1.0f,  1.0f,  1.0f, 0.75f );
     private Color shield_bar_pulse_color            = new Color( 0.35f, 0.75f, 1.0f, 0.90f );
     private Color shield_bar_regen_pulse_color      = new Color( 0.25f, 0.5f,  1.0f, 0.95f );
@@ -43,6 +49,8 @@ public class UIScript : MonoBehaviour
     private Image energy_overlay_cap;
     [SerializeField]
     private Image energy_loss;
+    [SerializeField]
+    private Image energy_loss_background;
     private Color energy_outline_default_color = new Color( 0.0f, 1.0f, 0.5f, 0.125f );
 
     [SerializeField]
@@ -61,6 +69,7 @@ public class UIScript : MonoBehaviour
 
     private float energy_overlay_timer;
     private float shield_overlay_timer;
+    private float shield_underlay_timer;
     private bool  is_energy_blinking;
     private bool  is_shield_blinking;
     private bool  is_shield_text_blinking;
@@ -71,8 +80,10 @@ public class UIScript : MonoBehaviour
 
     private float energy_prev_frame;
     private float shield_prev_frame;
-    private float energy_remembered_value; // for loss
-    private float shield_remembered_value; // for loss
+    private float energy_falling_value; // for loss
+    private float shield_falling_value; // for loss
+    private float energy_remembered_value;  // loss
+    private float shield_remembered_value;  // loss
     #endregion
 
     // TODO: should probably be non-destroyable, instantiated on load
@@ -87,17 +98,17 @@ public class UIScript : MonoBehaviour
         player = Referencer.instance.player; //GameObject.Find("PlayerCharacter").GetComponent<Player>(); //bad
         player_stats = Referencer.instance.player.GetComponent<PlayerStats>();
         energy_prev_frame = player.GetEnergyMax();
-        energy_remembered_value = energy_prev_frame;
+        energy_falling_value = energy_prev_frame;
         shield_prev_frame = player.GetShieldsMax();
-        shield_remembered_value = shield_prev_frame;
+        shield_falling_value = shield_prev_frame;
     }
 
     // Update is called once per frame
     void Update()
     {
-        shield_value.text = ( (int) player.GetShields() ).ToString(); //+ " / " + (int)player.GetShieldsMax();
-        if ( false ) { energy_value.text = "\u221E"; } // if adrenal rush is active, show infinite energy
-        energy_value.text = ( (int) player.GetEnergy()  ).ToString(); //+ " / " + (int)player.GetEnergyMax();
+        shield_value.text = ( (int) player.GetShields() ).ToString();
+        if ( player_stats.IsAdrenalRushing ) { energy_value.text = "\u221E"; } // if adrenal rush is active, show infinite energy
+        else { energy_value.text = ( (int) player.GetEnergy() ).ToString(); }
 
         ShowBasicBars();
         AnimateOverlays();
@@ -145,31 +156,55 @@ public class UIScript : MonoBehaviour
     {
         float duration = 2.25f; // seconds for a full bar length (90px) animation cycle
         float speed = Time.deltaTime * Time.timeScale;
-        if ( false ) { speed = speed * 2.0f; } // up animation speed while adrenal rush is active.
+        if ( player_stats.IsAdrenalRushing ) { speed = speed * 8.0f; } // up animation speed while adrenal rush is active.
 
-        energy_overlay_timer += speed;
-        while ( energy_overlay_timer >= duration ) { energy_overlay_timer -= duration; } // if->while Just in case something odd happens
-        float x = energy_overlay_timer * BAR_LENGTH / duration; // {0,BAR_LENGTH} x coordinate where the two pieces join
-        float percent_energy = player.GetEnergy() / player.GetEnergyMax();
-        float max_x = percent_energy * BAR_LENGTH; // do not allow either piece to go beyond this coordinate.
+        AnimateOverlay( duration, speed, player.GetEnergy() / player.GetEnergyMax(), energy_bar.rectTransform.position.x, ref energy_overlay_timer, 
+            ref energy_overlays[ 0 ], ref energy_overlays[ 1 ], ref energy_overlay_mask );
 
-        // position is (-90:0), fills from (0:position+90) from the right
-        energy_overlays[ 0 ].rectTransform.position = new Vector3( energy_bar.rectTransform.position.x + (int) x - BAR_LENGTH, energy_overlays[0].rectTransform.position.y, 0.0f);
-        energy_overlays[ 0 ].rectTransform.sizeDelta = new Vector2( BAR_LENGTH, energy_overlays[0].rectTransform.sizeDelta.y );
-        energy_overlays[ 0 ].fillAmount = ( (int) x ) / BAR_LENGTH;
-
-        // position is (0:90), fills from (position:90) from the left
-        energy_overlays[ 1 ].rectTransform.position = new Vector3( energy_bar.rectTransform.position.x + (int) x, energy_overlays[1].rectTransform.position.y, 0.0f );
-        energy_overlays[ 1 ].rectTransform.sizeDelta = new Vector2( BAR_LENGTH, energy_overlays[ 1 ].rectTransform.sizeDelta.y );
-        energy_overlays[ 1 ].fillAmount = ( BAR_LENGTH - (int) x ) / BAR_LENGTH;
-
-        // Use a mask to prevent the overlay from extending into the empty portion of the bar.
-        energy_overlay_mask.rectTransform.sizeDelta = new Vector2( max_x, energy_overlay_mask.rectTransform.sizeDelta.y );
+        duration = 4.5f; // varies from this to 1/4 this
+        speed = Time.deltaTime * Time.timeScale * ( 1.0f + 3.0f * ( 1.0f - player.GetShields() / player.GetShieldsMax() ) );
+        AnimateOverlay( duration, speed, player.GetShields() / player.GetShieldsMax(), shield_bar.rectTransform.position.x, ref shield_underlay_timer,
+            ref shield_underlays[ 0 ], ref shield_underlays[ 1 ], ref shield_underlay_mask );
+        shield_underlay_mask.rectTransform.sizeDelta = new Vector2( BAR_LENGTH, shield_underlay_mask.rectTransform.sizeDelta.y );
 
         PulseShield();
     }
 
-    // Makes the shield bar pulse while it regenerates
+    /// <summary>
+    /// Applies a scrolling animated overlay to a bar's fill.
+    /// </summary>
+    /// <param name="duration">The duration of a full animation cycle.</param>
+    /// <param name="speed">The speed at which the timer fills. Typically, should be delta time.</param>
+    /// <param name="fill_percent">How full the bar is, as a percentage (0.0f : 1.0f)</param>
+    /// <param name="left">The x coordinate of the left side of the bar</param>
+    /// <param name="timer">The timer to update</param>
+    /// <param name="overlay_right">The image object that will overlay from the right</param>
+    /// <param name="overlay_left"> The image object that will overlay from the left</param>
+    /// <param name="mask">The image object of the mask, which hides overlay animation that exceeds the bar's fill</param>
+    private void AnimateOverlay( float duration, float speed, float fill_percent, float left, ref float timer, ref Image overlay_right, ref Image overlay_left, ref Image mask )
+    {
+        timer += speed;
+        while ( timer >= duration ) { timer -= duration; } // if->while Just in case something odd happens
+        float x = timer * BAR_LENGTH / duration; // {0,BAR_LENGTH} x coordinate where the two pieces join
+        float max_x = fill_percent * BAR_LENGTH; // do not allow either piece to go beyond this coordinate.
+
+        // position is (-90:0), fills from (0:position+90) from the right
+        overlay_right.rectTransform.position = new Vector3( left + (int) x - BAR_LENGTH, overlay_right.rectTransform.position.y, 0.0f );
+        overlay_right.rectTransform.sizeDelta = new Vector2( BAR_LENGTH, overlay_right.rectTransform.sizeDelta.y );
+        overlay_right.fillAmount = ( (int) x ) / BAR_LENGTH;
+
+        // position is (0:90), fills from (position:90) from the left
+        overlay_left.rectTransform.position = new Vector3( left + (int) x, overlay_left.rectTransform.position.y, 0.0f );
+        overlay_left.rectTransform.sizeDelta = new Vector2( BAR_LENGTH, overlay_left.rectTransform.sizeDelta.y );
+        overlay_left.fillAmount = ( BAR_LENGTH - (int) x ) / BAR_LENGTH;
+
+        // Use a mask to prevent the overlay from extending into the empty portion of the bar.
+        mask.rectTransform.sizeDelta = new Vector2( max_x, mask.rectTransform.sizeDelta.y );
+    }
+
+    /// <summary>
+    /// Makes the shield bar pulse, and pulse more obviously while it regenerates
+    /// </summary>
     private void PulseShield()
     {
         float duration = 2.0f; // pulse cycle length, in seconds
@@ -260,43 +295,55 @@ public class UIScript : MonoBehaviour
     private void DropLosses()
     {
         // Energy
-        if ( energy_prev_frame >= player.GetEnergy() && energy_prev_frame >= energy_remembered_value )
+        if ( energy_prev_frame >= player.GetEnergy() && energy_prev_frame >= energy_falling_value )
         {
+            energy_falling_value = energy_prev_frame;
             energy_remembered_value = energy_prev_frame;
         }
 
-        if ( energy_remembered_value >= player.GetEnergy() )
+        if ( energy_falling_value >= player.GetEnergy() )
         {
             float percent_energy = player.GetEnergy() / player.GetEnergyMax();
-            energy_loss.rectTransform.position = new Vector3( energy_bar.rectTransform.position.x + percent_energy * BAR_LENGTH, energy_loss.rectTransform.position.y, 0.0f );
-            energy_loss.rectTransform.sizeDelta = new Vector2( ( energy_remembered_value - player.GetEnergy() ) / player.GetEnergyMax() * BAR_LENGTH, energy_loss.rectTransform.sizeDelta.y );
+            Vector3 position = new Vector3( energy_bar.rectTransform.position.x + percent_energy * BAR_LENGTH, energy_loss.rectTransform.position.y, 0.0f );
+            energy_loss.rectTransform.position = position;
+            energy_loss.rectTransform.sizeDelta = new Vector2( ( energy_falling_value - player.GetEnergy() ) / player.GetEnergyMax() * BAR_LENGTH, energy_loss.rectTransform.sizeDelta.y );
+            energy_loss_background.rectTransform.position = position;
+            energy_loss_background.rectTransform.sizeDelta = new Vector2( ( energy_remembered_value - player.GetEnergy() ) / player.GetEnergyMax() * BAR_LENGTH, 
+                                                                            energy_loss_background.rectTransform.sizeDelta.y );
         }
         else
         {
             energy_loss.rectTransform.sizeDelta = new Vector2( 0.0f, energy_loss.rectTransform.sizeDelta.y );
+            energy_loss_background.rectTransform.sizeDelta = new Vector2( 0.0f, energy_loss_background.rectTransform.sizeDelta.y );
         }
 
         // Shield
-        if ( shield_prev_frame >= player.GetShields() && shield_prev_frame >= shield_remembered_value )
+        if ( shield_prev_frame >= player.GetShields() && shield_prev_frame >= shield_falling_value )
         {
+            shield_falling_value = shield_prev_frame;
             shield_remembered_value = shield_prev_frame;
         }
 
-        if ( shield_remembered_value >= player.GetShields() )
+        if ( shield_falling_value >= player.GetShields() )
         {
             float percent_shield = player.GetShields() / player.GetShieldsMax();
-            shield_loss.rectTransform.position = new Vector3( shield_bar.rectTransform.position.x + percent_shield * BAR_LENGTH, shield_loss.rectTransform.position.y, 0.0f );
-            shield_loss.rectTransform.sizeDelta = new Vector2( (shield_remembered_value - player.GetShields() ) / player.GetShieldsMax() * BAR_LENGTH, shield_loss.rectTransform.sizeDelta.y );
+            Vector3 position = new Vector3( shield_bar.rectTransform.position.x + percent_shield * BAR_LENGTH, shield_loss.rectTransform.position.y, 0.0f );
+            shield_loss.rectTransform.position = position;
+            shield_loss.rectTransform.sizeDelta = new Vector2( (shield_falling_value - player.GetShields() ) / player.GetShieldsMax() * BAR_LENGTH, shield_loss.rectTransform.sizeDelta.y );
+            shield_loss_background.rectTransform.position = position;
+            shield_loss_background.rectTransform.sizeDelta = new Vector2( ( shield_remembered_value - player.GetShields() ) / player.GetShieldsMax() * BAR_LENGTH, 
+                                                                            shield_loss_background.rectTransform.sizeDelta.y );
         }
         else
         {
             shield_loss.rectTransform.sizeDelta = new Vector2( 0.0f, shield_loss.rectTransform.sizeDelta.y );
+            shield_loss_background.rectTransform.sizeDelta = new Vector2( 0.0f, shield_loss_background.rectTransform.sizeDelta.y );
         }
 
         // update old records.
         float drop_speed = 180.0f; // pixels per second
-        energy_remembered_value -= drop_speed * Time.deltaTime * Time.timeScale;
-        shield_remembered_value -= drop_speed * Time.deltaTime * Time.timeScale;
+        energy_falling_value -= drop_speed * Time.deltaTime * Time.timeScale;
+        shield_falling_value -= drop_speed * Time.deltaTime * Time.timeScale;
         energy_prev_frame = player.GetEnergy();
         shield_prev_frame = player.GetShields();
     }

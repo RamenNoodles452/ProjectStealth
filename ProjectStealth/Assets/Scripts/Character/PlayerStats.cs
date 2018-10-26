@@ -69,8 +69,19 @@ public class PlayerStats : MonoBehaviour
     private float silencer_regen = 1.0f;
     #endregion
 
+    [SerializeField]
+    private bool is_adrenal_rushing = false;
+    private const float ADRENAL_RUSH_DURATION =  7.5f;
+    private const float ADRENAL_RUSH_COOLDOWN = 15.0f;
+    private float adrenal_rush_timer = ADRENAL_RUSH_COOLDOWN;
+
     // progress values
-    public bool acquired_mag_grip;
+    public  bool acquired_mag_grip;
+    private bool acquired_adrenal_rush;
+    private bool acquired_hookshot;
+    private bool acquired_hack;
+    private bool acquired_explosive;
+    private bool acquired_charge_shot;
 
     // checkpointing
     public Vector2 checkpoint;
@@ -238,6 +249,11 @@ public class PlayerStats : MonoBehaviour
         get { return SHIELD_REGENERATION_DELAY; }
     }
 
+    public bool IsAdrenalRushing
+    {
+        get { return is_adrenal_rushing; }
+    }
+
     /// <summary>
     /// Fire weapon
     /// </summary>
@@ -298,6 +314,19 @@ public class PlayerStats : MonoBehaviour
     }
 
     /// <summary>
+    /// Activates super mode, granting infinite stamina and time dilation.
+    /// </summary>
+    public void AdrenalRush()
+    {
+        if ( ! is_adrenal_rushing && adrenal_rush_timer >= ADRENAL_RUSH_COOLDOWN )
+        {
+            is_adrenal_rushing = true;
+            adrenal_rush_timer = 0.0f;
+            Time.timeScale = 0.5f;
+        }
+    }
+
+    /// <summary>
     /// Evades
     /// </summary>
     public void Evade()
@@ -317,7 +346,7 @@ public class PlayerStats : MonoBehaviour
             return;
         }
 
-        if ( energy < EVADE_COST )
+        if ( energy < EVADE_COST && ! is_adrenal_rushing )
         {
             Referencer.instance.hud_ui.InsuffienctStamina();
             return;
@@ -368,7 +397,7 @@ public class PlayerStats : MonoBehaviour
             }
         }
 
-        energy -= EVADE_COST;
+        if ( ! is_adrenal_rushing ) { energy -= EVADE_COST; }
 
         // animate
         if ( char_stats.IsGrounded )
@@ -570,6 +599,26 @@ public class PlayerStats : MonoBehaviour
         if ( is_energy_regenerating )
         {
             energy = Mathf.Min( energy + ( energy_max / energy_regeneration_time ) * Time.deltaTime * Time.timeScale, energy_max );
+        }
+        #endregion
+
+        #region Adrenaline
+        if ( is_adrenal_rushing )
+        {
+            adrenal_rush_timer += Time.deltaTime * Time.timeScale;
+            if ( adrenal_rush_timer > ADRENAL_RUSH_DURATION )
+            {
+                is_adrenal_rushing = false;
+                adrenal_rush_timer = 0.0f;
+                Time.timeScale = 1.0f;
+            }
+        }
+        else
+        {
+            if ( adrenal_rush_timer < ADRENAL_RUSH_COOLDOWN )
+            {
+                adrenal_rush_timer += Time.deltaTime * Time.timeScale;
+            }
         }
         #endregion
 
