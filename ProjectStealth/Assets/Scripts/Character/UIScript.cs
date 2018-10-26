@@ -40,6 +40,8 @@ public class UIScript : MonoBehaviour
     [SerializeField]
     private Image energy_bar;
     [SerializeField]
+    private Image energy_bar_background;
+    [SerializeField]
     private Image energy_outline;
     [SerializeField]
     private Image[] energy_overlays;
@@ -51,7 +53,9 @@ public class UIScript : MonoBehaviour
     private Image energy_loss;
     [SerializeField]
     private Image energy_loss_background;
+    private Color energy_bar_default_color = new Color( 0.0f, 0.70f, 0.35f, 0.5f );
     private Color energy_outline_default_color = new Color( 0.0f, 1.0f, 0.5f, 0.125f );
+    private Color energy_value_outline_default_color = new Color( 0.0f, 1.0f, 0.5f, 0.25f );
 
     [SerializeField]
     private Image adrenal_rush_cooldown;
@@ -245,11 +249,14 @@ public class UIScript : MonoBehaviour
         }
         else if ( player_stats.IsAdrenalRushing )
         {
-            energy_outline.color = new Color( 0.0f, 1.0f, 0.35f, 0.35f );
+            AdrenalineMode();
         }
         else
         {
+            energy_bar.color = energy_bar_default_color;
             energy_outline.color = energy_outline_default_color;
+            energy_value.fontSize = 22;
+            energy_value.GetComponent<Outline>().effectColor = energy_value_outline_default_color;
         }
 
         // Shield bar
@@ -291,6 +298,18 @@ public class UIScript : MonoBehaviour
                           a.g * ( 1.0f - t ) + b.g * t,
                           a.b * ( 1.0f - t ) + b.b * t,
                           a.a * ( 1.0f - t ) + b.a * t );
+    }
+
+    /// <summary>
+    /// Handles special display logic for adrenaline rush mode
+    /// </summary>
+    private void AdrenalineMode()
+    {
+        // Flicker
+        energy_bar.color = new Color( 0.0f, 1.0f, 0.5f, Random.Range( 0.5f, 0.6f ) );
+        energy_outline.color = new Color( 0.0f, 1.0f, 0.35f, Random.Range( 0.25f, 0.5f ) );
+        energy_value.fontSize = 38;
+        energy_value.GetComponent<Outline>().effectColor = new Color( 0.0f, 1.0f, 0.5f, Random.Range( 0.25f, 0.5f ) );
     }
 
     /// <summary>
