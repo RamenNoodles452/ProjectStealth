@@ -71,9 +71,14 @@ public class PlayerStats : MonoBehaviour
 
     [SerializeField]
     private bool is_adrenal_rushing = false;
-    private const float ADRENAL_RUSH_DURATION =  3.0f;
-    private const float ADRENAL_RUSH_COOLDOWN = 15.0f;
+    private bool is_adrenaline_fading_in = false;
+    private bool is_adrenaline_fading_out = false;
+    private const float ADRENALINE_FADE_DURATION = 0.5f;  // seconds to transition (ignores time scaling)
+    private const float ADRENAL_RUSH_DURATION    =  3.0f; // seconds, duration will be ~2x as long
+    private const float ADRENAL_RUSH_COOLDOWN    = 15.0f; // seconds
+    private const float ADRENALINE_DESATURATION  = 0.75f; // percent desaturation
     private float adrenal_rush_timer = ADRENAL_RUSH_COOLDOWN;
+    private float adrenal_fade_timer = 0.0f;
 
     // progress values
     public  bool acquired_mag_grip;
@@ -333,7 +338,10 @@ public class PlayerStats : MonoBehaviour
             is_adrenal_rushing = true;
             adrenal_rush_timer = 0.0f;
             energy = energy_max;
-            Time.timeScale = 0.5f;
+            is_adrenaline_fading_in = true;
+            adrenal_fade_timer = 0.0f;
+
+            //Time.timeScale = 0.5f; // fade in timer, fade out timer -> greyscale
         }
     }
 
@@ -621,7 +629,9 @@ public class PlayerStats : MonoBehaviour
             {
                 is_adrenal_rushing = false;
                 adrenal_rush_timer = 0.0f;
-                Time.timeScale = 1.0f;
+                is_adrenaline_fading_out = true;
+                adrenal_fade_timer = 0.0f;
+                //Time.timeScale = 1.0f;
             }
         }
         else
@@ -629,6 +639,32 @@ public class PlayerStats : MonoBehaviour
             if ( adrenal_rush_timer < ADRENAL_RUSH_COOLDOWN )
             {
                 adrenal_rush_timer += Time.deltaTime * Time.timeScale;
+            }
+        }
+
+        if ( is_adrenaline_fading_in )
+        {
+            adrenal_fade_timer += Time.deltaTime;
+            float t = adrenal_fade_timer / ADRENALINE_FADE_DURATION;
+            Time.timeScale = 1.0f - Mathf.Min( 0.5f * t, 0.5f );
+            Camera.main.GetComponent<DesaturateEffect>().desaturation = Mathf.Min( t * ADRENALINE_DESATURATION, 1.0f );
+            if ( adrenal_fade_timer >= ADRENALINE_FADE_DURATION )
+            {
+                is_adrenaline_fading_in = false;
+                Time.timeScale = 0.5f;
+            }
+        }
+
+        if ( is_adrenaline_fading_out )
+        {
+            adrenal_fade_timer += Time.deltaTime;
+            float t = (1.0f - adrenal_fade_timer / ADRENALINE_FADE_DURATION);
+            Time.timeScale = 1.0f - Mathf.Min( 0.5f * t, 0.5f );
+            Camera.main.GetComponent<DesaturateEffect>().desaturation = Mathf.Min( t * ADRENALINE_DESATURATION, 1.0f );
+            if ( adrenal_fade_timer >= ADRENALINE_FADE_DURATION )
+            {
+                is_adrenaline_fading_out = false;
+                Time.timeScale = 1.0f;
             }
         }
         #endregion
