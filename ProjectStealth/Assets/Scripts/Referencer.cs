@@ -10,6 +10,7 @@ public class Referencer : MonoBehaviour
     public static Referencer instance;
 
     public Player player;
+    public UIScript hud_ui;
 
     public List<GameObject> enemies = new List<GameObject>();
     public List<Noise> noises = new List<Noise>();
@@ -24,6 +25,7 @@ public class Referencer : MonoBehaviour
         {
             instance = this;
             RegisterPlayer();
+            RegisterHUDUI();
         }
         else if ( instance != this )
         {
@@ -39,6 +41,11 @@ public class Referencer : MonoBehaviour
     public void RegisterPlayer()
     {
         player = GameObject.Find( "PlayerCharacter" ).GetComponent<Player>();
+    }
+
+    public void RegisterHUDUI()
+    {
+        hud_ui = GameObject.Find( "UI Canvas" ).GetComponent<UIScript>();
     }
 
     /// <summary>

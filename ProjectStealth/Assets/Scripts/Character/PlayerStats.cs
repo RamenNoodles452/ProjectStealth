@@ -147,10 +147,12 @@ public class PlayerStats : MonoBehaviour
         // Deal damage
         if ( shield > 0.0f )
         {
+            Referencer.instance.hud_ui.OnHit();
             shield = Mathf.Max( shield - damage, 0.0f );
             if ( shield <= 0.0f )
             {
                 // shield break
+                Referencer.instance.hud_ui.OnShieldBreak();
             }
         }
         else
@@ -217,6 +219,23 @@ public class PlayerStats : MonoBehaviour
         // reset movement
         char_stats = this.gameObject.GetComponent<CharacterStats>();
         char_stats.velocity = new Vector2( 0.0f, 0.0f );
+    }
+
+    /// <summary>
+    /// Accessor for shield regeneration
+    /// </summary>
+    /// <returns>True if the player is regenerating shields</returns>
+    public bool IsRegenerating
+    {
+        get { return is_regenerating; }
+    }
+
+    /// <summary>
+    /// Accessor for the time it takes after being hit for shield regeneration to begin.
+    /// </summary>
+    public float RegenerationDelay
+    {
+        get { return SHIELD_REGENERATION_DELAY; }
     }
 
     /// <summary>
@@ -298,7 +317,11 @@ public class PlayerStats : MonoBehaviour
             return;
         }
 
-        if ( energy < EVADE_COST ) { return; } // insufficient resources. play sound?
+        if ( energy < EVADE_COST )
+        {
+            Referencer.instance.hud_ui.InsuffienctStamina();
+            return;
+        } // insufficient resources. play sound?
 
         // check if stuck in a non-cancellable animation
 
