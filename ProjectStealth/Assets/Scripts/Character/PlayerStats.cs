@@ -71,8 +71,8 @@ public class PlayerStats : MonoBehaviour
 
     [SerializeField]
     private bool is_adrenal_rushing = false;
-    private const float ADRENAL_RUSH_DURATION =  5.0f;
-    private const float ADRENAL_RUSH_COOLDOWN = 10.0f;
+    private const float ADRENAL_RUSH_DURATION =  3.0f;
+    private const float ADRENAL_RUSH_COOLDOWN = 15.0f;
     private float adrenal_rush_timer = ADRENAL_RUSH_COOLDOWN;
 
     // progress values
@@ -120,6 +120,16 @@ public class PlayerStats : MonoBehaviour
     public float GetEnergyMax()
     {
         return energy_max;
+    }
+
+    /// <returns>How full the adrenaline charge is</returns>
+    public float PercentAdrenalineCharge
+    {
+        get
+        {
+            if ( ! is_adrenal_rushing ) { return adrenal_rush_timer / ADRENAL_RUSH_COOLDOWN; }
+            else { return 1.0f - adrenal_rush_timer / ADRENAL_RUSH_DURATION; }
+        }
     }
     #endregion
 

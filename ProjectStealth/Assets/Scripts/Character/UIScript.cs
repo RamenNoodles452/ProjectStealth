@@ -81,6 +81,7 @@ public class UIScript : MonoBehaviour
     private float shield_blink_timer;
     private const float BLINK_DURATION = 0.5f; // seconds
     private float shield_pulse_timer;
+    private float adrenaline_timer;
 
     private float energy_prev_frame;
     private float shield_prev_frame;
@@ -151,6 +152,8 @@ public class UIScript : MonoBehaviour
         energy_bar.rectTransform.sizeDelta = new Vector2( energy_percent * BAR_LENGTH, energy_bar.rectTransform.sizeDelta.y );
         shield_overlay_cap.rectTransform.position = new Vector3( shield_bar.rectTransform.position.x + shield_percent * BAR_LENGTH - 16.0f, shield_bar.rectTransform.position.y, 0.0f );
         energy_overlay_cap.rectTransform.position = new Vector3( energy_bar.rectTransform.position.x + energy_percent * BAR_LENGTH - 16.0f, energy_bar.rectTransform.position.y, 0.0f );
+
+        adrenal_rush_cooldown.fillAmount = player_stats.PercentAdrenalineCharge;
     }
 
     /// <summary>
@@ -281,6 +284,18 @@ public class UIScript : MonoBehaviour
         else
         {
             shield_outline.color = shield_outline_default_color;
+        }
+
+        // Adrenaline
+        adrenaline_timer += Time.deltaTime * Time.timeScale;
+        while ( adrenaline_timer > 1.0f ) { adrenaline_timer -= 1.0f; }
+        if ( player_stats.PercentAdrenalineCharge >= 1.0f || player_stats.IsAdrenalRushing )
+        {
+            adrenal_rush_cooldown.color = new Color( 0.0f, 1.0f, 0.5f, 0.65f + 0.34f * Mathf.Sin( adrenaline_timer * Mathf.PI * 2.0f ) );
+        }
+        else
+        {
+            adrenal_rush_cooldown.color = new Color( 0.0f, 1.0f, 0.5f, 0.5f );
         }
     }
 
