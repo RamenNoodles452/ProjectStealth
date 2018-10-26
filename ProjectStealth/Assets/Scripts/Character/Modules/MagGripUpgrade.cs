@@ -82,8 +82,8 @@ public class MagGripUpgrade : MonoBehaviour
     /// </summary>
     void ClimbMovementInput()
     {
-        float characterTop = char_stats.char_collider.bounds.max.y + 0.5f;
-        float characterBottom = char_stats.char_collider.bounds.min.y - 0.5f;
+        float characterTop = char_stats.char_collider.bounds.max.y;
+        float characterBottom = char_stats.char_collider.bounds.min.y;
 
         if ( grab_collider == null ) { return; }
 
@@ -202,25 +202,27 @@ public class MagGripUpgrade : MonoBehaviour
     void ClimbVerticalEdgeDetect()
     {
         // raycast to find the climbing object
-        RaycastHit2D hit = Physics2D.Raycast(char_stats.char_collider.bounds.center, new Vector2(char_stats.GetFacingXComponent(), 0), char_stats.char_collider.bounds.size.x, CollisionMasks.wall_grab_mask);
+        RaycastHit2D hit = Physics2D.Raycast(char_stats.char_collider.bounds.center, new Vector2(char_stats.GetFacingXComponent(), 0.0f), char_stats.char_collider.bounds.size.x, CollisionMasks.wall_grab_mask);
         if ( hit.collider != null )
         {
             float colliderTop = hit.collider.bounds.max.y;
             float colliderBottom = hit.collider.bounds.min.y;
-            float characterTop = char_stats.char_collider.bounds.max.y + 0.5f;
-            float characterBottom = char_stats.char_collider.bounds.min.y - 0.5f;
+            float characterTop = char_stats.char_collider.bounds.max.y;
+            float characterBottom = char_stats.char_collider.bounds.min.y;
 
             // stop at the edges of the surface
             float ledgeDistanceTop = colliderTop - characterTop;
             if ( char_stats.velocity.y > 0.0f && ledgeDistanceTop <= Mathf.Abs( char_stats.velocity.y * Time.deltaTime * Time.timeScale ) )
             {
-                char_stats.velocity.y = ledgeDistanceTop / ( Time.deltaTime * Time.timeScale );
+                char_stats.velocity.y = 0.0f; //ledgeDistanceTop / ( Time.deltaTime * Time.timeScale );
+                transform.Translate( new Vector3( 0.0f, ledgeDistanceTop, 0.0f ) );
             }
 
             float ledgeDistanceBottom = characterBottom - colliderBottom;
             if ( char_stats.velocity.y < 0.0f && ledgeDistanceBottom <= Mathf.Abs( char_stats.velocity.y * Time.deltaTime * Time.timeScale ) )
             {
-                char_stats.velocity.y = -ledgeDistanceBottom / ( Time.deltaTime * Time.timeScale );
+                char_stats.velocity.y = 0.0f; //-ledgeDistanceBottom / ( Time.deltaTime * Time.timeScale );
+                transform.Translate( new Vector3( 0.0f, -ledgeDistanceBottom, 0.0f ) );
             }
 
             // set if you're against the ledge
@@ -289,7 +291,6 @@ public class MagGripUpgrade : MonoBehaviour
         // variable sterilization
         char_stats.is_jumping = false;
         char_stats.is_on_ground = true;
-
 
         char_anims.WallToGroundTrigger();
         current_climb_state = ClimbState.Transition;
@@ -398,8 +399,6 @@ public class MagGripUpgrade : MonoBehaviour
         CollisionType collision_type = hit.collider.gameObject.GetComponent<CollisionType>();
         if ( collision_type == null )             { AbortWallClimbFromLedge(); return; }  // invalid configuration
         if ( ! collision_type.WallClimb )         { AbortWallClimbFromLedge(); return; }  // unclimbable object
-
-        Debug.Log( grabCheck.collider.gameObject.transform.position );
         if ( grabCheck.collider != hit.collider ) { AbortWallClimbFromLedge(); return; }  // hit a different object, too short
 
         char_stats.current_master_state = CharEnums.MasterState.ClimbState;
