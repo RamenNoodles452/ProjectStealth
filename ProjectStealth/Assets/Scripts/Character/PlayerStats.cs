@@ -82,7 +82,7 @@ public class PlayerStats : MonoBehaviour
 
     // progress values
     public  bool acquired_mag_grip;
-    private bool acquired_adrenal_rush;
+    public  bool acquired_adrenal_rush;
     private bool acquired_hookshot;
     private bool acquired_hack;
     private bool acquired_explosive;

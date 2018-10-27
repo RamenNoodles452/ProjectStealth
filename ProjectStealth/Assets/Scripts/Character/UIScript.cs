@@ -296,30 +296,39 @@ public class UIScript : MonoBehaviour
         }
 
         // Adrenaline
-        adrenaline_timer += Time.deltaTime * Time.timeScale;
-        while ( adrenaline_timer > 1.0f ) { adrenaline_timer -= 1.0f; }
-        if ( player_stats.PercentAdrenalineCharge >= 1.0f || player_stats.IsAdrenalRushing )
+        if ( player_stats.acquired_adrenal_rush )
         {
-            adrenaline_outline.color = new Color( 0.0f, 1.0f, 0.35f, Random.Range( 0.25f, 0.5f ) * ( 0.8f * player_stats.PercentAdrenalineCharge + 0.2f) );
-            adrenal_rush_cooldown.color = new Color( 0.0f, 1.0f, 0.5f, 0.65f + 0.34f * Mathf.Sin( adrenaline_timer * Mathf.PI * 2.0f ) );
-        }
-        else if ( is_adrenaline_blinking )
-        {
-            float duration = BLINK_DURATION; // seconds
-            adrenaline_blink_timer += Time.deltaTime * Time.timeScale;
-            float weight = Mathf.PingPong( adrenaline_blink_timer * 3.0f * 2.0f / duration, 1.0f ); // blink 3 times
-            Color red = new Color( 1.0f, 0.0f, 0.0f, 0.80f);
-            adrenaline_outline.color = Blend( new Color( 0.0f, 1.0f, 0.5f, 0.1f ), red, weight );
+            adrenal_rush_cooldown.transform.parent.gameObject.SetActive( true ); // excessive, should edge trigger.
 
-            if ( adrenaline_blink_timer >= duration )
+            adrenaline_timer += Time.deltaTime * Time.timeScale;
+            while ( adrenaline_timer > 1.0f ) { adrenaline_timer -= 1.0f; }
+            if ( player_stats.PercentAdrenalineCharge >= 1.0f || player_stats.IsAdrenalRushing )
             {
-                is_adrenaline_blinking = false;
+                adrenaline_outline.color = new Color( 0.0f, 1.0f, 0.35f, Random.Range( 0.25f, 0.5f ) * ( 0.8f * player_stats.PercentAdrenalineCharge + 0.2f ) );
+                adrenal_rush_cooldown.color = new Color( 0.0f, 1.0f, 0.5f, 0.65f + 0.34f * Mathf.Sin( adrenaline_timer * Mathf.PI * 2.0f ) );
+            }
+            else if ( is_adrenaline_blinking )
+            {
+                float duration = BLINK_DURATION; // seconds
+                adrenaline_blink_timer += Time.deltaTime * Time.timeScale;
+                float weight = Mathf.PingPong( adrenaline_blink_timer * 3.0f * 2.0f / duration, 1.0f ); // blink 3 times
+                Color red = new Color( 1.0f, 0.0f, 0.0f, 0.80f);
+                adrenaline_outline.color = Blend( new Color( 0.0f, 1.0f, 0.5f, 0.1f ), red, weight );
+
+                if ( adrenaline_blink_timer >= duration )
+                {
+                    is_adrenaline_blinking = false;
+                }
+            }
+            else
+            {
+                adrenaline_outline.color = new Color( 0.0f, 1.0f, 0.5f, 0.0f );
+                adrenal_rush_cooldown.color = new Color( 0.0f, 1.0f, 0.5f, 0.5f );
             }
         }
         else
         {
-            adrenaline_outline.color = new Color( 0.0f, 1.0f, 0.5f, 0.0f );
-            adrenal_rush_cooldown.color = new Color( 0.0f, 1.0f, 0.5f, 0.5f );
+            adrenal_rush_cooldown.transform.parent.gameObject.SetActive( false );
         }
     }
 
