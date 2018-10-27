@@ -59,6 +59,10 @@ public class UIScript : MonoBehaviour
 
     [SerializeField]
     private Image adrenal_rush_cooldown;
+    [SerializeField]
+    private Image adrenaline_slosh;
+    [SerializeField]
+    private Image adrenaline_outline;
 
     // Probable Debug UI (TODO: remove?)
     [SerializeField]
@@ -154,6 +158,9 @@ public class UIScript : MonoBehaviour
         energy_overlay_cap.rectTransform.position = new Vector3( energy_bar.rectTransform.position.x + energy_percent * BAR_LENGTH - 16.0f, energy_bar.rectTransform.position.y, 0.0f );
 
         adrenal_rush_cooldown.fillAmount = player_stats.PercentAdrenalineCharge;
+        adrenaline_slosh.rectTransform.position = new Vector3( adrenal_rush_cooldown.rectTransform.position.x, 
+            adrenal_rush_cooldown.rectTransform.position.y + player_stats.PercentAdrenalineCharge * adrenal_rush_cooldown.rectTransform.sizeDelta.y, 
+            0.0f );
     }
 
     /// <summary>
@@ -291,10 +298,12 @@ public class UIScript : MonoBehaviour
         while ( adrenaline_timer > 1.0f ) { adrenaline_timer -= 1.0f; }
         if ( player_stats.PercentAdrenalineCharge >= 1.0f || player_stats.IsAdrenalRushing )
         {
+            adrenaline_outline.color = new Color( 0.0f, 1.0f, 0.35f, Random.Range( 0.25f, 0.5f ) * ( 0.8f * player_stats.PercentAdrenalineCharge + 0.2f) );
             adrenal_rush_cooldown.color = new Color( 0.0f, 1.0f, 0.5f, 0.65f + 0.34f * Mathf.Sin( adrenaline_timer * Mathf.PI * 2.0f ) );
         }
         else
         {
+            adrenaline_outline.color = new Color( 0.0f, 1.0f, 0.5f, 0.0f );
             adrenal_rush_cooldown.color = new Color( 0.0f, 1.0f, 0.5f, 0.5f );
         }
     }
