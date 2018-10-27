@@ -225,6 +225,7 @@ public class PlayerStats : MonoBehaviour
         invincible = false;
         is_cloaked = false;
         was_hit_this_frame = false;
+        CleanupAdrenalineChanges();
 
         health = health_max;
         shield = shield_max;
@@ -340,8 +341,6 @@ public class PlayerStats : MonoBehaviour
             energy = energy_max;
             is_adrenaline_fading_in = true;
             adrenal_fade_timer = 0.0f;
-
-            //Time.timeScale = 0.5f; // fade in timer, fade out timer -> greyscale
         }
     }
 
@@ -496,6 +495,19 @@ public class PlayerStats : MonoBehaviour
     }
 
     /// <summary>
+    /// Restores adrenaline rush mode changes (time scale and camera desaturation) to normal.
+    /// </summary>
+    private void CleanupAdrenalineChanges()
+    {
+        is_adrenal_rushing = false;
+        is_adrenaline_fading_in = false;
+        is_adrenaline_fading_out = false;
+        adrenal_rush_timer = 0.0f;
+        Time.timeScale = 1.0f;
+        Camera.main.GetComponent<DesaturateEffect>().desaturation = 0.0f;
+    }
+
+    /// <summary>
     /// Initialization upon level entry
     /// </summary>
     void Start()
@@ -631,7 +643,6 @@ public class PlayerStats : MonoBehaviour
                 adrenal_rush_timer = 0.0f;
                 is_adrenaline_fading_out = true;
                 adrenal_fade_timer = 0.0f;
-                //Time.timeScale = 1.0f;
             }
         }
         else
@@ -663,8 +674,7 @@ public class PlayerStats : MonoBehaviour
             Camera.main.GetComponent<DesaturateEffect>().desaturation = Mathf.Min( t * ADRENALINE_DESATURATION, 1.0f );
             if ( adrenal_fade_timer >= ADRENALINE_FADE_DURATION )
             {
-                is_adrenaline_fading_out = false;
-                Time.timeScale = 1.0f;
+                CleanupAdrenalineChanges();
             }
         }
         #endregion
