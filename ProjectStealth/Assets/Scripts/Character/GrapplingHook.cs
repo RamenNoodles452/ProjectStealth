@@ -48,6 +48,9 @@ public class GrapplingHook : MonoBehaviour
         if ( is_on ) { Function(); }
     }
 
+    /// <summary>
+    /// Parses fire key and aiming.
+    /// </summary>
     void ParseInput()
     {
         if ( Input.GetKeyDown( KeyCode.Y ) && char_stats.current_master_state == CharEnums.MasterState.DefaultState )
@@ -58,7 +61,10 @@ public class GrapplingHook : MonoBehaviour
         }
     }
     
-    // Launch the hookshot!
+    /// <summary>
+    /// Launches the hookshot!
+    /// </summary>
+    /// <param name="target">The position to fire the hookshot at.</param>
     void Fire( Vector2 target )
     {
         bool hit_good_surface = false;
@@ -103,6 +109,10 @@ public class GrapplingHook : MonoBehaviour
         else if ( hit_bad_surface )  { NoisilyBounceOffWall( target ); }
     }
 
+    /// <summary>
+    /// Starts the process of pulling yourself to the grapple point.
+    /// </summary>
+    /// <param name="target"></param>
     private void StartGrapple( Vector2 target )
     {
         char_stats.current_master_state = CharEnums.MasterState.RappelState; // turn off default move behaviour.
@@ -137,9 +147,31 @@ public class GrapplingHook : MonoBehaviour
     /// </summary>
     private void GetOverHere()
     {
-        // Is enemy hookshottable?
+        // Is enemy hookshottable + pullable?
+        bool is_hookshottable = true;
+        if ( ! is_hookshottable ) { return; }
+        bool is_pullable = false;
+        if ( ! is_pullable ) { ComingOverThere(); return; }
+
+        // pull the enemy!
+        // complications: enemies can move, need to stun during pull, but also maybe before so you can hit them? Or defer the pull check?
+        // TODO:
     }
 
+    /// <summary>
+    /// Pulls you to a heavy enemy.
+    /// </summary>
+    private void ComingOverThere()
+    {
+        // pull
+        // complications: enemies can move, probably need to stun during pull, also maybe before so you can hit them? Or defer the check?
+        // TODO:
+        // StartGrapple( target );
+    }
+
+    /// <summary>
+    /// Makes the grappling hook shot function.
+    /// </summary>
     private void Function()
     {
         float scale;

@@ -334,13 +334,20 @@ public class PlayerStats : MonoBehaviour
     /// </summary>
     public void AdrenalRush()
     {
-        if ( ! is_adrenal_rushing && adrenal_rush_timer >= ADRENAL_RUSH_COOLDOWN )
+        if ( ! is_adrenal_rushing )
         {
-            is_adrenal_rushing = true;
-            adrenal_rush_timer = 0.0f;
-            energy = energy_max;
-            is_adrenaline_fading_in = true;
-            adrenal_fade_timer = 0.0f;
+            if ( adrenal_rush_timer >= ADRENAL_RUSH_COOLDOWN )
+            {
+                is_adrenal_rushing = true;
+                adrenal_rush_timer = 0.0f;
+                energy = energy_max;
+                is_adrenaline_fading_in = true;
+                adrenal_fade_timer = 0.0f;
+            }
+            else
+            {
+                Referencer.instance.hud_ui.InsufficientAdrenaline();
+            }
         }
     }
 

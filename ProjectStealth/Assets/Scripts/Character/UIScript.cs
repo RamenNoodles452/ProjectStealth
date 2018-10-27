@@ -79,10 +79,12 @@ public class UIScript : MonoBehaviour
     private float shield_overlay_timer;
     private float shield_underlay_timer;
     private bool  is_energy_blinking;
+    private bool is_adrenaline_blinking;
     private bool  is_shield_blinking;
     private bool  is_shield_text_blinking;
     private float energy_blink_timer;
     private float shield_blink_timer;
+    private float adrenaline_blink_timer;
     private const float BLINK_DURATION = 0.5f; // seconds
     private float shield_pulse_timer;
     private float adrenaline_timer;
@@ -301,6 +303,19 @@ public class UIScript : MonoBehaviour
             adrenaline_outline.color = new Color( 0.0f, 1.0f, 0.35f, Random.Range( 0.25f, 0.5f ) * ( 0.8f * player_stats.PercentAdrenalineCharge + 0.2f) );
             adrenal_rush_cooldown.color = new Color( 0.0f, 1.0f, 0.5f, 0.65f + 0.34f * Mathf.Sin( adrenaline_timer * Mathf.PI * 2.0f ) );
         }
+        else if ( is_adrenaline_blinking )
+        {
+            float duration = BLINK_DURATION; // seconds
+            adrenaline_blink_timer += Time.deltaTime * Time.timeScale;
+            float weight = Mathf.PingPong( adrenaline_blink_timer * 3.0f * 2.0f / duration, 1.0f ); // blink 3 times
+            Color red = new Color( 1.0f, 0.0f, 0.0f, 0.80f);
+            adrenaline_outline.color = Blend( new Color( 0.0f, 1.0f, 0.5f, 0.1f ), red, weight );
+
+            if ( adrenaline_blink_timer >= duration )
+            {
+                is_adrenaline_blinking = false;
+            }
+        }
         else
         {
             adrenaline_outline.color = new Color( 0.0f, 1.0f, 0.5f, 0.0f );
@@ -402,6 +417,16 @@ public class UIScript : MonoBehaviour
     {
         is_energy_blinking = true;
         energy_blink_timer = 0.0f;
+        //Referencer.instance.player.GetComponent<AudioSource>().PlayOneShot();
+    }
+
+    /// <summary>
+    /// Causes the adrenaline gauge to blink red when you don't have enough adrenaline.
+    /// </summary>
+    public void InsufficientAdrenaline()
+    {
+        is_adrenaline_blinking = true;
+        adrenaline_blink_timer = 0.0f;
         //Referencer.instance.player.GetComponent<AudioSource>().PlayOneShot();
     }
 
