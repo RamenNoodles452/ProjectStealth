@@ -710,20 +710,6 @@ public class PlayerStats : MonoBehaviour
         }
         #endregion
         #endregion
-
-        // Cheat codes
-        // TODO: remove
-        if ( Input.GetKeyDown( KeyCode.M ) )
-        {
-            if ( acquired_mag_grip )
-            {
-                acquired_mag_grip = false;
-            }
-            else
-            {
-                acquired_mag_grip = true;
-            }
-        }
     }
 
 }
