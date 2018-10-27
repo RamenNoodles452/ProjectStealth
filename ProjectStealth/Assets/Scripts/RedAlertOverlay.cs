@@ -40,6 +40,6 @@ public class RedAlertOverlay : MonoBehaviour
             }
         }
 
-        image.color = new Color( 0.9f, 0.0f, 0.0f, alpha * 0.25f );
+        image.color = new Color( 0.9f, 0.0f, 0.0f, alpha * 0.05f );
     }
 }

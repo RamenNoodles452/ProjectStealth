@@ -79,6 +79,9 @@ public class UserInputManager : IInputManager
             if ( Input.GetButtonDown( "Evade" ) ) { EvadeInputInst = true; }
             else { EvadeInputInst = false; }
 
+            if ( Input.GetKeyDown( KeyCode.Semicolon ) ) { AdrenalineInputInst = true; }
+            else { AdrenalineInputInst = false; }
+
             if ( Input.GetButton( "Interact" ) ) { InteractInput = true; }
             else { InteractInput = false; }
 

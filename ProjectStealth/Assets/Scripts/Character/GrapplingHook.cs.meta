@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: 33780b96c5794bc4d8ed594e010771c3
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - hook_prefab: {fileID: 1557396245808332, guid: 5fa6219ace4385346bf92f8b1ded800f,
+      type: 2}
+  - chain_prefab: {fileID: 1681320298824340, guid: 4b0c2a9299488894da248f82d54b9b0a,
+      type: 2}
+  - noise_prefab: {fileID: 1358546463198310, guid: 6031690b728867643bfa6e34edb58fc3,
+      type: 2}
+  - spark_prefab: {fileID: 1081862767448938, guid: d18cfe41f9cb3ad459625365ea775a69,
+      type: 2}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

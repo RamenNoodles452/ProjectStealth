@@ -69,8 +69,24 @@ public class PlayerStats : MonoBehaviour
     private float silencer_regen = 1.0f;
     #endregion
 
+    [SerializeField]
+    private bool is_adrenal_rushing = false;
+    private bool is_adrenaline_fading_in = false;
+    private bool is_adrenaline_fading_out = false;
+    private const float ADRENALINE_FADE_DURATION = 0.5f;  // seconds to transition (ignores time scaling)
+    private const float ADRENAL_RUSH_DURATION    =  3.0f; // seconds, duration will be ~2x as long
+    private const float ADRENAL_RUSH_COOLDOWN    = 15.0f; // seconds
+    private const float ADRENALINE_DESATURATION  = 0.75f; // percent desaturation
+    private float adrenal_rush_timer = ADRENAL_RUSH_COOLDOWN;
+    private float adrenal_fade_timer = 0.0f;
+
     // progress values
-    public bool acquired_mag_grip;
+    public  bool acquired_mag_grip;
+    public  bool acquired_adrenal_rush;
+    private bool acquired_hookshot;
+    private bool acquired_hack;
+    private bool acquired_explosive;
+    private bool acquired_charge_shot;
 
     // checkpointing
     public Vector2 checkpoint;
@@ -110,6 +126,16 @@ public class PlayerStats : MonoBehaviour
     {
         return energy_max;
     }
+
+    /// <returns>How full the adrenaline charge is</returns>
+    public float PercentAdrenalineCharge
+    {
+        get
+        {
+            if ( ! is_adrenal_rushing ) { return adrenal_rush_timer / ADRENAL_RUSH_COOLDOWN; }
+            else { return 1.0f - adrenal_rush_timer / ADRENAL_RUSH_DURATION; }
+        }
+    }
     #endregion
 
     /// <summary>
@@ -147,10 +173,12 @@ public class PlayerStats : MonoBehaviour
         // Deal damage
         if ( shield > 0.0f )
         {
+            Referencer.instance.hud_ui.OnHit();
             shield = Mathf.Max( shield - damage, 0.0f );
             if ( shield <= 0.0f )
             {
                 // shield break
+                Referencer.instance.hud_ui.OnShieldBreak();
             }
         }
         else
@@ -197,6 +225,7 @@ public class PlayerStats : MonoBehaviour
         invincible = false;
         is_cloaked = false;
         was_hit_this_frame = false;
+        CleanupAdrenalineChanges();
 
         health = health_max;
         shield = shield_max;
@@ -207,12 +236,38 @@ public class PlayerStats : MonoBehaviour
         {
             Referencer.instance.player.GetComponent<MagGripUpgrade>().StopClimbing();
         }
+        if ( Referencer.instance.player.GetComponent<CharacterStats>().current_master_state == CharEnums.MasterState.RappelState )
+        {
+            Referencer.instance.player.GetComponent<GrapplingHook>().ResetState();
+        }
 
         input_manager = GetComponent<IInputManager>();
         char_anims = this.gameObject.GetComponent<CharacterAnimationLogic>();
         // reset movement
         char_stats = this.gameObject.GetComponent<CharacterStats>();
         char_stats.velocity = new Vector2( 0.0f, 0.0f );
+    }
+
+    /// <summary>
+    /// Accessor for shield regeneration
+    /// </summary>
+    /// <returns>True if the player is regenerating shields</returns>
+    public bool IsRegenerating
+    {
+        get { return is_regenerating; }
+    }
+
+    /// <summary>
+    /// Accessor for the time it takes after being hit for shield regeneration to begin.
+    /// </summary>
+    public float RegenerationDelay
+    {
+        get { return SHIELD_REGENERATION_DELAY; }
+    }
+
+    public bool IsAdrenalRushing
+    {
+        get { return is_adrenal_rushing; }
     }
 
     /// <summary>
@@ -275,6 +330,28 @@ public class PlayerStats : MonoBehaviour
     }
 
     /// <summary>
+    /// Activates super mode, granting infinite stamina and time dilation.
+    /// </summary>
+    public void AdrenalRush()
+    {
+        if ( ! is_adrenal_rushing )
+        {
+            if ( adrenal_rush_timer >= ADRENAL_RUSH_COOLDOWN )
+            {
+                is_adrenal_rushing = true;
+                adrenal_rush_timer = 0.0f;
+                energy = energy_max;
+                is_adrenaline_fading_in = true;
+                adrenal_fade_timer = 0.0f;
+            }
+            else
+            {
+                Referencer.instance.hud_ui.InsufficientAdrenaline();
+            }
+        }
+    }
+
+    /// <summary>
     /// Evades
     /// </summary>
     public void Evade()
@@ -294,7 +371,11 @@ public class PlayerStats : MonoBehaviour
             return;
         }
 
-        if ( energy < EVADE_COST ) { return; } // insufficient resources. play sound?
+        if ( energy < EVADE_COST && ! is_adrenal_rushing )
+        {
+            Referencer.instance.hud_ui.InsuffienctStamina();
+            return;
+        } // insufficient resources. play sound?
 
         // check if stuck in a non-cancellable animation
 
@@ -341,7 +422,7 @@ public class PlayerStats : MonoBehaviour
             }
         }
 
-        energy -= EVADE_COST;
+        if ( ! is_adrenal_rushing ) { energy -= EVADE_COST; }
 
         // animate
         if ( char_stats.IsGrounded )
@@ -418,6 +499,19 @@ public class PlayerStats : MonoBehaviour
     {
         invincible = true;
         invincibility_counter = 0.0f;
+    }
+
+    /// <summary>
+    /// Restores adrenaline rush mode changes (time scale and camera desaturation) to normal.
+    /// </summary>
+    private void CleanupAdrenalineChanges()
+    {
+        is_adrenal_rushing = false;
+        is_adrenaline_fading_in = false;
+        is_adrenaline_fading_out = false;
+        adrenal_rush_timer = 0.0f;
+        Time.timeScale = 1.0f;
+        Camera.main.GetComponent<DesaturateEffect>().desaturation = 0.0f;
     }
 
     /// <summary>
@@ -546,6 +640,52 @@ public class PlayerStats : MonoBehaviour
         }
         #endregion
 
+        #region Adrenaline
+        if ( is_adrenal_rushing )
+        {
+            adrenal_rush_timer += Time.deltaTime * Time.timeScale;
+            if ( adrenal_rush_timer > ADRENAL_RUSH_DURATION )
+            {
+                is_adrenal_rushing = false;
+                adrenal_rush_timer = 0.0f;
+                is_adrenaline_fading_out = true;
+                adrenal_fade_timer = 0.0f;
+            }
+        }
+        else
+        {
+            if ( adrenal_rush_timer < ADRENAL_RUSH_COOLDOWN )
+            {
+                adrenal_rush_timer += Time.deltaTime * Time.timeScale;
+            }
+        }
+
+        if ( is_adrenaline_fading_in )
+        {
+            adrenal_fade_timer += Time.deltaTime;
+            float t = adrenal_fade_timer / ADRENALINE_FADE_DURATION;
+            Time.timeScale = 1.0f - Mathf.Min( 0.5f * t, 0.5f );
+            Camera.main.GetComponent<DesaturateEffect>().desaturation = Mathf.Min( t * ADRENALINE_DESATURATION, 1.0f );
+            if ( adrenal_fade_timer >= ADRENALINE_FADE_DURATION )
+            {
+                is_adrenaline_fading_in = false;
+                Time.timeScale = 0.5f;
+            }
+        }
+
+        if ( is_adrenaline_fading_out )
+        {
+            adrenal_fade_timer += Time.deltaTime;
+            float t = (1.0f - adrenal_fade_timer / ADRENALINE_FADE_DURATION);
+            Time.timeScale = 1.0f - Mathf.Min( 0.5f * t, 0.5f );
+            Camera.main.GetComponent<DesaturateEffect>().desaturation = Mathf.Min( t * ADRENALINE_DESATURATION, 1.0f );
+            if ( adrenal_fade_timer >= ADRENALINE_FADE_DURATION )
+            {
+                CleanupAdrenalineChanges();
+            }
+        }
+        #endregion
+
         #region Walking
         if ( char_stats.IsGrounded &&
             ( char_stats.current_move_state == CharEnums.MoveState.IsWalking || char_stats.current_move_state == CharEnums.MoveState.IsRunning ) )
@@ -570,20 +710,6 @@ public class PlayerStats : MonoBehaviour
         }
         #endregion
         #endregion
-
-        // Cheat codes
-        // TODO: remove
-        if ( Input.GetKeyDown( KeyCode.M ) )
-        {
-            if ( acquired_mag_grip )
-            {
-                acquired_mag_grip = false;
-            }
-            else
-            {
-                acquired_mag_grip = true;
-            }
-        }
     }
 
 }
