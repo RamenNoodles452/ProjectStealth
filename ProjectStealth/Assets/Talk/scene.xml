@@ -1,0 +1,15 @@
+<scene>
+<script>
+  <line duration = "1.0"></line>
+  <line character = "Markus">
+Scout team, report.
+  </line>
+  <line duration = "1.0"></line>
+  <line character = "Scout">
+We're in.
+  </line>
+  <line character = "Markus">
+Good. Keep it quiet and proceed to the target.
+  </line>
+</script>
+</scene>

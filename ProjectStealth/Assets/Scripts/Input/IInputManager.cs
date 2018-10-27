@@ -47,6 +47,9 @@ public abstract class IInputManager : MonoBehaviour
     public bool CloakInput;
     public bool CloakInputInst;
 
+    public bool AdrenalineInput;
+    public bool AdrenalineInputInst;
+
     protected float RunAxis;
     public bool RunInput;
     public bool RunInputDownInst;

@@ -45,7 +45,7 @@ public class SimpleCharacterCore : MonoBehaviour
 
     private const float APPROXIMATE_EQUALITY_MARGIN = 0.001f; //Mathf.Epsilon;
     private const float AERIAL_SIZE_INCREASE = 10.0f; // pixels added to collision box height while in midair, to avoid corner clipping
-    private const float ONE_PIXEL_BUFFER = 0.495f; // 0.005f; is minimum physics step, for some reason this makes player position line up on the pixel.
+    private const float ONE_PIXEL_BUFFER = 1.0f;
 
     private Queue<Vector3> applied_moves;
     #endregion
@@ -456,22 +456,22 @@ public class SimpleCharacterCore : MonoBehaviour
         float hit_distance = hit.distance - ONE_PIXEL_BUFFER;
         if ( hit_distance <= Mathf.Abs( char_stats.velocity.x * Time.deltaTime * Time.timeScale ) )
         {
+            CollisionType hit_collision_type = hit.collider.GetComponent<CollisionType>();
+            if ( hit_collision_type != null )
+            {
+                if ( hit_collision_type.CanVaultOver == true && char_stats.IsGrounded )
+                {
+                    char_stats.touched_vault_obstacle = hit.collider;
+                }
+                if ( ! hit_collision_type.IsBlocking ) { return; }
+            }
             // we touched a wall
             Vector3 gap;
             if ( char_stats.velocity.x > 0.0f ) { gap = new Vector3(  hit_distance, 0.0f, 0.0f ); }
             else                                { gap = new Vector3( -hit_distance, 0.0f, 0.0f ); }
             this.gameObject.transform.Translate( gap );
-
             char_stats.velocity.x = 0.0f;
             OnTouchWall( hit.collider.gameObject );
-            CollisionType hit_collision_type = hit.collider.GetComponent<CollisionType>();
-            if ( hit_collision_type != null )
-            {
-                if ( hit_collision_type.VaultObstacle == true && char_stats.IsGrounded )
-                {
-                    char_stats.touched_vault_obstacle = hit.collider;
-                }
-            }
         }
     }
 
@@ -547,6 +547,11 @@ public class SimpleCharacterCore : MonoBehaviour
         float hit_distance = hit.distance - ONE_PIXEL_BUFFER;
         if ( hit_distance <= Mathf.Abs( char_stats.velocity.y * Time.deltaTime * Time.timeScale ) )
         {
+            CollisionType collision_type = hit.transform.gameObject.GetComponent<CollisionType>();
+            if ( collision_type != null )
+            {
+                if ( ! collision_type.IsBlocking ) { return; }
+            }
             // hit the ceiling, stop upward movement
             this.gameObject.transform.Translate( new Vector3( 0.0f, hit_distance, 0.0f ) );
             char_stats.velocity.y = 0.0f;
@@ -579,6 +584,7 @@ public class SimpleCharacterCore : MonoBehaviour
             bool did_touch_ground = true;
             if ( collision_type != null )
             {
+                if ( ! collision_type.IsBlocking ) { return; }
                 // special types of floor can change behaviour.
                 if ( ShuntPlayer( collision_type, hit.collider ) )         { did_touch_ground = false; }
                 if ( FallthroughPlatform( collision_type, hit.collider ) ) { did_touch_ground = false; }
@@ -617,12 +623,12 @@ public class SimpleCharacterCore : MonoBehaviour
         float character_left       = char_stats.char_collider.bounds.min.x;
         float character_right      = char_stats.char_collider.bounds.max.x;
 
-        if ( char_stats.velocity.x > 0.0f && floor_collider_right < char_stats.char_collider.bounds.center.x && floor_collision_type.WalkOffRight == false )
+        if ( char_stats.velocity.x > 0.0f && floor_collider_right < char_stats.char_collider.bounds.center.x && floor_collision_type.CanWalkOffRightEdge == false )
         {
             transform.Translate( floor_collider_right - character_left, 0.0f, 0.0f );
             return true;
         }
-        if ( char_stats.velocity.x < 0.0f && floor_collider_left > char_stats.char_collider.bounds.center.x && floor_collision_type.WalkOffLeft == false )
+        if ( char_stats.velocity.x < 0.0f && floor_collider_left > char_stats.char_collider.bounds.center.x && floor_collision_type.CanWalkOffLeftEdge == false )
         {
             transform.Translate( -1.0f * ( character_right - floor_collider_left ), 0.0f, 0.0f );
             return true;
@@ -640,7 +646,7 @@ public class SimpleCharacterCore : MonoBehaviour
     {
         if ( ! fallthrough ) { return false; }    // The player is not falling through the floor.
 
-        if ( ! floor_collision_type.Fallthrough ) // The player cannot pass through this floor.
+        if ( ! floor_collision_type.CanFallthrough ) // The player cannot pass through this floor.
         {
             fallthrough = false;
             return false;
@@ -649,8 +655,8 @@ public class SimpleCharacterCore : MonoBehaviour
         // make sure that the player character is not straddling a solid platform
         // issue can't fall down when straddling two fallthrough platforms 
         // (but there shouldn't be a need to have two passthrough platforms touch, they can just merge into 1)
-        if ( ( floor_collision_type.WalkOffRight && char_stats.char_collider.bounds.max.x > floor_collider.bounds.max.x ) ||
-                ( floor_collision_type.WalkOffLeft  && char_stats.char_collider.bounds.min.x < floor_collider.bounds.min.x ) )
+        if ( ( floor_collision_type.CanWalkOffRightEdge && char_stats.char_collider.bounds.max.x > floor_collider.bounds.max.x ) ||
+                ( floor_collision_type.CanWalkOffLeftEdge  && char_stats.char_collider.bounds.min.x < floor_collider.bounds.min.x ) )
         {
             fallthrough = false;
             return false;
@@ -674,12 +680,12 @@ public class SimpleCharacterCore : MonoBehaviour
         float distance_to_edge;
         if ( char_stats.IsFacingLeft() )
         {
-            if ( collision_type.WalkOffLeft )  { return; } // player can walk off walk-off-able ledges (allows characters to walk over connected platforms)
+            if ( collision_type.CanWalkOffLeftEdge )  { return; } // player can walk off walk-off-able ledges (allows characters to walk over connected platforms)
             distance_to_edge = char_stats.char_collider.bounds.min.x - collider.bounds.min.x;
         }
         else
         {
-            if ( collision_type.WalkOffRight ) { return; } // player can walk off walk-off-able ledges
+            if ( collision_type.CanWalkOffRightEdge ) { return; } // player can walk off walk-off-able ledges
             distance_to_edge = collider.bounds.max.x - char_stats.char_collider.bounds.max.x;
         }
 

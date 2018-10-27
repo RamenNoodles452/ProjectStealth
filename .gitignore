@@ -28,3 +28,5 @@ sysinfo.txt
 */UnityPackageManager/manifest.json
 *.exe
 *.dll
+*.dll.meta
+*/storage.ide

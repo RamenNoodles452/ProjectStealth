@@ -398,7 +398,7 @@ public class MagGripUpgrade : MonoBehaviour
         if ( hit.collider == null )               { AbortWallClimbFromLedge(); return; }  // no floor.
         CollisionType collision_type = hit.collider.gameObject.GetComponent<CollisionType>();
         if ( collision_type == null )             { AbortWallClimbFromLedge(); return; }  // invalid configuration
-        if ( ! collision_type.WallClimb )         { AbortWallClimbFromLedge(); return; }  // unclimbable object
+        if ( ! collision_type.IsWallClimbable )   { AbortWallClimbFromLedge(); return; }  // unclimbable object
         if ( grabCheck.collider != hit.collider ) { AbortWallClimbFromLedge(); return; }  // hit a different object, too short
 
         char_stats.current_master_state = CharEnums.MasterState.ClimbState;
@@ -424,7 +424,7 @@ public class MagGripUpgrade : MonoBehaviour
         if ( ! player_stats.acquired_mag_grip )           { return; } // can't climb without this upgrade
         CollisionType collision_type = collision_object.gameObject.GetComponent<CollisionType>();
         if ( collision_type == null )                     { return; } // invalid config
-        if ( ! collision_type.WallClimb )                 { return; } // unclimbable
+        if ( ! collision_type.IsWallClimbable )           { return; } // unclimbable
         if ( current_climb_state != ClimbState.NotClimb ) { return; } // don't start climbing if you already are
         if ( ! char_stats.IsInMidair )                    { return; } // need to be in midair
         if ( wall_grab_delay_timer < WALL_GRAB_DELAY )    { return; } // wait for it
@@ -490,7 +490,7 @@ public class MagGripUpgrade : MonoBehaviour
         if ( ! player_stats.acquired_mag_grip )           { return; } // need the upgrade to do this TODO: separate wall and ceiling upgrades into 2 bools
         CollisionType collision_type = collision_object.gameObject.GetComponent<CollisionType>();
         if ( collision_type == null )                     { return; } // invalid config
-        if ( ! collision_type.CeilingClimb )              { return; } // unclimbable
+        if ( ! collision_type.IsCeilingClimbable )        { return; } // unclimbable
         if ( current_climb_state != ClimbState.NotClimb ) { return; } // don't start climbing if you already are
         if ( ! char_stats.IsInMidair )                    { return; } // need to be in midair
         if ( wall_grab_delay_timer < WALL_GRAB_DELAY )    { return; } // wait for it

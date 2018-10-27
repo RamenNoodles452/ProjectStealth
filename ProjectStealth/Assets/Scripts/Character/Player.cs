@@ -63,34 +63,40 @@ public class Player : SimpleCharacterCore
         if ( char_stats.current_master_state == CharEnums.MasterState.DefaultState )
         {
 
-            //Evade
+            // Evade
             if ( input_manager.EvadeInputInst )
             {
                 player_stats.Evade();
             }
 
-            //Shoot
+            // Shoot
             if ( input_manager.ShootInputInst )
             {
                 player_stats.Shoot();
             }
 
-            //Attack
+            // Attack
             if ( input_manager.AttackInputInst )
             {
                 player_stats.Attack();
             }
 
-            //Assassinate
+            // Assassinate
             if ( input_manager.AssassinateInputInst )
             {
                 player_stats.Assassinate();
             }
 
-            //Cloak
+            // Cloak
             if ( input_manager.CloakInputInst )
             {
                 player_stats.Cloak();
+            }
+
+            // Adrenal Rush
+            if ( input_manager.AdrenalineInputInst )
+            {
+                player_stats.AdrenalRush();
             }
 
             // base mag grip checks
