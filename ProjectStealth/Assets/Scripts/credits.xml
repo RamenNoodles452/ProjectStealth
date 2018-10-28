@@ -1,51 +1,57 @@
 <credits>
   <lines>
-    <text header = "1">Writing</text>
-    <text header = "2">Scenario Writers</text>
-    <text>Jay Lee</text>
-    <text>Gabriel Violette</text>
-    <text></text>
-
     <text header = "1">Game Design</text>
-    <text header = "2">Lead Game Designer</text>
+    <text header = "2">Lead Game Designer:</text>
     <text>Jay Lee</text>
-    <text header = "2">Game Designer</text>
-    <text>Gabriel Violette</text>
-    <text></text>
-
-    <text header = "1">Art</text>
-    <text header = "2">Character Artist</text>
-    <text>Jay Lee</text>
-    <text header = "2">Concept Artist</text>
-    <text>"Shrimpy"</text>
-    <text header = "2">Environment Artist</text>
+    <text header = "2">Game Designer:</text>
     <text>Gabriel Violette</text>
     <text></text>
 
     <text header = "1">Programming</text>
-    <text header = "2">Programmers</text>
+    <text header = "2">Programmers:</text>
     <text>Jay Lee</text>
     <text>Gabriel Violette</text>
     <text></text>
 
+    <text header = "1">Writing</text>
+    <text header = "2">Scenario Writers:</text>
+    <text>Jay Lee</text>
+    <text>Gabriel Violette</text>
+    <text></text>
+
+    <text header = "1">Art</text>
+    <text header = "2">Character Artist:</text>
+    <text>Jay Lee</text>
+    <text header = "2">Concept Artist:</text>
+    <text>"Shrimpy"</text>
+    <text header = "2">Environment Artist:</text>
+    <text>Gabriel Violette</text>
+    <text></text>
+    <text header = "2">Fonts courtesy of:</text>
+    <text>Randy Everett (Andromeda)</text>
+    <text>Tepid Monkey Fonts (Discognate)</text>
+    <text></text>
+
     <text header = "1">Music</text>
-    <text header = "2">Composer</text>
+    <text header = "2">Composer:</text>
     <text></text>
 
     <text header = "1">Sound Design</text>
-    <text header = "2">Sound Designer</text>
+    <text header = "2">Sound Designer:</text>
     <text></text>
 
     <text header = "1">Voice Acting</text>
-    <text header = "2">Voice Actor(s)</text>
-    <text></text>
-
-    <text header = "1">Special Thanks</text>
-    <text>To the people who played this game</text>
+    <text header = "2">Voice Actor(s):</text>
     <text></text>
     <text></text>
     <text></text>
 
     <text>Built with Unity3D</text>
+    <text></text>
+    <text></text>
+    <text></text>
+    
+    <text header = "1">Special Thanks</text>
+    <text>To you, the players and watchers of this game.</text>
   </lines>
 </credits>
