@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// Conveyor Belt script
+// - Gabriel Violette
 public class ConveyorBelt : MonoBehaviour
 {
     #region vars
@@ -9,14 +11,12 @@ public class ConveyorBelt : MonoBehaviour
     private float speed = 48.0f; // pixels per second. Negative to reverse.
     private bool attached;
 
-    private Player player;
     private CharacterStats char_stats;
     #endregion
 
     // Use this for initialization
     void Start()
     {
-        player = Referencer.instance.player;
         char_stats = Referencer.instance.player.GetComponent<CharacterStats>();
 
         Initialize();
@@ -72,11 +72,12 @@ public class ConveyorBelt : MonoBehaviour
         if ( attached )
         {
             Vector3 delta = new Vector3( speed  * Time.deltaTime * Time.timeScale, 0.0f, 0.0f );
-            player.MoveWithCollision( delta );
+            Referencer.instance.player.MoveWithCollision( delta );
         }
     }
 
     #region trigger
+    // Called when a collider touches the trigger collider
     private void OnTriggerEnter2D( Collider2D other )
     {
         if ( other.gameObject.layer == LayerMask.NameToLayer( "character objects" ) )
@@ -85,6 +86,7 @@ public class ConveyorBelt : MonoBehaviour
         }
     }
 
+    // Called when a collider is no longer touching the trigger collider, which it was previously touching
     private void OnTriggerExit2D( Collider2D other )
     {
         if ( other.gameObject.layer == LayerMask.NameToLayer( "character objects" ) )
