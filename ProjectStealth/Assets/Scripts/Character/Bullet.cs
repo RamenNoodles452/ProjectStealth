@@ -49,6 +49,7 @@ public class Bullet : MonoBehaviour
         }
     }
 
+    // Called when a collider enters this object's hitbox
     void OnTriggerEnter2D( Collider2D collider )
     {
         // So... bullets should have kinematic, not dynamic rigidbodies so that they don't "interact" with floors, walls, etc. by sliding around and doing physics-based simulations.
@@ -56,7 +57,7 @@ public class Bullet : MonoBehaviour
         // THEREFORE, bullets must be triggers.
         // See: https://docs.Unity2d.com/Manual/CollidersOverview.html
 
-        if ( collider.gameObject.layer == LayerMask.NameToLayer( "character objects" ) )
+        if ( Utils.IsPlayersCollider( collider ) )
         {
             PlayerStats player_stats = collider.gameObject.GetComponent<PlayerStats> ();
             if ( player_stats != null )
@@ -66,7 +67,7 @@ public class Bullet : MonoBehaviour
             Debug.Log( "bullet hit player" );
             Destroy( this.gameObject );
         }
-        else if ( collider.gameObject.layer == LayerMask.NameToLayer( "geometry" ) )
+        else if ( Utils.IsGeometryCollider( collider ) )
         {
             Debug.Log( "bullet hit wall" );
             Destroy( this.gameObject );

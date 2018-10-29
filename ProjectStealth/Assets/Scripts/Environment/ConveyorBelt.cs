@@ -77,19 +77,19 @@ public class ConveyorBelt : MonoBehaviour
     }
 
     #region trigger
-    // Called when a collider touches the trigger collider
+    // Called when a collider touches this object's hitbox
     private void OnTriggerEnter2D( Collider2D other )
     {
-        if ( other.gameObject.layer == LayerMask.NameToLayer( "character objects" ) )
+        if ( Utils.IsPlayersCollider( other ) )
         {
             AttachPlayer();
         }
     }
 
-    // Called when a collider is no longer touching the trigger collider, which it was previously touching
+    // Called when a collider is no longer touching this object's hitbox, which it was previously touching
     private void OnTriggerExit2D( Collider2D other )
     {
-        if ( other.gameObject.layer == LayerMask.NameToLayer( "character objects" ) )
+        if ( Utils.IsPlayersCollider( other ) )
         {
             DetachPlayer();
         }

@@ -24,9 +24,10 @@ public class LiftDetector : MonoBehaviour
 
     }
 
+    // Called when a collider enters this object's hitbox
     void OnTriggerEnter2D( Collider2D other )
     {
-        if ( other.gameObject.layer == LayerMask.NameToLayer( "character objects" ) )
+        if ( Utils.IsPlayersCollider( other ) )
         {
             platform_path.AttachPlayer();
 
@@ -38,9 +39,10 @@ public class LiftDetector : MonoBehaviour
         }
     }
 
+    // Called when a collider exits the object's hitbox
     void OnTriggerExit2D( Collider2D other )
     {
-        if ( other.gameObject.layer == LayerMask.NameToLayer( "character objects" ) )
+        if ( Utils.IsPlayersCollider( other ) )
         {
             platform_path.DetachPlayer();
         }
