@@ -18,7 +18,7 @@ public class PlayerFocalPoint : MonoBehaviour
     {
         charStats = GetComponentInParent<CharacterStats>();
         right_position = new Vector3(  DEFAULT_X, DEFAULT_Y, depth );
-        left_position  = new Vector3( -DEFAULT_X, DEFAULT_X, depth );
+        left_position  = new Vector3( -DEFAULT_X, DEFAULT_Y, depth );
         focal_point_slider = 1.0f;
         focal_point_lock = true;
     }
