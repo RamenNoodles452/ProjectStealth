@@ -28,7 +28,7 @@ public class Dialogue
     /// <returns>A dialogue object with all the lines from the file.</returns>
     public static Dialogue Load( string file_name )
     {
-        string path = Path.Combine( Path.Combine( Application.dataPath, "Talk" ), file_name );
+        string path = System.IO.Path.Combine( Path.Combine( Application.dataPath, "Talk" ), file_name );
         XmlSerializer serializer = new XmlSerializer( typeof( Dialogue ) );
         FileStream stream = new FileStream( path, FileMode.Open );
         Dialogue temp = serializer.Deserialize( stream ) as Dialogue;
