@@ -5,13 +5,13 @@ using UnityEngine;
 public class LiftDetector : MonoBehaviour
 {
     #region vars
-    PlatformPatrol platform_path;
+    FollowPath platform_path;
     #endregion
 
     // Use this for initialization
     void Start()
     {
-        platform_path = GetComponentInParent<PlatformPatrol>();
+        platform_path = GetComponentInParent<FollowPath>();
         if ( platform_path == null )
         {
             Debug.LogError( "Lift configuration issue!" );

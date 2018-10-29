@@ -5,7 +5,7 @@ using UnityEngine;
 // Stores enemy patrol behaviour.
 
 // Needed to inherit from some Unity class so the custom editor typecast from UnityEngine.Object works.
-public class PatrolPath : MonoBehaviour
+public class Path : MonoBehaviour
 {
     #region vars
     // NOTE: if you add a public var, to get it to display, you may need to update PointEditor.cs
@@ -54,6 +54,14 @@ public class PatrolPath : MonoBehaviour
         if ( path.Length <= 0 ) { return transform.position; }
 
         return path[ index ].position;
+    }
+
+    /// <returns>The number of seconds to wait once the current destination is reached.</returns>
+    public float CurrentDelay()
+    {
+        if ( path == null ) { return 0.0f; }
+        if ( path.Length <= 0 ) { return 0.0f; }
+        return path[ index ].delay;
     }
 }
 

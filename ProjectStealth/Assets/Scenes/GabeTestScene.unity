@@ -22920,7 +22920,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 32
-  delta: {x: 0, y: 0, z: 0}
 --- !u!114 &1563138771
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22938,9 +22937,9 @@ MonoBehaviour:
   - position: {x: -370, y: -16, z: 0}
     delay: 0
   - position: {x: -370, y: 270, z: 0}
-    delay: 0
+    delay: 1
   - position: {x: 0, y: 270, z: 0}
-    delay: 0
+    delay: 1
 --- !u!212 &1563138772
 SpriteRenderer:
   m_ObjectHideFlags: 0

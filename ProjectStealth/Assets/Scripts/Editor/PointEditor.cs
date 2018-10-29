@@ -7,7 +7,7 @@ using UnityEditor;
 // TODO: update as we add functionality to the patrol paths.
 // - Gabe V
 
-[CustomEditor( typeof( PatrolPath ) )]
+[CustomEditor( typeof( Path ) )]
 public class PointEditor : Editor
 {
     #region vars
@@ -22,7 +22,7 @@ public class PointEditor : Editor
     public void OnSceneGUI()
     {
         // target = implicitly passed, the object being inspected (should be of type Path, but passed as UnityEngine.Object)
-        PatrolPath inspectee = ((PatrolPath)target);
+        Path inspectee = ((Path)target);
         if ( inspectee == null ) { return; }
         if ( inspectee.path == null ) { return; }
 
@@ -57,7 +57,7 @@ public class PointEditor : Editor
     /// </summary>
     public override void OnInspectorGUI()
     {
-        PatrolPath path = (PatrolPath) target;                                 // target is implicit engine-set variable
+        Path path = (Path) target;                                 // target is implicit engine-set variable
         if ( path == null ) { return; }                                        // safety
 
         serializedObject.Update();                                             // does something? to serialized PathNode members in PatrolPath target
