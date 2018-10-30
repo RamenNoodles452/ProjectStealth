@@ -52,7 +52,10 @@ public class EnemyVisionField : MonoBehaviour
         // has enemy already seen you?
         // TODO:
 
-        Look();
+        if ( Utils.IsPlayersCollider( collision ) )
+        {
+            Look();
+        }
     }
 
     private void OnTriggerStay2D( Collider2D collision )
@@ -60,7 +63,10 @@ public class EnemyVisionField : MonoBehaviour
         // has enemy already seen you?
         // TODO:
 
-        Look();
+        if ( Utils.IsPlayersCollider( collision ) )
+        {
+            Look();
+        }
     }
 
     private void OnTriggerExit2D( Collider2D collision )
