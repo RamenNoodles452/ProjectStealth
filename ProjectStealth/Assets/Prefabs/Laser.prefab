@@ -27,6 +27,7 @@ GameObject:
   - component: {fileID: 114506404325422352}
   - component: {fileID: 114034389158300498}
   - component: {fileID: 114848018984098646}
+  - component: {fileID: 114010188313162148}
   m_Layer: 0
   m_Name: Laser
   m_TagString: Untagged
@@ -43,6 +44,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4001422422811308}
   - component: {fileID: 212864593803848394}
+  - component: {fileID: 108859869218693886}
   m_Layer: 0
   m_Name: End
   m_TagString: Untagged
@@ -76,6 +78,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4465209292796146}
   - component: {fileID: 212252695521113552}
+  - component: {fileID: 108554814035241518}
   m_Layer: 0
   m_Name: Start
   m_TagString: Untagged
@@ -183,6 +186,103 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 24, y: 1}
   m_EdgeRadius: 0
+--- !u!108 &108554814035241518
+Light:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1884573428355028}
+  m_Enabled: 0
+  serializedVersion: 8
+  m_Type: 2
+  m_Color: {r: 1, g: 0, b: 0, a: 1}
+  m_Intensity: 4
+  m_Range: 24
+  m_SpotAngle: 30
+  m_CookieSize: 10
+  m_Shadows:
+    m_Type: 0
+    m_Resolution: -1
+    m_CustomResolution: -1
+    m_Strength: 1
+    m_Bias: 0.05
+    m_NormalBias: 0.4
+    m_NearPlane: 0.2
+  m_Cookie: {fileID: 0}
+  m_DrawHalo: 0
+  m_Flare: {fileID: 0}
+  m_RenderMode: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_Lightmapping: 4
+  m_LightShadowCasterMode: 0
+  m_AreaSize: {x: 1, y: 1}
+  m_BounceIntensity: 1
+  m_ColorTemperature: 6570
+  m_UseColorTemperature: 0
+  m_ShadowRadius: 0
+  m_ShadowAngle: 0
+--- !u!108 &108859869218693886
+Light:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1717224724532460}
+  m_Enabled: 0
+  serializedVersion: 8
+  m_Type: 2
+  m_Color: {r: 1, g: 0, b: 0, a: 1}
+  m_Intensity: 4
+  m_Range: 24
+  m_SpotAngle: 30
+  m_CookieSize: 10
+  m_Shadows:
+    m_Type: 0
+    m_Resolution: -1
+    m_CustomResolution: -1
+    m_Strength: 1
+    m_Bias: 0.05
+    m_NormalBias: 0.4
+    m_NearPlane: 0.2
+  m_Cookie: {fileID: 0}
+  m_DrawHalo: 0
+  m_Flare: {fileID: 0}
+  m_RenderMode: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_Lightmapping: 4
+  m_LightShadowCasterMode: 0
+  m_AreaSize: {x: 1, y: 1}
+  m_BounceIntensity: 1
+  m_ColorTemperature: 6570
+  m_UseColorTemperature: 0
+  m_ShadowRadius: 0
+  m_ShadowAngle: 0
+--- !u!114 &114010188313162148
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1581357801213894}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 151d79a0e8125614b842546329736617, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  begin_on: 1
+  durations:
+  - 2.6
+  - 0.05
+  - 0.05
+  - 0.05
+  - 0.05
+  - 1
+  - 0.05
+  - 0.05
+  - 0.05
+  - 0.05
 --- !u!114 &114034389158300498
 MonoBehaviour:
   m_ObjectHideFlags: 1

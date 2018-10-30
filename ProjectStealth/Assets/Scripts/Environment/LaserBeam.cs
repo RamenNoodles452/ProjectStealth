@@ -33,9 +33,10 @@ public class LaserBeam : MonoBehaviour
         if ( ! is_on )
         {
             sprite_renderer.size = new Vector2( 0.0f, 0.0f );
-            collider.size = new Vector2( 0.0f, 0.0f );
+            collider.enabled = false;
             start_light.gameObject.SetActive( false );
             end_light.gameObject.SetActive( false );
+            particles.gameObject.SetActive( false );
             return;
         }
 
@@ -56,6 +57,7 @@ public class LaserBeam : MonoBehaviour
 
         // set up collider and graphics (rotation of transform handles rotational stuff)
         sprite_renderer.size = new Vector2( range, 8.0f );
+        collider.enabled = true;
         collider.size = new Vector2( range, collider.size.y );
         collider.offset = new Vector2( range / 2.0f, 0.0f);
 
@@ -66,6 +68,7 @@ public class LaserBeam : MonoBehaviour
         end_light.GetComponent<SpriteRenderer>().color   = new Color( 1.0f, 0.8f, 0.8f, Random.Range( 0.5f, 0.75f ) );
 
         // For some reason the particlesystem API is awkward.
+        particles.gameObject.SetActive( true );
         //ParticleSystem.MainModule main = particles.main;
         ParticleSystem.ShapeModule shape = particles.shape;
         shape.radius = range / 2.0f;
