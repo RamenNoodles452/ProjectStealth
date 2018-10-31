@@ -11,19 +11,21 @@ public class KillOnTouch : MonoBehaviour
     {
         #region config checks
         // Validate the build.
-        BoxCollider2D collider = GetComponent<BoxCollider2D>();
+        Collider2D collider = GetComponent<BoxCollider2D>();
+        if ( collider == null ) { collider = GetComponent<CircleCollider2D>(); }
+
         if ( collider == null )
         {
             #if UNITY_EDITOR
-            Debug.LogError( "Missing component: BoxCollider2D." );
+            Debug.LogError( "Missing component: Collider2D on " + this.gameObject );
             #endif
             Destroy( this );
             return;
         }
-        if ( !collider.isTrigger )
+        if ( ! collider.isTrigger )
         {
             #if UNITY_EDITOR
-            Debug.LogError( "Invalid configuration: BoxCollider2D is not a trigger." );
+            Debug.LogError( "Invalid configuration: Collider2D is not a trigger on " + this.gameObject );
             #endif
             Destroy( this );
             return;
@@ -33,15 +35,15 @@ public class KillOnTouch : MonoBehaviour
         if ( rigidbody == null )
         {
             #if UNITY_EDITOR
-            Debug.LogError( "Missing component: Rigidbody2D." );
+            Debug.LogError( "Missing component: Rigidbody2D on " + this.gameObject );
             #endif
             Destroy( this );
             return;
         }
-        if ( !rigidbody.isKinematic )
+        if ( ! rigidbody.isKinematic )
         {
             #if UNITY_EDITOR
-            Debug.LogError( "Invalid configuration: Rigidbody2D is not kinematic." );
+            Debug.LogError( "Invalid configuration: Rigidbody2D is not kinematic on " + this.gameObject );
             #endif
             Destroy( this );
             return;

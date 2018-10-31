@@ -7,7 +7,7 @@ public class Bullet : MonoBehaviour
 {
     #region vars
     private float damage    = 50.0f;  // base player health is 100
-    private float speed     = 200.0f; // pixels / second
+    private float speed     = 200.0f; // pixels / second (player move speed is 120:240)
     private float angle     = 0.0f;
     private bool  is_homing = false;
     #endregion
@@ -15,7 +15,44 @@ public class Bullet : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        #region config checks
+        // Validate the build.
+        CircleCollider2D collider = GetComponent<CircleCollider2D>();
+        if ( collider == null )
+        {
+            #if UNITY_EDITOR
+            Debug.LogError( "Missing component: CircleCollider2D." );
+            #endif
+            Destroy( this );
+            return;
+        }
+        if ( ! collider.isTrigger )
+        {
+            #if UNITY_EDITOR
+            Debug.LogError( "Invalid configuration: CircleCollider2D is not a trigger." );
+            #endif
+            Destroy( this );
+            return;
+        }
 
+        Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
+        if ( rigidbody == null )
+        {
+            #if UNITY_EDITOR
+            Debug.LogError( "Missing component: Rigidbody2D." );
+            #endif
+            Destroy( this );
+            return;
+        }
+        if ( ! rigidbody.isKinematic )
+        {
+            #if UNITY_EDITOR
+            Debug.LogError( "Invalid configuration: Rigidbody2D is not kinematic." );
+            #endif
+            Destroy( this );
+            return;
+        }
+        #endregion
     }
 
     // Update is called once per frame
@@ -29,6 +66,9 @@ public class Bullet : MonoBehaviour
         transform.position += new Vector3( speed * Mathf.Cos( angle ), speed * Mathf.Sin( angle ), 0.0f ) * Time.deltaTime * Time.timeScale;
     }
 
+    /// <summary>
+    /// The angle the bullet is moving in (in radians)
+    /// </summary>
     public float Angle
     {
         get
