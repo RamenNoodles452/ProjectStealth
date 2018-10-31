@@ -7,7 +7,7 @@ public class CrumblingPlatform : MonoBehaviour
 {
     #region vars
     [SerializeField]
-    private float fall_time = 0.2f; // player speed is 120 pixels / second (5 tiles / sec)
+    private float fall_time = 0.27f; // player speed is 120 pixels / second (4.075 tiles / sec)
 
     private const float REGEN_DELAY = 3.0f;
 

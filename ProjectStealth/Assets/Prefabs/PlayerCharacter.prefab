@@ -70,7 +70,7 @@ GameObject:
   m_Layer: 2
   m_Name: CameraFocalPoint
   m_TagString: Untagged
-  m_Icon: {fileID: -1462388694956747189, guid: 0000000000000000d000000000000000, type: 0}
+  m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -219,7 +219,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 24, y: 40}
+  m_Size: {x: 26, y: 40}
   m_EdgeRadius: 0
 --- !u!95 &95145278766902952
 Animator:
@@ -369,9 +369,9 @@ MonoBehaviour:
   previous_move_state: 0
   on_ground_collider: {fileID: 0}
   char_collider: {fileID: 0}
-  STANDING_COLLIDER_SIZE: {x: 24, y: 40}
+  STANDING_COLLIDER_SIZE: {x: 26, y: 40}
   STANDING_COLLIDER_OFFSET: {x: 0, y: -2}
-  CROUCHING_COLLIDER_SIZE: {x: 24, y: 20}
+  CROUCHING_COLLIDER_SIZE: {x: 26, y: 20}
   CROUCHING_COLLIDER_OFFSET: {x: 0, y: -12}
   velocity: {x: 0, y: 0}
   acceleration: {x: 0, y: 0}
