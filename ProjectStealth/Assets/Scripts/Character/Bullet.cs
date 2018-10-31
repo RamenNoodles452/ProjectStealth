@@ -7,8 +7,6 @@ public class Bullet : MonoBehaviour
 {
     #region vars
     private float damage    = 50.0f;  // base player health is 100
-    private float lifetime  = 3.0f;   // seconds //TODO: use DestroyMe instead.
-    private float timer     = 0.0f;
     private float speed     = 200.0f; // pixels / second
     private float angle     = 0.0f;
     private bool  is_homing = false;
@@ -29,12 +27,6 @@ public class Bullet : MonoBehaviour
             angle = Mathf.Atan2( player_position.y - transform.position.y, player_position.x - transform.position.x );
         }
         transform.position += new Vector3( speed * Mathf.Cos( angle ), speed * Mathf.Sin( angle ), 0.0f ) * Time.deltaTime * Time.timeScale;
-
-        timer += Time.deltaTime * Time.timeScale;
-        if ( timer > lifetime )
-        {
-            Destroy( this.gameObject );
-        }
     }
 
     public float Angle

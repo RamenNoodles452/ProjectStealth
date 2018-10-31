@@ -6,8 +6,7 @@ using UnityEngine;
 public class DestroyMe : MonoBehaviour
 {
     #region vars
-    [SerializeField]
-    private float lifetime = 1.0f;
+    public  float lifetime = 1.0f;
     private float timer = 0.0f;
     #endregion
 
