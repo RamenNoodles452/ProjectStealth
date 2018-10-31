@@ -23,6 +23,7 @@ public class EnemyVisionField : MonoBehaviour
         line_renderer.startWidth = 1.0f;
         line_renderer.endWidth = 1.0f;
         line_renderer.positionCount = 4;
+        //TODO: configuration checks (collider, trigger, rigidbody, kinematic)
 #endif
     }
 

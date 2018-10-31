@@ -17,6 +17,11 @@ public class ConveyorBelt : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        if ( ! TriggerBuildValidator.Validate( this.gameObject ) )
+        {
+            Destroy( this );
+            return;
+        }
         char_stats = Referencer.instance.player.GetComponent<CharacterStats>();
 
         Initialize();

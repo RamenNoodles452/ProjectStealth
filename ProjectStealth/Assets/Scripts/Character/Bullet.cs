@@ -15,44 +15,11 @@ public class Bullet : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        #region config checks
-        // Validate the build.
-        CircleCollider2D collider = GetComponent<CircleCollider2D>();
-        if ( collider == null )
+        if ( ! TriggerBuildValidator.Validate( this.gameObject ) )
         {
-            #if UNITY_EDITOR
-            Debug.LogError( "Missing component: CircleCollider2D." );
-            #endif
             Destroy( this );
             return;
         }
-        if ( ! collider.isTrigger )
-        {
-            #if UNITY_EDITOR
-            Debug.LogError( "Invalid configuration: CircleCollider2D is not a trigger." );
-            #endif
-            Destroy( this );
-            return;
-        }
-
-        Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
-        if ( rigidbody == null )
-        {
-            #if UNITY_EDITOR
-            Debug.LogError( "Missing component: Rigidbody2D." );
-            #endif
-            Destroy( this );
-            return;
-        }
-        if ( ! rigidbody.isKinematic )
-        {
-            #if UNITY_EDITOR
-            Debug.LogError( "Invalid configuration: Rigidbody2D is not kinematic." );
-            #endif
-            Destroy( this );
-            return;
-        }
-        #endregion
     }
 
     // Update is called once per frame
