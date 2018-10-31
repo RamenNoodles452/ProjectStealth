@@ -75,6 +75,5 @@ public class LaserBeam : MonoBehaviour
         shape.position = new Vector3( range / 2.0f, 0.0f, 0.0f );
         ParticleSystem.EmissionModule emission = particles.emission;
         emission.rateOverTime = range / 24.0f * 160.0f;
-
     }
 }

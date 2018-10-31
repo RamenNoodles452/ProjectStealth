@@ -33,7 +33,7 @@ public class SimpleCharacterCore : MonoBehaviour
     private const float MAX_HORIZONTAL_SPEED = 600.0f; // pixels per second
     protected float WALK_SPEED   =  60.0f; // used for cutscenes for PC, guards will walk when not alerted (pixels / second)
     protected float SNEAK_SPEED  = 120.0f; // default speed, enemies that were walking will use this speed when on guard (pixels / second)
-    protected float RUN_SPEED    = 270.0f; // (pixels / second)
+    protected float RUN_SPEED    = 240.0f; // (pixels / second)
     protected float ACCELERATION = 360.0f; // acceleration used for velocity calcs when running (pixels / second / second)
     protected float DRAG         = 900.0f; // how quickly a character decelerates when running  (pixels / second / second)
     private bool start_run;                // prevents wonky shit from happening if you turn around during a run

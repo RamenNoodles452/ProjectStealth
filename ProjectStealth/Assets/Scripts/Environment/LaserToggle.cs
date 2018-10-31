@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// turns laser on and off
+// turns laser on and off on a timer.
 public class LaserToggle : MonoBehaviour
 {
     #region vars

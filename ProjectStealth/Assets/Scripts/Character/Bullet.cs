@@ -7,7 +7,7 @@ public class Bullet : MonoBehaviour
 {
     #region vars
     private float damage    = 50.0f;  // base player health is 100
-    private float lifetime  = 3.0f;   // seconds
+    private float lifetime  = 3.0f;   // seconds //TODO: use DestroyMe instead.
     private float timer     = 0.0f;
     private float speed     = 200.0f; // pixels / second
     private float angle     = 0.0f;
