@@ -511,7 +511,7 @@ public class PlayerStats : MonoBehaviour
         is_adrenaline_fading_out = false;
         adrenal_rush_timer = 0.0f;
         Time.timeScale = 1.0f;
-        Camera.main.GetComponent<DesaturateEffect>().desaturation = 0.0f;
+        Camera.main.GetComponent<RenderEffects>().desaturation = 0.0f;
     }
 
     /// <summary>
@@ -665,7 +665,7 @@ public class PlayerStats : MonoBehaviour
             adrenal_fade_timer += Time.deltaTime;
             float t = adrenal_fade_timer / ADRENALINE_FADE_DURATION;
             Time.timeScale = 1.0f - Mathf.Min( 0.5f * t, 0.5f );
-            Camera.main.GetComponent<DesaturateEffect>().desaturation = Mathf.Min( t * ADRENALINE_DESATURATION, 1.0f );
+            Camera.main.GetComponent<RenderEffects>().desaturation = Mathf.Min( t * ADRENALINE_DESATURATION, 1.0f );
             if ( adrenal_fade_timer >= ADRENALINE_FADE_DURATION )
             {
                 is_adrenaline_fading_in = false;
@@ -678,7 +678,7 @@ public class PlayerStats : MonoBehaviour
             adrenal_fade_timer += Time.deltaTime;
             float t = (1.0f - adrenal_fade_timer / ADRENALINE_FADE_DURATION);
             Time.timeScale = 1.0f - Mathf.Min( 0.5f * t, 0.5f );
-            Camera.main.GetComponent<DesaturateEffect>().desaturation = Mathf.Min( t * ADRENALINE_DESATURATION, 1.0f );
+            Camera.main.GetComponent<RenderEffects>().desaturation = Mathf.Min( t * ADRENALINE_DESATURATION, 1.0f );
             if ( adrenal_fade_timer >= ADRENALINE_FADE_DURATION )
             {
                 CleanupAdrenalineChanges();

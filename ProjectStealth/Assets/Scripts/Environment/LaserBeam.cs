@@ -64,8 +64,10 @@ public class LaserBeam : MonoBehaviour
         start_light.gameObject.SetActive( true );
         end_light.gameObject.SetActive( true );
         end_light.transform.position = new Vector3( transform.position.x + Mathf.Cos( angle ) * range, transform.position.y + Mathf.Sin( angle ) * range, 0.0f );
-        start_light.GetComponent<SpriteRenderer>().color = new Color( 1.0f, 0.8f, 0.8f, Random.Range( 0.5f, 0.75f ) );
-        end_light.GetComponent<SpriteRenderer>().color   = new Color( 1.0f, 0.8f, 0.8f, Random.Range( 0.5f, 0.75f ) );
+        Color color = start_light.GetComponent<SpriteRenderer>().color;
+        start_light.GetComponent<SpriteRenderer>().color = new Color( color.r, color.g, color.b, Random.Range( 0.5f, 0.75f ) );
+        color = end_light.GetComponent<SpriteRenderer>().color;
+        end_light.GetComponent<SpriteRenderer>().color   = new Color( color.r, color.g, color.b, Random.Range( 0.5f, 0.75f ) );
 
         // For some reason the particlesystem API is awkward.
         particles.gameObject.SetActive( true );
