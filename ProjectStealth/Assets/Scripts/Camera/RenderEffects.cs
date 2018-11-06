@@ -290,9 +290,9 @@ public class RenderEffects : MonoBehaviour
         Mesh blocker_mesh = GetBlockerMesh();
         ShadowCastingLight[] lights = top_level_object.GetComponentsInChildren<ShadowCastingLight>(); // inefficient.
 
-        ShadowMap( ref blocker_mesh, ref lights );
+        ShadowMap( blocker_mesh, lights );
         ConsolidateShadowMap();
-        RenderShadows( ref lights );
+        RenderShadows( lights );
     }
 
     /// <summary>
@@ -300,7 +300,7 @@ public class RenderEffects : MonoBehaviour
     /// </summary>
     /// <param name="blocker_mesh">A mesh made of the edges of all light-occluding geometry.</param>
     /// <param name="lights">An array of all the lights in the scene</param>
-    private void ShadowMap( ref Mesh blocker_mesh, ref ShadowCastingLight[] lights )
+    private void ShadowMap( Mesh blocker_mesh, ShadowCastingLight[] lights )
     {
         // Flush the raw shadow map
         command_buffer.Clear();
@@ -343,7 +343,7 @@ public class RenderEffects : MonoBehaviour
     /// then passes it to the shadow renderer to be queued up for normal rendering.
     /// </summary>
     /// <param name="lights">An array of all the lights in the scene</param>
-    private void RenderShadows( ref ShadowCastingLight[] lights )
+    private void RenderShadows( ShadowCastingLight[] lights )
     {
         // Render all the shadows based on the shadowmap to the screen.
         Material shadow_material = new Material( shadow_shader );
