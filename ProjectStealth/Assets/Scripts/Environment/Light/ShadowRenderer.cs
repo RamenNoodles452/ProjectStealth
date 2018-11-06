@@ -5,26 +5,10 @@ using UnityEngine;
 // Renders shadows.
 public class ShadowRenderer : MonoBehaviour
 {
-    #region vars
-    private Mesh mesh;
-    #endregion
-
-    // Awake is called before Start, for initialization
-    private void Awake()
-    {
-        mesh = GetComponent<MeshFilter>().mesh;
-        #if UNITY_EDITOR
-        if ( mesh == null )
-        {
-            Debug.LogError( "Missing MeshFilter component!" );
-        }
-        #endif
-    }
-
     // Update is called once per frame
     void Update ()
     {
-        mesh = Mesh();
+        GetComponent<MeshFilter>().mesh = Mesh();
     }
 
     // Generates a simple mesh at z = 0.5 for rendering lights / shadows.
