@@ -13,6 +13,12 @@ public class ShadowRenderer : MonoBehaviour
     private void Awake()
     {
         mesh = GetComponent<MeshFilter>().mesh;
+        #if UNITY_EDITOR
+        if ( mesh == null )
+        {
+            Debug.LogError( "Missing MeshFilter component!" );
+        }
+        #endif
     }
 
     // Update is called once per frame
