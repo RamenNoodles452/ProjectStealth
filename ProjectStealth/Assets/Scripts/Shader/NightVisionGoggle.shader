@@ -5,6 +5,7 @@ Shader "Hidden/NVG"
 	Properties
 	{
 		_MainTex ("Texture", 2D) = "white" {}
+		// color1, color2, width
 	}
 	SubShader
 	{
@@ -63,13 +64,13 @@ Shader "Hidden/NVG"
 				fixed p = IN.uv.y;
 				fixed4 color = tex2D( _MainTex, IN.uv );
 
-				fixed line_width = 1.0;
-				fixed mod = (int) ( p * _ScreenParams.y / line_width ) % 4;
+				fixed line_width = 2.0;
+				fixed mod = (uint) ( p * _ScreenParams.y / line_width ) % 4;
 				fixed factor = 0.5;
 				if ( mod == 0 ) { factor = 0; }
 				if ( mod == 2 ) { factor = 1; }
 
-				color.rgb *= lerp( fixed3( 0.5, 0.5, 0.5), fixed3( 0.5, 1.0, 0.5 ), factor );
+				color.rgb *= lerp( fixed3( 0.25, 0.75, 0.25), fixed3( 0.5, 1.0, 0.5 ), factor );
 
 				return color;
 			}
