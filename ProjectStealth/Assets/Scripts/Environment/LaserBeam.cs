@@ -73,6 +73,11 @@ public class LaserBeam : MonoBehaviour
         collider.offset = new Vector2( range / 2.0f, 0.0f );
     }
 
+    /// <summary>
+    /// Sets up the visuals for the laser beam, based on its range and rotation.
+    /// </summary>
+    /// <param name="range">The range of the laser, in pixels.</param>
+    /// <param name="angle">The angle at which the laser is aiming.</param>
     private void SetUpGraphics( float range, float angle )
     {
         // Beam

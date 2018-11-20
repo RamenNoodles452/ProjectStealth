@@ -166,6 +166,10 @@ public class RenderEffects : MonoBehaviour
     #endregion
 
     #region mesh generators
+    /// <summary>
+    /// Gets a mesh representing all the light-occluding geometry of the level.
+    /// </summary>
+    /// <returns>A mesh with the edges of all the light-occluding geometry of the level.</returns>
     private Mesh GetBlockerMesh()
     {
         // Get all light-occluding geometry in the level
