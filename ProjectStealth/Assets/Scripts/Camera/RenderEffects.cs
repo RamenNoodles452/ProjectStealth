@@ -53,6 +53,8 @@ public class RenderEffects : MonoBehaviour
     [SerializeField]
     private RenderTexture shadow;
     private GameObject shadow_object;          // object under lighting, which renders the shadows
+    private float light_alpha = 0.15f;
+    private float light_alpha_timer = 0.0f;
 
     private ulong allocated_shadow_maps = 0;   // mask representing 64 bools (64 x 1/0 bits) (FULL)
     public const int MAX_SHADOW_MAPS = 64;     // this needs to match the height of the shadow map render textures.
@@ -360,7 +362,8 @@ public class RenderEffects : MonoBehaviour
             properties.SetTexture( "_ShadowMap", shadow_map );
             properties.SetTexture( "_BlendTarget", shadow );
             properties.SetVector( "_LightPosition", new Vector4( light.transform.position.x, light.transform.position.y, 0.0f, 0.0f ) );
-            properties.SetColor( "_Color", new Color( 1.0f, 1.0f, 1.0f, 0.10f ) );
+            properties.SetColor( "_Color", new Color( 1.0f, 1.0f, 1.0f, light_alpha ) );
+            properties.SetFloat( "_Range", light.range );
             // add a small tolerance to prevent ambiguous sampling from using the wrong shadowmap.
             properties.SetFloat( "_ShadowMapY", UCoordinate( ( ( (float) light.shadow_map_slot ) + 0.5f ) / ( (float) MAX_SHADOW_MAPS ) ) ); // ( 0, 1 ) range
             // draw it, and blend.
@@ -391,14 +394,14 @@ public class RenderEffects : MonoBehaviour
         // You COULD do this by querying the final light/shadow image from the shadow renderer, or the shadowmap... 
         // but those approaches are SLOW (6 - 20 ms slow), and use async GPU readbacks (readpixels) or require certain GL versions (copytexture).
 
-        const float MAX_DISTANCE = 512.0f; // This value should match the max_cast_distance in Shadow.shader
-        const float MAX_DISTANCE_SQUARED = MAX_DISTANCE * MAX_DISTANCE;
         bool is_in_shadow = true;
 
         foreach ( ShadowCastingLight light in lights )
         {
             // Cheapest (elimination) checks first
             Vector2 direction = world_position - (Vector2) light.transform.position;
+            float MAX_DISTANCE = Mathf.Min( light.range, 512.0f ); // This value should match the max_cast_distance in Shadow.shader
+            float MAX_DISTANCE_SQUARED = MAX_DISTANCE * MAX_DISTANCE;
             if ( direction.sqrMagnitude > MAX_DISTANCE_SQUARED )
             {
                 continue; // out of range. Check the next one.
@@ -409,7 +412,7 @@ public class RenderEffects : MonoBehaviour
             // Raycast, check if anything is occluding the light. If all lights are blocked, you are in shadow.
             // Since we know direction.magnitude < MAX_DISTANCE, don't need to use Mathf.Min( direction.magnitude, MAX_DISTANCE ) as distance. 
             //   (since this is an all cast, overshooting could cause false positives, but we won't overshoot)
-            RaycastHit2D[] hits = Physics2D.RaycastAll( light.transform.position, direction, direction.magnitude, CollisionMasks.light_occlusion_mask );
+            RaycastHit2D[] hits = Physics2D.RaycastAll( light.transform.position, direction, Mathf.Min( direction.magnitude, light.range ), CollisionMasks.light_occlusion_mask );
             #if UNITY_EDITOR
             Debug.DrawLine( light.transform.position, light.transform.position + new Vector3( direction.x, direction.y, 0.0f ) );
             #endif
@@ -461,6 +464,19 @@ public class RenderEffects : MonoBehaviour
 
         Graphics.Blit( render_texture2, destination );
         render_texture2.Release();
+    }
+
+    /// <summary>
+    /// Update is called once per frame.
+    /// </summary>
+    private void Update()
+    {
+        //light_alpha_timer += Time.deltaTime * Time.timeScale * Mathf.PI * 2.0f / 2.0f;
+        //while ( light_alpha_timer > Mathf.PI * 2.0f )
+        //{
+        //    light_alpha_timer -= Mathf.PI * 2.0f;
+        //}
+        //light_alpha = 0.15f + 10.0f / 256.0f * Mathf.Sin( light_alpha_timer ) + 1.0f / 256.0f * Random.Range( -1.0f, 1.0f );
     }
 
     // Called when this script is destroyed.

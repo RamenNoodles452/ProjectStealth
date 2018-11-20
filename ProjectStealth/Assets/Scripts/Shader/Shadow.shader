@@ -8,6 +8,7 @@ Shader "Sprites/Shadow"
 		[PerRendererData] _Color( "Color", Color ) = ( 1, 1, 1, 1 )
 		[PerRendererData] _LightPosition( "LightPosition", Vector ) = ( 0, 0, 1, 0 )
 		[PerRendererData] _ShadowMapY( "ShadowMapY", Float ) = 0
+		[PerRendererData] _Range( "Range", Float ) = 512
 	}
 	SubShader
 	{
@@ -16,7 +17,8 @@ Shader "Sprites/Shadow"
 		Lighting Off
 		ZWrite Off 
 		ZTest Always
-		Blend One One
+		BlendOp Max // Blends with consecutive passes using max (prevents super-stacking of multiple lights to absurd brightness).
+		//Blend One One // Additive
 
 		Tags
 		{
@@ -41,6 +43,7 @@ Shader "Sprites/Shadow"
 			float4    _LightPosition;
 			float     _ShadowMapY;
 			fixed4    _Color;
+			float     _Range;
 
 			// Vertex shader input
 			struct appdata
@@ -105,13 +108,13 @@ Shader "Sprites/Shadow"
 				}
 
 				// fall off over distance
-				float falloff = 1.0 - clamp( max( 0.0f, length( IN.world_position.xy - _LightPosition.xy ) - 32.0 ) / 512.0, 0.0, 1.0 );
+				float falloff = 1.0 - clamp( max( 0.0f, length( IN.world_position.xy - _LightPosition.xy ) - 32.0 ) / _Range, 0.0, 1.0 );
 				color = color * falloff;
 
 				// blend with existing light / shadow
 				fixed4 blend = tex2D( _BlendTarget, IN.uv.xy );
 				float weight = step( blend.r, color.r ); //max: color if color is >= blend
-				color = color * weight + blend * ( 1.0 - weight );
+				color = color * weight + blend * ( 1.0 - weight ); // color xor blend
 
 				return color;
 			}

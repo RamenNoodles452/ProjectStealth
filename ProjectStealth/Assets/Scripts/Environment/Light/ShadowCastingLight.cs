@@ -8,6 +8,8 @@ public class ShadowCastingLight : MonoBehaviour
 {
     #region vars
     public int shadow_map_slot = -1;
+    [Range( 0.0f, 512.0f )]
+    public float range = 512.0f;
     #endregion
 
     // Use for pre-initialization
