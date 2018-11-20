@@ -61,7 +61,7 @@ public class PlayerStats : MonoBehaviour
     // Just change input mapping to require a couple seconds of sneaking in place.
     #endregion
 
-    #region silencer
+    #region Silencer
     // Not sure if this should be consolidated with stealth / UI needs simplification here....
     // Potentially concerning
     private float silencer = 0.0f;
@@ -69,11 +69,13 @@ public class PlayerStats : MonoBehaviour
     private float silencer_regen = 1.0f;
     #endregion
 
+    private bool is_in_shadow = false;
+
     [SerializeField]
     private bool is_adrenal_rushing = false;
     private bool is_adrenaline_fading_in = false;
     private bool is_adrenaline_fading_out = false;
-    private const float ADRENALINE_FADE_DURATION = 0.5f;  // seconds to transition (ignores time scaling)
+    private const float ADRENALINE_FADE_DURATION =  0.5f; // seconds to transition (ignores time scaling)
     private const float ADRENAL_RUSH_DURATION    =  3.0f; // seconds, duration will be ~2x as long
     private const float ADRENAL_RUSH_COOLDOWN    = 15.0f; // seconds
     private const float ADRENALINE_DESATURATION  = 0.75f; // percent desaturation
@@ -246,6 +248,15 @@ public class PlayerStats : MonoBehaviour
         // reset movement
         char_stats = this.gameObject.GetComponent<CharacterStats>();
         char_stats.velocity = new Vector2( 0.0f, 0.0f );
+    }
+
+    /// <summary>
+    /// Accessor for if the player is in shadow or light.
+    /// </summary>
+    public bool IsInShadow
+    {
+        get { return is_in_shadow; }
+        set { is_in_shadow = value; }
     }
 
     /// <summary>
@@ -511,7 +522,7 @@ public class PlayerStats : MonoBehaviour
         is_adrenaline_fading_out = false;
         adrenal_rush_timer = 0.0f;
         Time.timeScale = 1.0f;
-        Camera.main.GetComponent<DesaturateEffect>().desaturation = 0.0f;
+        Camera.main.GetComponent<RenderEffects>().desaturation = 0.0f;
     }
 
     /// <summary>
@@ -665,7 +676,7 @@ public class PlayerStats : MonoBehaviour
             adrenal_fade_timer += Time.deltaTime;
             float t = adrenal_fade_timer / ADRENALINE_FADE_DURATION;
             Time.timeScale = 1.0f - Mathf.Min( 0.5f * t, 0.5f );
-            Camera.main.GetComponent<DesaturateEffect>().desaturation = Mathf.Min( t * ADRENALINE_DESATURATION, 1.0f );
+            Camera.main.GetComponent<RenderEffects>().desaturation = Mathf.Min( t * ADRENALINE_DESATURATION, 1.0f );
             if ( adrenal_fade_timer >= ADRENALINE_FADE_DURATION )
             {
                 is_adrenaline_fading_in = false;
@@ -678,7 +689,7 @@ public class PlayerStats : MonoBehaviour
             adrenal_fade_timer += Time.deltaTime;
             float t = (1.0f - adrenal_fade_timer / ADRENALINE_FADE_DURATION);
             Time.timeScale = 1.0f - Mathf.Min( 0.5f * t, 0.5f );
-            Camera.main.GetComponent<DesaturateEffect>().desaturation = Mathf.Min( t * ADRENALINE_DESATURATION, 1.0f );
+            Camera.main.GetComponent<RenderEffects>().desaturation = Mathf.Min( t * ADRENALINE_DESATURATION, 1.0f );
             if ( adrenal_fade_timer >= ADRENALINE_FADE_DURATION )
             {
                 CleanupAdrenalineChanges();

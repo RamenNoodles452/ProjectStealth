@@ -71,6 +71,8 @@ public class UIScript : MonoBehaviour
     private GameObject cloak_icon;
     [SerializeField]
     private GameObject evade_icon;
+    [SerializeField]
+    private GameObject shadow_icon;
 
     public bool hide_all;
     private const float BAR_LENGTH = 90.0f; // pixels
@@ -155,6 +157,18 @@ public class UIScript : MonoBehaviour
         else
         {
             evade_icon.GetComponent<Text>().enabled = false;
+        }
+        #endregion
+
+        #region shadow
+        // Shadow / Light
+        if ( player.IsInShadow )
+        {
+            shadow_icon.GetComponent<Text>().enabled = true;
+        }
+        else
+        {
+            shadow_icon.GetComponent<Text>().enabled = false;
         }
         #endregion
     }

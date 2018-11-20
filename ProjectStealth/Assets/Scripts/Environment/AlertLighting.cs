@@ -12,7 +12,7 @@ public class AlertLighting : MonoBehaviour
     [Range (0.0f, 1.0f)]
     private float  minimum_brightness = 0.10f; // as a % of maximum brightness
 
-    private Light light;
+    private new Light light;
     private Color safe_color;
     private float intensity;
     private float timer;
