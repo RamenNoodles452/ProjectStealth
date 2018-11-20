@@ -75,7 +75,7 @@ public class PlayerStats : MonoBehaviour
     private bool is_adrenal_rushing = false;
     private bool is_adrenaline_fading_in = false;
     private bool is_adrenaline_fading_out = false;
-    private const float ADRENALINE_FADE_DURATION = 0.5f;  // seconds to transition (ignores time scaling)
+    private const float ADRENALINE_FADE_DURATION =  0.5f; // seconds to transition (ignores time scaling)
     private const float ADRENAL_RUSH_DURATION    =  3.0f; // seconds, duration will be ~2x as long
     private const float ADRENAL_RUSH_COOLDOWN    = 15.0f; // seconds
     private const float ADRENALINE_DESATURATION  = 0.75f; // percent desaturation
