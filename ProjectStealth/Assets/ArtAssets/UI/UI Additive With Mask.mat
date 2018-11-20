@@ -8,7 +8,7 @@ Material:
   m_PrefabInternal: {fileID: 0}
   m_Name: UI Additive With Mask
   m_Shader: {fileID: 4800000, guid: e37cab21724b96a4181cfaf127551bdf, type: 3}
-  m_ShaderKeywords: UNITY_UI_ALPHACLIP _ALPHATEST_ON
+  m_ShaderKeywords: ETC1_EXTERNAL_ALPHA UNITY_UI_ALPHACLIP _ALPHATEST_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0

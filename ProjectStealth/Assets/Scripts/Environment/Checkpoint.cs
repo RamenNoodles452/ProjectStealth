@@ -21,7 +21,7 @@ public class Checkpoint : MonoBehaviour
 
     void OnTriggerEnter2D( Collider2D collision )
     {
-        if ( collision.GetComponent<Player>() != null )
+        if ( Utils.IsPlayersCollider( collision ) )
         {
             Vector2 checkpoint_coordinates = new Vector2( this.gameObject.transform.position.x, this.gameObject.transform.position.y );
             Referencer.instance.player.SetCheckpoint( checkpoint_coordinates );

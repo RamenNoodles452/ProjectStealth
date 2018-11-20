@@ -17,7 +17,7 @@ public class Credits : MonoBehaviour
     // Use for pre-initialization
     private void Awake()
     {
-        string path = Path.Combine( Application.dataPath, "Scripts/credits.xml" );
+        string path = System.IO.Path.Combine( Application.dataPath, "Scripts/credits.xml" );
         FileStream stream = new FileStream( path, FileMode.Open );
         XmlSerializer serializer = new XmlSerializer( typeof( CreditData ) );
         credit_data = serializer.Deserialize( stream ) as CreditData;

@@ -5,14 +5,16 @@ using UnityEngine;
 // Stores enemy patrol behaviour.
 
 // Needed to inherit from some Unity class so the custom editor typecast from UnityEngine.Object works.
-public class PatrolPath : MonoBehaviour
+public class Path : MonoBehaviour
 {
     #region vars
+    // NOTE: if you add a public var, to get it to display, you may need to update PointEditor.cs
+    [SerializeField]
     public bool is_flying;      // ignore such trivial things as collision & gravity
+    [SerializeField]
     public PathLoopMode loop_mode;
 
-    public Vector3[] positions;
-    // public float[] delays; // probably better to merge positions & delays instead of using parallel arrays
+    public PathNode[] path;
     private int index;
     #endregion
 
@@ -31,16 +33,16 @@ public class PatrolPath : MonoBehaviour
     public Vector3 Next( out bool was_reset )
     {
         was_reset = false;
-        if ( positions == null ) { return transform.position; }
-        if ( positions.Length <= 0 ) { return transform.position; }
+        if ( path == null ) { return transform.position; }
+        if ( path.Length <= 0 ) { return transform.position; }
 
         index++;
-        if ( index >= positions.Length )
+        if ( index >= path.Length )
         {
             index = 0;
             was_reset = true;
         }
-        return positions[ index ];
+        return path[ index ].position;
     }
 
     /// <summary>
@@ -48,14 +50,29 @@ public class PatrolPath : MonoBehaviour
     /// </summary>
     public Vector3 Current()
     {
-        if ( positions == null ) { return transform.position; }
-        if ( positions.Length <= 0 ) { return transform.position; }
+        if ( path == null ) { return transform.position; }
+        if ( path.Length <= 0 ) { return transform.position; }
 
-        return positions[ index ];
+        return path[ index ].position;
+    }
+
+    /// <returns>The number of seconds to wait once the current destination is reached.</returns>
+    public float CurrentDelay()
+    {
+        if ( path == null ) { return 0.0f; }
+        if ( path.Length <= 0 ) { return 0.0f; }
+        return path[ index ].delay;
     }
 }
 
 public enum PathLoopMode
 {
     LOOP, SNAP_BACK
+}
+
+[System.Serializable]
+public class PathNode
+{
+    public Vector3 position;
+    public float   delay = 0.0f;
 }

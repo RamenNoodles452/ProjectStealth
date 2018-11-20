@@ -21,5 +21,9 @@ public static class CollisionMasks
     public static int all_collision_mask = geo_mask | object_mask | character_mask | jump_through_mask;
     public static int upwards_collision_mask = geo_mask | object_mask | character_mask;
     public static int wall_grab_mask = geo_mask;
+
+    // light
+    // ASSUMES: all light-blocking geometry is on the geometry layer.
+    public static int light_occlusion_mask = geo_mask;
 }
 

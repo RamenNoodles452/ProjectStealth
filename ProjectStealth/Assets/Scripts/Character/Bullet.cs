@@ -7,9 +7,7 @@ public class Bullet : MonoBehaviour
 {
     #region vars
     private float damage    = 50.0f;  // base player health is 100
-    private float lifetime  = 3.0f;   // seconds
-    private float timer     = 0.0f;
-    private float speed     = 200.0f; // pixels / second
+    private float speed     = 200.0f; // pixels / second (player move speed is 120:240)
     private float angle     = 0.0f;
     private bool  is_homing = false;
     #endregion
@@ -17,7 +15,11 @@ public class Bullet : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-
+        if ( ! TriggerBuildValidator.Validate( this.gameObject ) )
+        {
+            Destroy( this );
+            return;
+        }
     }
 
     // Update is called once per frame
@@ -29,14 +31,11 @@ public class Bullet : MonoBehaviour
             angle = Mathf.Atan2( player_position.y - transform.position.y, player_position.x - transform.position.x );
         }
         transform.position += new Vector3( speed * Mathf.Cos( angle ), speed * Mathf.Sin( angle ), 0.0f ) * Time.deltaTime * Time.timeScale;
-
-        timer += Time.deltaTime * Time.timeScale;
-        if ( timer > lifetime )
-        {
-            Destroy( this.gameObject );
-        }
     }
 
+    /// <summary>
+    /// The angle the bullet is moving in (in radians)
+    /// </summary>
     public float Angle
     {
         get
@@ -49,6 +48,7 @@ public class Bullet : MonoBehaviour
         }
     }
 
+    // Called when a collider enters this object's hitbox
     void OnTriggerEnter2D( Collider2D collider )
     {
         // So... bullets should have kinematic, not dynamic rigidbodies so that they don't "interact" with floors, walls, etc. by sliding around and doing physics-based simulations.
@@ -56,7 +56,7 @@ public class Bullet : MonoBehaviour
         // THEREFORE, bullets must be triggers.
         // See: https://docs.Unity2d.com/Manual/CollidersOverview.html
 
-        if ( collider.gameObject.layer == LayerMask.NameToLayer( "character objects" ) )
+        if ( Utils.IsPlayersCollider( collider ) )
         {
             PlayerStats player_stats = collider.gameObject.GetComponent<PlayerStats> ();
             if ( player_stats != null )
@@ -66,7 +66,7 @@ public class Bullet : MonoBehaviour
             Debug.Log( "bullet hit player" );
             Destroy( this.gameObject );
         }
-        else if ( collider.gameObject.layer == LayerMask.NameToLayer( "geometry" ) )
+        else if ( Utils.IsGeometryCollider( collider ) )
         {
             Debug.Log( "bullet hit wall" );
             Destroy( this.gameObject );

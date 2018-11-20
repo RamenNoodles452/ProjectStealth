@@ -11,7 +11,7 @@ public class Enemy : MonoBehaviour
     private float listening_radius = 0.0f;
 
     // snooze, vigilance, investigate, alert, combat
-    public PatrolPath patrol_path;
+    public Path patrol_path;
     public float move_speed = 24.0f; // pixels / second
 
     #region vision

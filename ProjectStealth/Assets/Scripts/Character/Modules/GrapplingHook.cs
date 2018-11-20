@@ -18,7 +18,7 @@ public class GrapplingHook : MonoBehaviour
     private float angle;
     private Vector2 target;
     //private Player player_script;
-    private PlayerStats player_stats;
+    //private PlayerStats player_stats;
     private CharacterStats char_stats;
     private GameObject hook_instance;
     private GameObject chain_instance;
@@ -37,7 +37,7 @@ public class GrapplingHook : MonoBehaviour
     void Start ()
     {
         //player_script = GetComponent<Player>();
-        player_stats  = GetComponent<PlayerStats>();
+        //player_stats  = GetComponent<PlayerStats>();
         char_stats    = GetComponent<CharacterStats>();
     }
     

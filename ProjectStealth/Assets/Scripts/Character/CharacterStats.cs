@@ -14,13 +14,13 @@ public class CharacterStats : MonoBehaviour
     public Collider2D on_ground_collider = null; // the geometry the character is standing on. null if not standing on anything
 
     [HideInInspector]
-    public BoxCollider2D char_collider; // defaults: offset[0,-2] size [26,40]
-    [HideInInspector]
-    public Vector2 STANDING_COLLIDER_SIZE = new Vector2(21.0f, 39.0f);
+    public BoxCollider2D char_collider; // defaults: offset[0,-2] size [24,40]
+    //[HideInInspector]
+    public Vector2 STANDING_COLLIDER_SIZE = new Vector2(26.0f, 40.0f);
     [HideInInspector]
     public Vector2 STANDING_COLLIDER_OFFSET = new Vector2(0.0f, -2.0f); // the collider box needs to be offset from center
-    [HideInInspector]
-    public Vector2 CROUCHING_COLLIDER_SIZE = new Vector2(21.0f, 19.0f);
+    //[HideInInspector]
+    public Vector2 CROUCHING_COLLIDER_SIZE = new Vector2(26.0f, 20.0f);
     [HideInInspector]
     public Vector2 CROUCHING_COLLIDER_OFFSET = new Vector2(0.0f, -12.0f); // the collider box needs to be offset from center
 

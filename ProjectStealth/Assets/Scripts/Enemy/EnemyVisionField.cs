@@ -23,6 +23,7 @@ public class EnemyVisionField : MonoBehaviour
         line_renderer.startWidth = 1.0f;
         line_renderer.endWidth = 1.0f;
         line_renderer.positionCount = 4;
+        //TODO: configuration checks (collider, trigger, rigidbody, kinematic)
 #endif
     }
 
@@ -52,7 +53,10 @@ public class EnemyVisionField : MonoBehaviour
         // has enemy already seen you?
         // TODO:
 
-        Look();
+        if ( Utils.IsPlayersCollider( collision ) )
+        {
+            Look();
+        }
     }
 
     private void OnTriggerStay2D( Collider2D collision )
@@ -60,7 +64,10 @@ public class EnemyVisionField : MonoBehaviour
         // has enemy already seen you?
         // TODO:
 
-        Look();
+        if ( Utils.IsPlayersCollider( collision ) )
+        {
+            Look();
+        }
     }
 
     private void OnTriggerExit2D( Collider2D collision )

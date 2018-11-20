@@ -154,6 +154,9 @@ public class Player : SimpleCharacterCore
         return new Vector2( this.gameObject.transform.position.x + collider.size.x / 2.0f, this.gameObject.transform.position.y + collider.size.y / 2.0f );
     }
 
+    /// <summary>Whether the player is in shadow, or in the light</summary>
+    public bool IsInShadow { get{ return player_stats.IsInShadow; } }
+
     /// <returns>Whether the player is cloaked or not</returns>
     public bool IsCloaking() { return player_stats.IsCloaking(); }
 
