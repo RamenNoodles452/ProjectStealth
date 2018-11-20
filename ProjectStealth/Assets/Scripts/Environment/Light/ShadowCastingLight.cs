@@ -18,29 +18,19 @@ public class ShadowCastingLight : MonoBehaviour
         Register();
     }
 
-    // Use this for initialization
-    void Start ()
-    {
-        
-    }
-    
-    // Update is called once per frame
-    void Update ()
-    {
-        
-    }
-
     // Destroy is called when this script is destroyed
     private void OnDestroy()
     {
         Unregister();
     }
 
+    // OnEnable is called when the gameObject/script is enabled. (also can be called on initialization)
     private void OnEnable()
     {
         Register();
     }
 
+    // OnDisable is called when the gameObject/script is disabled.
     private void OnDisable()
     {
         Unregister();

@@ -12,12 +12,14 @@ public class LaserBeam : MonoBehaviour
     private Transform start_light;
     private Transform end_light;
     private ParticleSystem particles;
+    private SpriteRenderer sprite_renderer;
     private const float MAX_RANGE = 500.0f;
     #endregion
 
     // Use this for initialization
     void Start ()
     {
+        sprite_renderer = GetComponent<SpriteRenderer>();
         start_light = transform.Find( "Start" );
         end_light   = transform.Find( "End" );
         particles   = transform.Find( "Particles" ).GetComponent<ParticleSystem>();
@@ -27,7 +29,6 @@ public class LaserBeam : MonoBehaviour
     void Update ()
     {
         BoxCollider2D collider = GetComponent<BoxCollider2D>();
-        SpriteRenderer sprite_renderer = GetComponent<SpriteRenderer>();
 
         // If off
         if ( ! is_on )
@@ -55,23 +56,40 @@ public class LaserBeam : MonoBehaviour
             range = hit.distance;
         }
 
-        // set up collider and graphics (rotation of transform handles rotational stuff)
-        sprite_renderer.size = new Vector2( range, 8.0f );
+        SetUpCollider( collider, range );
+        SetUpGraphics( range, angle );
+    }
+
+    /// <summary>
+    /// Sets up the collider based on the laser beam's range
+    /// </summary>
+    /// <param name="collider">This laser's hitbox collider</param>
+    /// <param name="range">The range of the laser, in pixels</param>
+    private void SetUpCollider( BoxCollider2D collider, float range )
+    {
+        // (rotation of transform handles rotational stuff)
         collider.enabled = true;
         collider.size = new Vector2( range, collider.size.y );
-        collider.offset = new Vector2( range / 2.0f, 0.0f);
+        collider.offset = new Vector2( range / 2.0f, 0.0f );
+    }
 
+    private void SetUpGraphics( float range, float angle )
+    {
+        // Beam
+        sprite_renderer.size = new Vector2( range, 8.0f );
+
+        // Beam end lights
         start_light.gameObject.SetActive( true );
         end_light.gameObject.SetActive( true );
         end_light.transform.position = new Vector3( transform.position.x + Mathf.Cos( angle ) * range, transform.position.y + Mathf.Sin( angle ) * range, 0.0f );
         Color color = start_light.GetComponent<SpriteRenderer>().color;
         start_light.GetComponent<SpriteRenderer>().color = new Color( color.r, color.g, color.b, Random.Range( 0.5f, 0.75f ) );
         color = end_light.GetComponent<SpriteRenderer>().color;
-        end_light.GetComponent<SpriteRenderer>().color   = new Color( color.r, color.g, color.b, Random.Range( 0.5f, 0.75f ) );
+        end_light.GetComponent<SpriteRenderer>().color = new Color( color.r, color.g, color.b, Random.Range( 0.5f, 0.75f ) );
 
+        // Particles
         // For some reason the particlesystem API is awkward.
         particles.gameObject.SetActive( true );
-        //ParticleSystem.MainModule main = particles.main;
         ParticleSystem.ShapeModule shape = particles.shape;
         shape.radius = range / 2.0f;
         shape.position = new Vector3( range / 2.0f, 0.0f, 0.0f );

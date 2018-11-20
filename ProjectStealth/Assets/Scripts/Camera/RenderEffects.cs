@@ -374,6 +374,8 @@ public class RenderEffects : MonoBehaviour
         shadow_object.GetComponent<MeshRenderer>().material.SetTexture( "_MainTex", shadow );
     }
 
+    // TODO: this is kind of odd to have in the render effects script. Consider moving to playerstats, maybe?
+
     /// <summary>
     /// Sets the flag for if the player is in light or not.
     /// </summary>

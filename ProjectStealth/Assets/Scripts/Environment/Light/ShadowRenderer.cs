@@ -12,7 +12,7 @@ public class ShadowRenderer : MonoBehaviour
         GetComponent<MeshFilter>().mesh = Mesh();
     }
 
-    // Generates a simple mesh at z = 0.5 for rendering lights / shadows.
+    // Generates a simple full-screen mesh at z = 0.5 for rendering lights / shadows.
     private Mesh Mesh()
     {
         List<Vector3> verts = new List<Vector3>();

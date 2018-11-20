@@ -34,12 +34,6 @@ public class LightBlocker : MonoBehaviour
             return;
         }
     }
-    
-    // Update is called once per frame
-    void Update ()
-    {
-        
-    }
 
     /// <summary>
     /// Returns a list of the edges of the collider.
@@ -55,7 +49,7 @@ public class LightBlocker : MonoBehaviour
         vertex[ 2 ] = new Vector2( x + my_collider.size.x / 2.0f, y + my_collider.size.y / 2.0f );
         vertex[ 3 ] = new Vector2( x - my_collider.size.x / 2.0f, y + my_collider.size.y / 2.0f );
 
-        edges.Add( vertex[ 0 ] ); // TODO: wrap in a class?
+        edges.Add( vertex[ 0 ] );
         edges.Add( vertex[ 1 ] );
 
         edges.Add( vertex[ 1 ] );
