@@ -293,6 +293,8 @@ public class RenderEffects : MonoBehaviour
         ShadowMap( blocker_mesh, lights );
         ConsolidateShadowMap();
         RenderShadows( lights );
+
+        CheckIfPlayerIsInShadow( lights );
     }
 
     /// <summary>
@@ -354,19 +356,78 @@ public class RenderEffects : MonoBehaviour
         // need to draw each light to the shadow texture independently, and blend it with previously drawn lights.
         foreach ( ShadowCastingLight light in lights )
         {
-            MaterialPropertyBlock properties2 = new MaterialPropertyBlock();
-            properties2.SetTexture( "_ShadowMap", shadow_map );
-            properties2.SetTexture( "_BlendTarget", shadow );
-            properties2.SetVector( "_LightPosition", new Vector4( light.transform.position.x, light.transform.position.y, 0.0f, 0.0f ) );
-            properties2.SetColor( "_Color", new Color( 1.0f, 1.0f, 1.0f, 0.10f ) );
+            MaterialPropertyBlock properties = new MaterialPropertyBlock();
+            properties.SetTexture( "_ShadowMap", shadow_map );
+            properties.SetTexture( "_BlendTarget", shadow );
+            properties.SetVector( "_LightPosition", new Vector4( light.transform.position.x, light.transform.position.y, 0.0f, 0.0f ) );
+            properties.SetColor( "_Color", new Color( 1.0f, 1.0f, 1.0f, 0.10f ) );
             // add a small tolerance to prevent ambiguous sampling from using the wrong shadowmap.
-            properties2.SetFloat( "_ShadowMapY", UCoordinate( ( ( (float) light.shadow_map_slot ) + 0.5f ) / ( (float) MAX_SHADOW_MAPS ) ) ); // ( 0, 1 ) range
+            properties.SetFloat( "_ShadowMapY", UCoordinate( ( ( (float) light.shadow_map_slot ) + 0.5f ) / ( (float) MAX_SHADOW_MAPS ) ) ); // ( 0, 1 ) range
             // draw it, and blend.
-            command_buffer.DrawMesh( FullscreenRenderMeshWorld(), Matrix4x4.identity, shadow_material, 0, -1, properties2 );
+            command_buffer.DrawMesh( FullscreenRenderMeshWorld(), Matrix4x4.identity, shadow_material, 0, -1, properties );
         }
 
         // set up shadow texture for rendering using the render queue and z depth testing
         shadow_object.GetComponent<MeshRenderer>().material.SetTexture( "_MainTex", shadow );
+    }
+
+    /// <summary>
+    /// Sets the flag for if the player is in light or not.
+    /// </summary>
+    /// <param name="lights">Array of all shadow-casting lights in the scene to check</param>
+    private void CheckIfPlayerIsInShadow( ShadowCastingLight[] lights )
+    {
+        Referencer.instance.player.GetComponent<PlayerStats>().IsInShadow = IsInShadow( (Vector2) Referencer.instance.player.transform.position, lights );
+    }
+
+    /// <summary>
+    /// Determines if a given coordinate is in light or shadow.
+    /// </summary>
+    /// <param name="world_position"></param>
+    /// <param name="lights"></param>
+    /// <returns>True if the coordinate is in shadow, false if it is in light.</returns>
+    private bool IsInShadow( Vector2 world_position, ShadowCastingLight[] lights )
+    {
+        // You COULD do this by querying the final light/shadow image from the shadow renderer, or the shadowmap... 
+        // but those approaches are SLOW (6 - 20 ms slow), and use async GPU readbacks (readpixels) or require certain GL versions (copytexture).
+
+        const float MAX_DISTANCE = 512.0f; // This value should match the max_cast_distance in Shadow.shader
+        const float MAX_DISTANCE_SQUARED = MAX_DISTANCE * MAX_DISTANCE;
+        bool is_in_shadow = true;
+
+        foreach ( ShadowCastingLight light in lights )
+        {
+            // Cheapest (elimination) checks first
+            Vector2 direction = world_position - (Vector2) light.transform.position;
+            if ( direction.sqrMagnitude > MAX_DISTANCE_SQUARED )
+            {
+                continue; // out of range. Check the next one.
+            }
+
+            // TODO: angle limits on lights?
+
+            // Raycast, check if anything is occluding the light. If all lights are blocked, you are in shadow.
+            // Since we know direction.magnitude < MAX_DISTANCE, don't need to use Mathf.Min( direction.magnitude, MAX_DISTANCE ) as distance. 
+            //   (since this is an all cast, overshooting could cause false positives, but we won't overshoot)
+            RaycastHit2D[] hits = Physics2D.RaycastAll( light.transform.position, direction, direction.magnitude, CollisionMasks.light_occlusion_mask );
+            #if UNITY_EDITOR
+            Debug.DrawLine( light.transform.position, light.transform.position + new Vector3( direction.x, direction.y, 0.0f ) );
+            #endif
+
+            bool is_blocked = false; // is the light blocked?
+            foreach ( RaycastHit2D hit in hits )
+            {
+                if ( hit.collider == null ) { continue; } // didn't hit anything, skip
+                if ( hit.collider.gameObject.GetComponent<LightBlocker>() == null ) { continue; } // not an occluder, skip
+                // One or more occluders: This will block the light.
+                is_blocked = true;
+                break;
+            }
+
+            if ( ! is_blocked ) { is_in_shadow = false; } // If the light is not blocked, you are in it.
+            if ( ! is_in_shadow ) { break; } // Once we know you're in one light, we don't need to check any more.
+        }
+        return is_in_shadow;
     }
 
     // Called after the camera renders, for post-processing

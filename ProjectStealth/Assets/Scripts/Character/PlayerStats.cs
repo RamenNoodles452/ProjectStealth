@@ -61,13 +61,15 @@ public class PlayerStats : MonoBehaviour
     // Just change input mapping to require a couple seconds of sneaking in place.
     #endregion
 
-    #region silencer
+    #region Silencer
     // Not sure if this should be consolidated with stealth / UI needs simplification here....
     // Potentially concerning
     private float silencer = 0.0f;
     private float silencer_max = 3.0f;
     private float silencer_regen = 1.0f;
     #endregion
+
+    private bool is_in_shadow = false;
 
     [SerializeField]
     private bool is_adrenal_rushing = false;
@@ -246,6 +248,15 @@ public class PlayerStats : MonoBehaviour
         // reset movement
         char_stats = this.gameObject.GetComponent<CharacterStats>();
         char_stats.velocity = new Vector2( 0.0f, 0.0f );
+    }
+
+    /// <summary>
+    /// Accessor for if the player is in shadow or light.
+    /// </summary>
+    public bool IsInShadow
+    {
+        get { return is_in_shadow; }
+        set { is_in_shadow = value; }
     }
 
     /// <summary>

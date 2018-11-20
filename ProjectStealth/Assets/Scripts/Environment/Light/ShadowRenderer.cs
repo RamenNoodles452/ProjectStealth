@@ -6,8 +6,9 @@ using UnityEngine;
 public class ShadowRenderer : MonoBehaviour
 {
     // Update is called once per frame
-    void Update ()
+    void LateUpdate ()
     {
+        // Use late update to ensure the camera has finished moving BEFORE this sets the mesh position based on it: prevents "lagging shadows".
         GetComponent<MeshFilter>().mesh = Mesh();
     }
 

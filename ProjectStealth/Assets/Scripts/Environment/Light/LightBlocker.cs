@@ -22,6 +22,17 @@ public class LightBlocker : MonoBehaviour
             Destroy( this ); // remove component
             return;
         }
+
+        // Catch bad configuration.
+        if ( CollisionMasks.light_occlusion_mask != ( CollisionMasks.light_occlusion_mask | LayerMask.GetMask( LayerMask.LayerToName( this.gameObject.layer ) ) ) )
+        {
+            #if UNITY_EDITOR
+            Debug.LogError( "Light occluder object " + gameObject + " is not on a recognized light-occluding layer. " +
+                "It will not correctly occlude light. Move it to the correct layer, or add the current layer to the CollisionMasks.light_occlusion_mask." );
+            #endif
+            Destroy( this ); // remove component, so there is no visual / functional disparity. (Light/shadow graphics don't require correct layering, but detection logic does).
+            return;
+        }
     }
     
     // Update is called once per frame
