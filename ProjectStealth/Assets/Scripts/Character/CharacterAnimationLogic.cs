@@ -7,6 +7,7 @@ public class CharacterAnimationLogic : MonoBehaviour
     #region vars
     public Animator animator;
     protected CharacterStats char_stats;
+    protected UserInputManager input_manager;
     #endregion
 
     // Use this for initialization
@@ -14,6 +15,7 @@ public class CharacterAnimationLogic : MonoBehaviour
     {
         animator   = GetComponent<Animator>();
         char_stats = GetComponent<CharacterStats>();
+        input_manager = GetComponent<UserInputManager>();
     }
 
     // Update is called once per frame
@@ -30,6 +32,19 @@ public class CharacterAnimationLogic : MonoBehaviour
         CrouchLogic();
         WallClimb();
         WallSlide();
+        HorizontalAxisInput();
+    }
+
+    private void HorizontalAxisInput()
+    {
+        if (input_manager.HorizontalAxis != 0)
+        {
+            animator.SetBool( "horizontal_axis_input", true );
+        }
+        else
+        {
+            animator.SetBool( "horizontal_axis_input", false );
+        }
     }
 
     // This is temporary & may not solve all problems. Once the animator has run states, adjust this accordingly.

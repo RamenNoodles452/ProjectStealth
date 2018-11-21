@@ -153,7 +153,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1555196157489052}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -290, y: 24, z: -5}
+  m_LocalPosition: {x: -291.4, y: 92.6, z: -5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4338403707927870}
@@ -219,7 +219,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 26, y: 40}
+  m_Size: {x: 21, y: 40}
   m_EdgeRadius: 0
 --- !u!95 &95145278766902952
 Animator:
@@ -230,7 +230,7 @@ Animator:
   m_GameObject: {fileID: 1555196157489052}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 6b36d7f0de1f7a44a953819de812f4f5, type: 2}
+  m_Controller: {fileID: 9100000, guid: 5d6e2dde2ba655b4e8bdf51e62bc852b, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -369,9 +369,9 @@ MonoBehaviour:
   previous_move_state: 0
   on_ground_collider: {fileID: 0}
   char_collider: {fileID: 0}
-  STANDING_COLLIDER_SIZE: {x: 26, y: 40}
+  STANDING_COLLIDER_SIZE: {x: 21, y: 40}
   STANDING_COLLIDER_OFFSET: {x: 0, y: -2}
-  CROUCHING_COLLIDER_SIZE: {x: 26, y: 20}
+  CROUCHING_COLLIDER_SIZE: {x: 21, y: 20}
   CROUCHING_COLLIDER_OFFSET: {x: 0, y: -12}
   velocity: {x: 0, y: 0}
   acceleration: {x: 0, y: 0}
@@ -451,7 +451,7 @@ MonoBehaviour:
   health_max: 1
   EVADE_COST: 20
   is_adrenal_rushing: 0
-  acquired_mag_grip: 0
+  acquired_mag_grip: 1
   acquired_adrenal_rush: 1
   checkpoint: {x: 0, y: 0}
   noise_prefab: {fileID: 1358546463198310, guid: 6031690b728867643bfa6e34edb58fc3,

@@ -45,7 +45,7 @@ public class CharacterStats : MonoBehaviour
     // Crouching vars
     public bool is_crouching = false;
 
-    // bezier curve vars for getting up ledges and jumping over cover
+    // bezier curve vars for jumping over cover
     [HideInInspector]
     public Vector2 bezier_start_position;
     [HideInInspector]
