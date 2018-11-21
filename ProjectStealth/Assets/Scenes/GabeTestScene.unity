@@ -14492,37 +14492,6 @@ Prefab:
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 711f4e08ce229234e90e41dac82362da, type: 2}
   m_IsPrefabAsset: 0
---- !u!84 &1282617605
-RenderTexture:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_Name: 
-  m_ImageContentsHash:
-    serializedVersion: 2
-    Hash: 00000000000000000000000000000000
-  m_ForcedFallbackFormat: 4
-  m_DownscaleFallback: 0
-  m_Width: 1920
-  m_Height: 910
-  m_AntiAliasing: 1
-  m_DepthFormat: 0
-  m_ColorFormat: 7
-  m_MipMap: 0
-  m_GenerateMips: 1
-  m_SRGB: 0
-  m_UseDynamicScale: 0
-  m_BindMS: 0
-  m_TextureSettings:
-    serializedVersion: 2
-    m_FilterMode: 1
-    m_Aniso: 1
-    m_MipBias: 0
-    m_WrapU: 1
-    m_WrapV: 1
-    m_WrapW: 1
-  m_Dimension: 2
-  m_VolumeDepth: 1
 --- !u!1001 &1285404407
 Prefab:
   m_ObjectHideFlags: 0
@@ -14562,8 +14531,7 @@ Prefab:
       propertyPath: m_RootOrder
       value: 2
       objectReference: {fileID: 0}
-    - target: {fileID: 114416071810192428, guid: 03a2394fc8e4cb74f84e4ac441423ac6,
-        type: 2}
+    - target: {fileID: 0}
       propertyPath: fall_time
       value: 0.27
       objectReference: {fileID: 0}
@@ -19453,7 +19421,7 @@ MonoBehaviour:
     type: 3}
   shadow_map_shader: {fileID: 4800000, guid: 3b28936c977a12e45bd0f50c93c4121b, type: 3}
   shadow_shader: {fileID: 4800000, guid: 4809b48941982514d98094e4988a415e, type: 3}
-  shadow: {fileID: 1282617605}
+  shadow: {fileID: 1705092433}
 --- !u!1 &1391888238
 GameObject:
   m_ObjectHideFlags: 0
@@ -25587,6 +25555,37 @@ Prefab:
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 68504798cbaaed246a05a7f926b12b71, type: 2}
   m_IsPrefabAsset: 0
+--- !u!84 &1705092433
+RenderTexture:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_Name: 
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_Width: 1920
+  m_Height: 910
+  m_AntiAliasing: 1
+  m_DepthFormat: 0
+  m_ColorFormat: 7
+  m_MipMap: 0
+  m_GenerateMips: 1
+  m_SRGB: 0
+  m_UseDynamicScale: 0
+  m_BindMS: 0
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 1
+    m_WrapV: 1
+    m_WrapW: 1
+  m_Dimension: 2
+  m_VolumeDepth: 1
 --- !u!1 &1715054224
 GameObject:
   m_ObjectHideFlags: 0
