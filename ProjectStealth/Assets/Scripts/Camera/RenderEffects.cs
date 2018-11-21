@@ -17,7 +17,6 @@ using UnityEngine.Rendering;
 //  near background =   1,   range: ( 0.01, 1.99 )
 //  far background is rendered first, so z doesn't really matter (except for parallax layering).
 //----------------------------------------------------------------------------------------------
-[ExecuteInEditMode]
 public class RenderEffects : MonoBehaviour
 {
     #region vars
@@ -54,7 +53,7 @@ public class RenderEffects : MonoBehaviour
     private RenderTexture shadow;
     private GameObject shadow_object;          // object under lighting, which renders the shadows
     private float light_alpha = 0.15f;
-    private float light_alpha_timer = 0.0f;
+    //private float light_alpha_timer = 0.0f;
 
     private ulong allocated_shadow_maps = 0;   // mask representing 64 bools (64 x 1/0 bits) (FULL)
     public const int MAX_SHADOW_MAPS = 64;     // this needs to match the height of the shadow map render textures.
