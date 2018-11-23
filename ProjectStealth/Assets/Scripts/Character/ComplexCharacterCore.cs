@@ -25,7 +25,7 @@ public class ComplexCharacterCore : MonoBehaviour
     public virtual void Start()
     {
         character_collider = GetComponent<PolygonCollider2D>();
-        animator = GetComponent<Animator>();
+        animator = transform.Find( "Sprites" ).GetComponent<Animator>();
         input_manager = GetComponent<IInputManager>();
         vertical_velocity = 0.0f;
         falling_time = 0.0f;

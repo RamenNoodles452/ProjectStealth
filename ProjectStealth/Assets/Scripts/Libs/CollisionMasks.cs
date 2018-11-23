@@ -23,7 +23,7 @@ public static class CollisionMasks
     public static int wall_grab_mask = geo_mask;
 
     // light
-    // ASSUMES: all light-blocking geometry is on the geometry layer.
-    public static int light_occlusion_mask = geo_mask;
+    // ASSUMES: all light-blocking geometry is on these layers. Should log an error if you try another layer.
+    public static int light_occlusion_mask = geo_mask | object_mask;
 }
 

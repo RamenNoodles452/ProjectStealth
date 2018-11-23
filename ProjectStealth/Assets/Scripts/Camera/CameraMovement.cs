@@ -3,12 +3,17 @@ using System.Collections;
 
 public class CameraMovement : MonoBehaviour
 {
-    public float damp_time = 0.15f;
-    private Vector3 velocity = Vector3.zero;
-    public Transform focal_target;
-    private Camera cam;
+    #region vars
+    [SerializeField]
+    private Transform focal_target;
+    [SerializeField]
+    private float damp_time = 0.15f;
 
+    private Vector3 velocity = Vector3.zero;
+    private Vector3 accumulated_position;   // accumulate fractional x, y coordinates. camera position will always be whole number.
+    private Camera cam;
     private BoxCollider2D boundingBox;
+    #endregion
 
     private void Awake()
     {
@@ -18,10 +23,10 @@ public class CameraMovement : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        Screen.SetResolution( 640, 480, false, 60 );
         cam = GetComponent<Camera>();
 
         boundingBox = GameObject.Find( "BoundingBox" ).GetComponent<BoxCollider2D>(); //bad
+        accumulated_position = transform.position;
     }
 
     // Update is called once per frame
@@ -74,7 +79,10 @@ public class CameraMovement : MonoBehaviour
             Vector3 point = cam.WorldToViewportPoint( clamped_focal_target );
             Vector3 delta = clamped_focal_target - cam.ViewportToWorldPoint( new Vector3( 0.5f, 0.5f, point.z ) );
             Vector3 destination = transform.position + delta;
-            transform.position = Vector3.SmoothDamp( transform.position, destination, ref velocity, damp_time );
+            accumulated_position = Vector3.SmoothDamp( accumulated_position, destination, ref velocity, damp_time );
+            // Disabled. Making it less smooth looks bad. We should either go all-in on low res before enabling this, or don't do it.
+            transform.position = new Vector3( (int) accumulated_position.x, (int) accumulated_position.y, accumulated_position.z );
+            //transform.position = accumulated_position;
         }
 
     }
@@ -84,6 +92,7 @@ public class CameraMovement : MonoBehaviour
     /// </summary>
     public void SnapToFocalPoint()
     {
-        transform.position = focal_target.position;
+        accumulated_position = new Vector3( (int) focal_target.position.x, (int) focal_target.position.y, focal_target.position.z );
+        transform.position = accumulated_position;
     }
 }

@@ -58,6 +58,8 @@ public class RenderEffects : MonoBehaviour
     private ulong allocated_shadow_maps = 0;   // mask representing 64 bools (64 x 1/0 bits) (FULL)
     public const int MAX_SHADOW_MAPS = 64;     // this needs to match the height of the shadow map render textures.
     private GameObject top_level_object;       // object at top of level hierarchy
+
+    private Vector2 target_resolution; // 4:3, multiple of 32. Match render texture dimensions.
     #endregion
     #endregion
 
@@ -98,6 +100,17 @@ public class RenderEffects : MonoBehaviour
             command_buffer = new CommandBuffer();
             GetComponent<Camera>().AddCommandBuffer( CameraEvent.BeforeForwardOpaque, command_buffer );
         }
+
+        // Pixelation
+        #if UNITY_EDITOR
+        if ( Camera.main.targetTexture == null )
+        {
+            Debug.LogError( "Main camera is not rendering to a render texture. Game will not display properly." );
+        }
+        #endif
+        target_resolution = new Vector2( Camera.main.targetTexture.width, Camera.main.targetTexture.height );
+        Camera.main.orthographicSize = target_resolution.y / 2.0f;
+
     }
 
     #region shadow map slot allocation
@@ -443,32 +456,96 @@ public class RenderEffects : MonoBehaviour
     {
         // Do not blit the shadow map here, by this point, it should be done with proper layering via the scene's ShadowRenderer.
 
+        // Camera's view sized for the target texture render texture
+        source.filterMode = FilterMode.Point;
+        // Pixelate (we do this first b/c it downscales, which means less image to post-process)
+        RenderTexture low_resolution = Pixelate( source );
+
+        // Post-Processing
         // Desaturate
-        RenderTexture render_texture = new RenderTexture( source );
+        RenderTexture desaturated = Desaturate( ref low_resolution );
+        // Night Vision Goggles
+        RenderTexture night_vision = NightVision( ref desaturated );
+
+        // Integer upscaling
+        float height = Camera.main.orthographicSize * 2.0f; // set based on target_resolution
+        float width  = height * ( (float) Camera.main.pixelWidth / (float) Camera.main.pixelHeight );
+        float height_scale = Mathf.Floor( (float) Camera.main.pixelHeight / height );
+        float width_scale  = Mathf.Floor( (float) Camera.main.pixelWidth  / width  );
+        RenderTexture upscale = RenderTexture.GetTemporary( (int) ( width * (width_scale + 1.0f) ), (int) ( height * (height_scale + 1.0f) ) );
+        upscale.filterMode = FilterMode.Bilinear;
+        Graphics.Blit( night_vision, upscale );
+        RenderTexture.ReleaseTemporary( night_vision );
+
+        // Downscale
+        // Write to camera's target texture render texture
+        Graphics.Blit( upscale, destination );
+        RenderTexture.ReleaseTemporary( upscale );
+        // Camera 2 will read the texture and output it to the screen (Can't do it here, Unity limitation)
+    }
+
+    /// <summary>
+    /// Makes the camera capture a pixelated low-resolution version of the scene
+    /// </summary>
+    /// <param name="source">The render texture to take the raw data from</param>
+    /// <returns> A temporary render texture with the pixelated image written to it</param>
+    private RenderTexture Pixelate( RenderTexture source )
+    {
+        float height = Camera.main.orthographicSize * 2.0f; // set based on target_resolution
+        float width  = height * ( (float) Camera.main.pixelWidth / (float) Camera.main.pixelHeight );
+        //float height_scale = Mathf.Floor( (float) Camera.main.pixelHeight / height );
+        //float width_scale  = Mathf.Floor( (float) Camera.main.pixelWidth  / width  );
+        //float height_offset = Camera.main.pixelHeight - ( height * height_scale );
+        //float width_offset  = Camera.main.pixelWidth  - ( width  * width_scale );
+        RenderTexture low_resolution = RenderTexture.GetTemporary( (int) width, (int) height, 0 );
+        low_resolution.filterMode = FilterMode.Point;
+        Graphics.Blit( source, low_resolution );
+        return low_resolution;
+    }
+
+    /// <summary>
+    /// Applies a desaturation post-processing effect.
+    /// If the effect is applied, it cleans up the previous render texture in the render chain.
+    /// </summary>
+    /// <param name="source">The raw image to process.</param>
+    /// <returns>The raw image, or the processed (desaturated) image.</returns>
+    private RenderTexture Desaturate( ref RenderTexture source )
+    {
         if ( desaturation == 0.0f )
         {
-            Graphics.Blit( source, render_texture );
+            return source;
         }
         else
         {
             desaturate_material.SetFloat( "_Desaturate", desaturation );
+            RenderTexture render_texture = RenderTexture.GetTemporary( source.width, source.height, 0 );
+            render_texture.filterMode = FilterMode.Point;
             Graphics.Blit( source, render_texture, desaturate_material );
+            RenderTexture.ReleaseTemporary( source );
+            return render_texture;
         }
+    }
 
-        // Night Vision Goggles
-        RenderTexture render_texture2 = new RenderTexture( render_texture );
+    /// <summary>
+    /// Applies a green scanlines post-processing effect.
+    /// If the effect is applied, it cleans up the previous render texture in the render chain.
+    /// </summary>
+    /// <param name="source">The raw image to process.</param>
+    /// <returns>The raw image, or the processed (night vision-ified) image.</returns>
+    private RenderTexture NightVision( ref RenderTexture source )
+    {
         if ( ! is_night_vision_on )
         {
-            Graphics.Blit( render_texture, render_texture2 );
+            return source;
         }
         else
         {
-            Graphics.Blit( render_texture, render_texture2, NVG_material );
+            RenderTexture render_texture = RenderTexture.GetTemporary( source.width, source.height, 0 );
+            render_texture.filterMode = FilterMode.Point;
+            Graphics.Blit( source, render_texture, NVG_material );
+            RenderTexture.ReleaseTemporary( source );
+            return render_texture;
         }
-        render_texture.Release();
-
-        Graphics.Blit( render_texture2, destination );
-        render_texture2.Release();
     }
 
     /// <summary>
@@ -476,6 +553,8 @@ public class RenderEffects : MonoBehaviour
     /// </summary>
     private void Update()
     {
+        Camera.main.orthographicSize = target_resolution.y / 2.0f;
+
         //light_alpha_timer += Time.deltaTime * Time.timeScale * Mathf.PI * 2.0f / 2.0f;
         //while ( light_alpha_timer > Mathf.PI * 2.0f )
         //{

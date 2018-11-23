@@ -20,10 +20,19 @@ public class ShadowRenderer : MonoBehaviour
         int[] indices = new int[6];
 
         Vector3 depth_modifier = ( Camera.main.transform.position.z - 0.5f ) * new Vector3( 0.0f, 0.0f, 1.0f );
-        verts.Add( Camera.main.ScreenToWorldPoint( new Vector3( 0.0f, 0.0f, 0.0f )                  - depth_modifier ) );
-        verts.Add( Camera.main.ScreenToWorldPoint( new Vector3( Screen.width, 0.0f, 0.0f )          - depth_modifier ) );
-        verts.Add( Camera.main.ScreenToWorldPoint( new Vector3( Screen.width, Screen.height, 0.0f ) - depth_modifier ) );
-        verts.Add( Camera.main.ScreenToWorldPoint( new Vector3( 0.0f, Screen.height, 0.0f )         - depth_modifier ) );
+
+        float x = Screen.width;
+        float y = Screen.height;
+        if ( Camera.main.targetTexture != null ) // If camera is rendering to a texture, offsets need to be calculated a bit differently.
+        {
+            x = Camera.main.targetTexture.width;
+            y = Camera.main.targetTexture.height;
+        }
+
+        verts.Add( Camera.main.ScreenToWorldPoint( new Vector3( 0.0f, 0.0f, 0.0f ) - depth_modifier ) );
+        verts.Add( Camera.main.ScreenToWorldPoint( new Vector3(    x, 0.0f, 0.0f ) - depth_modifier ) );
+        verts.Add( Camera.main.ScreenToWorldPoint( new Vector3(    x,    y, 0.0f ) - depth_modifier ) );
+        verts.Add( Camera.main.ScreenToWorldPoint( new Vector3( 0.0f,    y, 0.0f ) - depth_modifier ) );
 
         uvs0.Add( new Vector2( 0.0f, 0.0f ) );
         uvs0.Add( new Vector2( 1.0f, 0.0f ) );

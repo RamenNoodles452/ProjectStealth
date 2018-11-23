@@ -12,7 +12,7 @@ public class CharacterAnimationLogic : MonoBehaviour
     // Use this for initialization
     void Start ()
     {
-        animator   = GetComponent<Animator>();
+        animator   = transform.Find( "Sprites" ).GetComponent<Animator>();
         char_stats = GetComponent<CharacterStats>();
     }
 

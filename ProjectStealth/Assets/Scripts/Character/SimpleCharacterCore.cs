@@ -57,7 +57,7 @@ public class SimpleCharacterCore : MonoBehaviour
         char_stats      = GetComponent<CharacterStats>();
         input_manager   = GetComponent<IInputManager>();
         char_anims      = GetComponent<CharacterAnimationLogic>();
-        sprite_renderer = GetComponent<SpriteRenderer>();
+        sprite_renderer = transform.Find( "Sprites" ).GetComponent<SpriteRenderer>();
 
         applied_moves = new Queue<Vector3>();
 
