@@ -407,7 +407,8 @@ public class SimpleCharacterCore : MonoBehaviour
             {
                 char_stats.velocity.y = JUMP_VERTICAL_SPEED;
             }
-            else
+
+            if( char_stats.velocity.y < 0 )
             {
                 // jump has peaked
                 char_stats.is_jumping = false;
@@ -760,6 +761,7 @@ public class SimpleCharacterCore : MonoBehaviour
     public virtual void OnTouchCeiling( GameObject collisionObject )
     {
         //base class does nothing with this function. gets overridden at the subclass level to handle such occasions
+        //char_anims.FallTrigger() needs to be incluseded in the override somewhere
     }
 
     /// <summary>

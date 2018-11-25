@@ -1,9 +1,10 @@
 fileFormatVersion: 2
-guid: 288566807ea959447af1a515794fbb95
+guid: 1120619a060ad284fb9e815c24dbc4e3
 TextureImporter:
   fileIDToRecycleName:
     21300000: val_jump_moving_apex_0
     21300002: val_jump_moving_apex_1
+    21300004: val_jump_moving_apex_2
   externalObjects: {}
   serializedVersion: 7
   mipmaps:
@@ -65,7 +66,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -76,7 +77,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -100,7 +101,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 3c263ad7d51e34848903d1e1097d3d70
+      spriteID: 52d68c4be556b024d95a0ada8ab3e171
       vertices: []
       indices: 
       edges: []
@@ -120,7 +121,27 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: df6d2461ebfd36f4daf172022aef2ff3
+      spriteID: b532f60324a4b384c8eda6162aa6527a
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: val_jump_moving_apex_2
+      rect:
+        serializedVersion: 2
+        x: 300
+        y: 0
+        width: 150
+        height: 150
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0cc434d117079f347b42466f6c0d77e6
       vertices: []
       indices: 
       edges: []
@@ -128,7 +149,7 @@ TextureImporter:
     outline: []
     physicsShape: []
     bones: []
-    spriteID: 131b7e11181ac3e4885d2d39c4a13eb9
+    spriteID: b1cf7cc1966dae54eb2a0cb75f806696
     vertices: []
     indices: 
     edges: []

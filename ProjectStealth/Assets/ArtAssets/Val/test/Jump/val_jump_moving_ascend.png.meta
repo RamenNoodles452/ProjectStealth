@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 045714f885555244e8faddde1d62195c
+guid: 3c25275770e9d8f488850222a9250f6e
 TextureImporter:
   fileIDToRecycleName:
     21300000: val_jump_moving_ascend_0
@@ -65,7 +65,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -76,7 +76,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -100,7 +100,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 2c4f904975baae744b96cdc4df61a0d3
+      spriteID: 0ed31e43778fe05438322c7c479891a3
       vertices: []
       indices: 
       edges: []
@@ -120,7 +120,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 0ac8ffd2ed83a0e4bbf953bd83c6bcca
+      spriteID: 6eb9ba5de14ed304bbdcb328d76d2fe7
       vertices: []
       indices: 
       edges: []
@@ -128,7 +128,7 @@ TextureImporter:
     outline: []
     physicsShape: []
     bones: []
-    spriteID: 2e12cdeabec51ab4da752dcf32f6ed61
+    spriteID: a091088a6f9a4ad4b96f7d985664cfb6
     vertices: []
     indices: 
     edges: []

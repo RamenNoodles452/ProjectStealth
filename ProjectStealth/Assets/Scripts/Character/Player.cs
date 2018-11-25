@@ -144,6 +144,7 @@ public class Player : SimpleCharacterCore
 
     public override void OnTouchCeiling( GameObject collisionObject )
     {
+        char_anims.FallTrigger();
         mag_grip.InitiateCeilingGrab( collisionObject.GetComponent<Collider2D>() );
     }
 

@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: ba1a9619f14c0054cacb8d9f590f7eb2
+guid: 50cea1871259f934c883a5424d0ccee4
 TextureImporter:
   fileIDToRecycleName:
     21300000: val_jump_idle_ascend_0
@@ -65,7 +65,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -76,7 +76,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -100,7 +100,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 76c35752ae20f564785e80e4eb6e8e40
+      spriteID: 957e692f2fff799468b57e637e5701ea
       vertices: []
       indices: 
       edges: []
@@ -120,7 +120,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: b9475cb5467efb543886fbb720f59a8b
+      spriteID: 47fc6e067816cbf47a3f12a13e163005
       vertices: []
       indices: 
       edges: []
@@ -128,7 +128,7 @@ TextureImporter:
     outline: []
     physicsShape: []
     bones: []
-    spriteID: fe5cf96ba4dc035498409ccc6d1e81e3
+    spriteID: 3871a01d55f2f6a4289bf4f0793094c5
     vertices: []
     indices: 
     edges: []

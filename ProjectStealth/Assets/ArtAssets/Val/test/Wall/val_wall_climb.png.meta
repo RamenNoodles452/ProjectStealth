@@ -1,20 +1,25 @@
 fileFormatVersion: 2
-guid: 48ae7796893ddef4484838977d0c7490
+guid: 83c9cba98f9620d4f96e1b4e7848a699
 TextureImporter:
   fileIDToRecycleName:
-    21300000: val_wall_to_ground_corrected_0
-    21300002: val_wall_to_ground_corrected_1
-    21300004: val_wall_to_ground_corrected_2
-    21300006: val_wall_to_ground_corrected_3
-    21300008: val_wall_to_ground_corrected_4
-    21300010: val_wall_to_ground_corrected_5
-    21300012: val_wall_to_ground_corrected_6
-    21300014: val_wall_to_ground_corrected_7
-    21300016: val_wall_to_ground_corrected_8
-    21300018: val_wall_to_ground_corrected_9
-    21300020: val_wall_to_ground_corrected_10
+    21300000: val_wall_climb_0
+    21300002: val_wall_climb_1
+    21300004: val_wall_climb_2
+    21300006: val_wall_climb_3
+    21300008: val_wall_climb_4
+    21300010: val_wall_climb_5
+    21300012: val_wall_climb_6
+    21300014: val_wall_climb_7
+    21300016: val_wall_climb_8
+    21300018: val_wall_climb_9
+    21300020: val_wall_climb_10
+    21300022: val_wall_climb_11
+    21300024: val_wall_climb_12
+    21300026: val_wall_climb_13
+    21300028: val_wall_climb_14
+    21300030: val_wall_climb_15
   externalObjects: {}
-  serializedVersion: 5
+  serializedVersion: 7
   mipmaps:
     mipMapMode: 0
     enableMipMap: 0
@@ -32,6 +37,8 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
   isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
   grayScaleToAlpha: 0
   generateCubemap: 6
   cubemapConvolution: 0
@@ -42,7 +49,7 @@ TextureImporter:
     serializedVersion: 2
     filterMode: 0
     aniso: -1
-    mipBias: -1
+    mipBias: -100
     wrapU: 1
     wrapV: 1
     wrapW: 1
@@ -50,7 +57,7 @@ TextureImporter:
   lightmap: 0
   compressionQuality: 50
   spriteMode: 2
-  spriteExtrude: 0
+  spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
@@ -93,7 +100,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: val_wall_to_ground_corrected_0
+      name: val_wall_climb_0
       rect:
         serializedVersion: 2
         x: 0
@@ -107,13 +114,13 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: b147753c71fa81749a3e0841579c6e32
+      spriteID: 42358fb58e42bbc4799e6c6058124724
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: val_wall_to_ground_corrected_1
+      name: val_wall_climb_1
       rect:
         serializedVersion: 2
         x: 150
@@ -127,13 +134,13 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: b6e171d7e0eadad47b85220172590020
+      spriteID: ed2a0dd77ed7d644d85717d58eab03e1
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: val_wall_to_ground_corrected_2
+      name: val_wall_climb_2
       rect:
         serializedVersion: 2
         x: 300
@@ -147,13 +154,33 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 5285e2229c52e2945aa73b188a289d77
+      spriteID: ea6a06a7a52ffd64a83eaf19ea7f133e
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: val_wall_to_ground_corrected_3
+      name: val_wall_climb_3
+      rect:
+        serializedVersion: 2
+        x: 450
+        y: 450
+        width: 150
+        height: 150
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fc5e303e0b73f7e4b8cf5eb6cebfcb92
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: val_wall_climb_4
       rect:
         serializedVersion: 2
         x: 0
@@ -167,13 +194,13 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 1e6bb3f02cdc2054eaa23b00aed63f27
+      spriteID: 5d8fdbac904ecfd47adde95e5d1d4232
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: val_wall_to_ground_corrected_4
+      name: val_wall_climb_5
       rect:
         serializedVersion: 2
         x: 150
@@ -187,13 +214,13 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: f4a3d1f633c939947a8ce56dbaf09eb9
+      spriteID: a29c5e4bcddbce94c897a58fa11df0e9
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: val_wall_to_ground_corrected_5
+      name: val_wall_climb_6
       rect:
         serializedVersion: 2
         x: 300
@@ -207,13 +234,33 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: a2f7dd5b38cb4f44b8d1cede3a514b19
+      spriteID: c88baca5a3439e64e9922b892fc56e6f
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: val_wall_to_ground_corrected_6
+      name: val_wall_climb_7
+      rect:
+        serializedVersion: 2
+        x: 450
+        y: 300
+        width: 150
+        height: 150
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 84f140a399d460b4a90a0ec93edf99f1
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: val_wall_climb_8
       rect:
         serializedVersion: 2
         x: 0
@@ -227,13 +274,13 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: f4cf06ff52c0f5a4a8436e82f14ec88e
+      spriteID: 496a5135bb7b2874198b9e883c099561
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: val_wall_to_ground_corrected_7
+      name: val_wall_climb_9
       rect:
         serializedVersion: 2
         x: 150
@@ -247,13 +294,13 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 717505887988df848bef2671c85a0e69
+      spriteID: 192fbf63893063e4fb1803271dc081e8
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: val_wall_to_ground_corrected_8
+      name: val_wall_climb_10
       rect:
         serializedVersion: 2
         x: 300
@@ -267,13 +314,33 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 33463ff0b6788ee4d96b90af98f07f11
+      spriteID: 4c1124b3905602e44878460cfd72c478
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: val_wall_to_ground_corrected_9
+      name: val_wall_climb_11
+      rect:
+        serializedVersion: 2
+        x: 450
+        y: 150
+        width: 150
+        height: 150
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 83bd69b7c2c0a8742acec8ec9b358e5a
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: val_wall_climb_12
       rect:
         serializedVersion: 2
         x: 0
@@ -287,13 +354,13 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: e5a0f833f47b80c4bad1e684f33df61a
+      spriteID: e09bb3415432f584493779501fbf52ef
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: val_wall_to_ground_corrected_10
+      name: val_wall_climb_13
       rect:
         serializedVersion: 2
         x: 150
@@ -307,7 +374,47 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 362a5411bf732c945972d8f94aebdea7
+      spriteID: 7925a44f591d8024baae50d2b51e54c3
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: val_wall_climb_14
+      rect:
+        serializedVersion: 2
+        x: 300
+        y: 0
+        width: 150
+        height: 150
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7989e0bee3ca94e4b93a631a383dc6f1
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: val_wall_climb_15
+      rect:
+        serializedVersion: 2
+        x: 450
+        y: 0
+        width: 150
+        height: 150
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 19d3acf53095b77408598f9a8bd32aa4
       vertices: []
       indices: 
       edges: []
@@ -315,12 +422,14 @@ TextureImporter:
     outline: []
     physicsShape: []
     bones: []
-    spriteID: 324a64e4846bd994582aa55e487a7dc2
+    spriteID: 5f2da0780a94dde4294649aad709dafe
     vertices: []
     indices: 
     edges: []
     weights: []
   spritePackingTag: 
+  pSDRemoveMatte: 0
+  pSDShowRemoveMatteOption: 0
   userData: 
   assetBundleName: 
   assetBundleVariant: 

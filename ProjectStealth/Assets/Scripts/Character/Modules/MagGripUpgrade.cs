@@ -23,8 +23,8 @@ public class MagGripUpgrade : MonoBehaviour
     public enum ClimbState { NotClimb, WallClimb, CeilingClimb, Transition };
     public ClimbState current_climb_state = ClimbState.NotClimb;
 
-    private const float WALL_CLIMB_SPEED = 90.0f;  // pixels / second
-    private const float WALL_SLIDE_SPEED = 180.0f; // pixels / second
+    private const float WALL_CLIMB_SPEED = 70.0f;  // pixels / second
+    private const float WALL_SLIDE_SPEED = 160.0f; // pixels / second
 
     //TODO: do something about duplicate code
     // ledge logic
