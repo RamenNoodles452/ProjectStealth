@@ -23,7 +23,7 @@ public class CharacterAnimationLogic : MonoBehaviour
     {
         if ( char_stats.current_master_state == CharEnums.MasterState.DefaultState )
         {
-            animator.SetBool( "jumping", char_stats.IsInMidair );
+            animator.SetBool( "midair", char_stats.IsInMidair );
         }
 
         CoverLogic();
@@ -132,6 +132,7 @@ public class CharacterAnimationLogic : MonoBehaviour
     {
         animator.SetTrigger( "wall_grab_trigger" );
         animator.SetBool( "sneaking", false );
+        animator.SetBool( "midair", false );
     }
 
     public void WallClimb()

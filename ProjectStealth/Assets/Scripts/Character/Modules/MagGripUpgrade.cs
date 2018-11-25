@@ -410,7 +410,6 @@ public class MagGripUpgrade : MonoBehaviour
     /// </summary>
     private void AbortWallClimbFromLedge()
     {
-        char_stats.is_jumping = false;
         //TODO: head shake animation to notify that the ledge is too short
     }
 

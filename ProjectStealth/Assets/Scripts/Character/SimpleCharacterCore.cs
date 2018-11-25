@@ -20,9 +20,9 @@ public class SimpleCharacterCore : MonoBehaviour
     //jump vars
     protected const float JUMP_HORIZONTAL_SPEED_MIN =   150.0f; // (pixels / seond)
     protected const float JUMP_HORIZONTAL_SPEED_MAX =   240.0f; // (pixels / second)
-    private   const float JUMP_VERTICAL_SPEED       =   360.0f; // (pixels / second)
-    private   const float JUMP_CONTROL_TIME         =     0.2f; // maximum duration of a jump (in seconds) if you hold it
-    private   const float JUMP_DURATION_MIN         =     0.1f; // minimum duration of a jump (in seconds) if you tap it
+    private   const float JUMP_VERTICAL_SPEED       =   300.0f; // (pixels / second)
+    private   const float JUMP_CONTROL_TIME         =     0.22f; // maximum duration of a jump (in seconds) if you hold it
+    private   const float JUMP_DURATION_MIN         =     0.005f; // minimum duration of a jump (in seconds) if you tap it
     private   const float JUMP_GRACE_PERIOD_TIME    =     0.1f; // how long (in seconds) a player has to jump if they slip off a platform
     [SerializeField]
     private bool jump_grace_period; //for jump tolerance if a player walks off a platform but wants to jump
@@ -397,7 +397,14 @@ public class SimpleCharacterCore : MonoBehaviour
     /// </summary>
     private void SetVerticalVelocity()
     {
-        char_stats.velocity.y += GRAVITATIONAL_ACCELERATION * Time.deltaTime * Time.timeScale;
+        if ( char_stats.is_jumping )
+        {
+            char_stats.velocity.y += GRAVITATIONAL_ACCELERATION * 0.8f * Time.deltaTime * Time.timeScale;
+        }
+        else
+        {
+            char_stats.velocity.y += GRAVITATIONAL_ACCELERATION * Time.deltaTime * Time.timeScale;
+        }
 
         //override the vertical velocity if we're in the middle of jumping
         if ( char_stats.is_jumping )
