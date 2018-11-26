@@ -127,12 +127,16 @@ public class CharacterAnimationLogic : MonoBehaviour
         animator.SetTrigger( "fallthrough" );
     }
 
+    public void SetMidairToFalse()
+    {
+        animator.SetBool("midair", false);
+    }
+
     // Triggers are called within the character scripts
     public void WallGrabTrigger()
     {
         animator.SetTrigger( "wall_grab_trigger" );
         animator.SetBool( "sneaking", false );
-        animator.SetBool( "midair", false );
     }
 
     public void WallClimb()
@@ -199,6 +203,12 @@ public class CharacterAnimationLogic : MonoBehaviour
     public void DodgeRollAerialTrigger()
     {
         animator.SetTrigger( "dodge_roll_aerial_trigger" );
+    }
+
+    // bool when you're looking away from the wall when climbing
+    public void WallLookAway( bool is_looking_away )
+    {
+        animator.SetBool( "wall_look_away", is_looking_away );
     }
 }
 
