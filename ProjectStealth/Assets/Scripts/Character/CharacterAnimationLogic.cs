@@ -25,6 +25,10 @@ public class CharacterAnimationLogic : MonoBehaviour
         {
             animator.SetBool( "midair", char_stats.IsInMidair );
         }
+        else if ( char_stats.current_master_state == CharEnums.MasterState.ClimbState )
+        {
+            animator.SetBool( "midair", false );
+        }
 
         CoverLogic();
         RunningLogic();
@@ -125,11 +129,6 @@ public class CharacterAnimationLogic : MonoBehaviour
     public void FallthoughTrigger()
     {
         animator.SetTrigger( "fallthrough" );
-    }
-
-    public void SetMidairToFalse()
-    {
-        animator.SetBool("midair", false);
     }
 
     // Triggers are called within the character scripts
