@@ -186,6 +186,7 @@ public class MagGripUpgrade : MonoBehaviour
     /// </summary>
     private void SetClimbVerticalVelocity()
     {
+        char_stats.velocity.y = 0.0f;
         if ( input_manager.VerticalAxis > 0.0f )
         {
             if ( !is_looking_away )
@@ -196,10 +197,6 @@ public class MagGripUpgrade : MonoBehaviour
         else if ( input_manager.VerticalAxis < 0.0f )
         {
             char_stats.velocity.y = -WALL_SLIDE_SPEED;
-        }
-        else
-        {
-            char_stats.velocity.y = 0.0f;
         }
     }
 
