@@ -16,13 +16,14 @@ public class SimpleCharacterCore : MonoBehaviour
     //gravity vars
     private const float MAX_VERTICAL_SPEED          =   600.0f; // (pixels / second)
     private const float GRAVITATIONAL_ACCELERATION  = -1800.0f; // (pixels / second / second)
+    private const float HANG_TIME_FACTOR            = -400.0f;  // value to subtract from gravity during apex of a jump
 
     //jump vars
     protected const float JUMP_HORIZONTAL_SPEED_MIN =   150.0f; // (pixels / seond)
     protected const float JUMP_HORIZONTAL_SPEED_MAX =   240.0f; // (pixels / second)
-    private   const float JUMP_VERTICAL_SPEED       =   360.0f; // (pixels / second)
-    private   const float JUMP_CONTROL_TIME         =     0.2f; // maximum duration of a jump (in seconds) if you hold it
-    private   const float JUMP_DURATION_MIN         =     0.1f; // minimum duration of a jump (in seconds) if you tap it
+    private   const float JUMP_VERTICAL_SPEED       =   300.0f; // (pixels / second)
+    private   const float JUMP_CONTROL_TIME         =     0.22f; // maximum duration of a jump (in seconds) if you hold it
+    private   const float JUMP_DURATION_MIN         =     0.05f; // minimum duration of a jump (in seconds) if you tap it
     private   const float JUMP_GRACE_PERIOD_TIME    =     0.1f; // how long (in seconds) a player has to jump if they slip off a platform
     [SerializeField]
     private bool jump_grace_period; //for jump tolerance if a player walks off a platform but wants to jump
@@ -397,9 +398,7 @@ public class SimpleCharacterCore : MonoBehaviour
     /// </summary>
     private void SetVerticalVelocity()
     {
-        char_stats.velocity.y += GRAVITATIONAL_ACCELERATION * Time.deltaTime * Time.timeScale;
-
-        //override the vertical velocity if we're in the middle of jumping
+        // override the vertical velocity if we're in the middle of jumping
         if ( char_stats.is_jumping )
         {
             char_stats.jump_input_time = char_stats.jump_input_time + Time.deltaTime * Time.timeScale;
@@ -409,10 +408,20 @@ public class SimpleCharacterCore : MonoBehaviour
             }
             else
             {
+                char_stats.velocity.y += ( GRAVITATIONAL_ACCELERATION - HANG_TIME_FACTOR ) * Time.deltaTime * Time.timeScale;
+            }
+
+            if( char_stats.velocity.y < 0 )
+            {
                 // jump has peaked
                 char_stats.is_jumping = false;
                 char_anims.FallTrigger();
             }
+        }
+        // if not jumping, be affected by gravity
+        else
+        {
+            char_stats.velocity.y += GRAVITATIONAL_ACCELERATION * Time.deltaTime * Time.timeScale;
         }
 
         // if you turned while jumping, turn off the jump var
@@ -760,6 +769,7 @@ public class SimpleCharacterCore : MonoBehaviour
     public virtual void OnTouchCeiling( GameObject collisionObject )
     {
         //base class does nothing with this function. gets overridden at the subclass level to handle such occasions
+        //char_anims.FallTrigger() needs to be incluseded in the override somewhere
     }
 
     /// <summary>

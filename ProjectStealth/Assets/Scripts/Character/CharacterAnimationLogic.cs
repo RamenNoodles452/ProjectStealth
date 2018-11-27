@@ -7,6 +7,7 @@ public class CharacterAnimationLogic : MonoBehaviour
     #region vars
     public Animator animator;
     protected CharacterStats char_stats;
+    protected UserInputManager input_manager;
     #endregion
 
     // Use this for initialization
@@ -14,6 +15,7 @@ public class CharacterAnimationLogic : MonoBehaviour
     {
         animator   = GetComponent<Animator>();
         char_stats = GetComponent<CharacterStats>();
+        input_manager = GetComponent<UserInputManager>();
     }
 
     // Update is called once per frame
@@ -21,7 +23,11 @@ public class CharacterAnimationLogic : MonoBehaviour
     {
         if ( char_stats.current_master_state == CharEnums.MasterState.DefaultState )
         {
-            animator.SetBool( "jumping", char_stats.IsInMidair );
+            animator.SetBool( "midair", char_stats.IsInMidair );
+        }
+        else if ( char_stats.current_master_state == CharEnums.MasterState.ClimbState )
+        {
+            animator.SetBool( "midair", false );
         }
 
         CoverLogic();
@@ -30,6 +36,19 @@ public class CharacterAnimationLogic : MonoBehaviour
         CrouchLogic();
         WallClimb();
         WallSlide();
+        HorizontalAxisInput();
+    }
+
+    private void HorizontalAxisInput()
+    {
+        if (input_manager.HorizontalAxis != 0)
+        {
+            animator.SetBool( "horizontal_axis_input", true );
+        }
+        else
+        {
+            animator.SetBool( "horizontal_axis_input", false );
+        }
     }
 
     // This is temporary & may not solve all problems. Once the animator has run states, adjust this accordingly.
@@ -183,6 +202,12 @@ public class CharacterAnimationLogic : MonoBehaviour
     public void DodgeRollAerialTrigger()
     {
         animator.SetTrigger( "dodge_roll_aerial_trigger" );
+    }
+
+    // bool when you're looking away from the wall when climbing
+    public void WallLookAway( bool is_looking_away )
+    {
+        animator.SetBool( "wall_look_away", is_looking_away );
     }
 }
 
