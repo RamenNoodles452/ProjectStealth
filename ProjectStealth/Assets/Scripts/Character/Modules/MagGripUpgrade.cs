@@ -23,8 +23,8 @@ public class MagGripUpgrade : MonoBehaviour
     public enum ClimbState { NotClimb, WallClimb, CeilingClimb, Transition };
     public ClimbState current_climb_state = ClimbState.NotClimb;
 
-    private const float WALL_CLIMB_SPEED = 90.0f;  // pixels / second
-    private const float WALL_SLIDE_SPEED = 180.0f; // pixels / second
+    private const float WALL_CLIMB_SPEED = 70.0f;  // pixels / second
+    private const float WALL_SLIDE_SPEED = 160.0f; // pixels / second
 
     //TODO: do something about duplicate code
     // ledge logic
@@ -33,6 +33,8 @@ public class MagGripUpgrade : MonoBehaviour
 
     //consts
     protected const float JUMP_ACCELERATION = 240.0f; // base acceleration for jump off the wall with no input (pixels / second / second)
+
+    private bool is_looking_away = false;
     #endregion
 
     // Use this for initialization
@@ -87,12 +89,14 @@ public class MagGripUpgrade : MonoBehaviour
 
         if ( grab_collider == null ) { return; }
 
+        LookAway();
         LedgeLook();
 
         // Jump logic.
         if ( input_manager.JumpInputInst )
         {
-            if ( ! is_overlooking_ledge )
+            //if ( ! is_overlooking_ledge)
+            if ( is_looking_away )
             {
                 StopClimbing();
                 char_stats.is_jumping = true;
@@ -182,17 +186,17 @@ public class MagGripUpgrade : MonoBehaviour
     /// </summary>
     private void SetClimbVerticalVelocity()
     {
+        char_stats.velocity.y = 0.0f;
         if ( input_manager.VerticalAxis > 0.0f )
         {
-            char_stats.velocity.y = WALL_CLIMB_SPEED * input_manager.VerticalAxis;
+            if ( !is_looking_away )
+            {
+                char_stats.velocity.y = WALL_CLIMB_SPEED * input_manager.VerticalAxis;
+            }
         }
         else if ( input_manager.VerticalAxis < 0.0f )
         {
             char_stats.velocity.y = -WALL_SLIDE_SPEED;
-        }
-        else
-        {
-            char_stats.velocity.y = 0.0f;
         }
     }
 
@@ -263,6 +267,26 @@ public class MagGripUpgrade : MonoBehaviour
         else if ( current_climb_state == ClimbState.CeilingClimb )
         {
 
+        }
+    }
+
+    /// <summary>
+    /// looks away if the player inputs away from the wall
+    /// </summary>
+    public void LookAway()
+    {
+        if ( current_climb_state == ClimbState.WallClimb )
+        {
+            if ( input_manager.HorizontalAxis == char_stats.GetFacingXComponent() *-1 )
+            {
+                char_anims.WallLookAway( true );
+                is_looking_away = true;
+            }
+            else
+            {
+                char_anims.WallLookAway( false );
+                is_looking_away = false;
+            }
         }
     }
 
@@ -410,7 +434,6 @@ public class MagGripUpgrade : MonoBehaviour
     /// </summary>
     private void AbortWallClimbFromLedge()
     {
-        char_stats.is_jumping = false;
         //TODO: head shake animation to notify that the ledge is too short
     }
 
