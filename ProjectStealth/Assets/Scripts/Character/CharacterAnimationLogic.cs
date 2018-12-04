@@ -217,6 +217,20 @@ public class CharacterAnimationLogic : MonoBehaviour
     }
 
     /// <summary>
+    /// Resets wall-climb related animations state parameters.
+    /// </summary>
+    public void ResetWallClimb()
+    {
+        //animator.ResetTrigger( "wall_grab_trigger" );
+        //animator.SetBool( "wall_climb", false );
+        //animator.SetBool( "wall_slide", false );
+        //animator.ResetTrigger( "drop_from_wall" );
+        //animator.ResetTrigger( "wall_to_ground" );
+        //animator.ResetTrigger( "ground_to_wall" );
+        //animator.ResetTrigger( "wall_slide_touch_ground" );
+    }
+
+    /// <summary>
     /// Resets all animation state parameters.
     /// </summary>
     public void Reset()

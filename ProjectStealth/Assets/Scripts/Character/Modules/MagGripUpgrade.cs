@@ -304,7 +304,9 @@ public class MagGripUpgrade : MonoBehaviour
         char_stats.current_master_state = CharEnums.MasterState.DefaultState;
 
         //TODO: temp?
-        char_anims.WallSlideTouchGround();
+        //char_anims.WallSlideTouchGround();
+        // Reset animation state
+        char_anims.ResetWallClimb();
     }
 
     /// <summary>
@@ -345,6 +347,8 @@ public class MagGripUpgrade : MonoBehaviour
 
         char_stats.current_master_state = CharEnums.MasterState.DefaultState;
         char_stats.current_move_state = CharEnums.MoveState.IsSneaking;
+        Debug.Log( "end" );
+        transform.position = new Vector3( transform.position.x, grab_collider.bounds.max.y + GetComponent<Collider2D>().bounds.size.y / 2.0f + GetComponent<Collider2D>().offset.y + 1.0f + 10.0f, transform.position.z );
         grab_collider = null;
     }
 

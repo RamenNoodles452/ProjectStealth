@@ -45,6 +45,7 @@ public class LiftDetector : MonoBehaviour
             //reset state from climbing, etc.
             if ( Referencer.instance.player.GetComponent<CharacterStats>().current_master_state == CharEnums.MasterState.ClimbState )
             {
+                Referencer.instance.player.GetComponent<CharacterAnimationLogic>().WallSlideTouchGround(); // play slide down and touch ground animation
                 Referencer.instance.player.GetComponent<MagGripUpgrade>().StopClimbing();
             }
         }
