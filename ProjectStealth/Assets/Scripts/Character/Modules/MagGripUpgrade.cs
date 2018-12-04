@@ -302,6 +302,9 @@ public class MagGripUpgrade : MonoBehaviour
         wall_grab_delay_timer = 0.0f;
         //set the master state to the default state. It'll transition into any other state from there. 
         char_stats.current_master_state = CharEnums.MasterState.DefaultState;
+
+        //TODO: temp?
+        char_anims.WallSlideTouchGround();
     }
 
     /// <summary>

@@ -245,6 +245,7 @@ public class PlayerStats : MonoBehaviour
 
         input_manager = GetComponent<IInputManager>();
         char_anims = this.gameObject.GetComponent<CharacterAnimationLogic>();
+        char_anims.Reset();
         // reset movement
         char_stats = this.gameObject.GetComponent<CharacterStats>();
         char_stats.velocity = new Vector2( 0.0f, 0.0f );
