@@ -22,7 +22,7 @@ public class CharacterStats : MonoBehaviour
     //[HideInInspector]
     public Vector2 CROUCHING_COLLIDER_SIZE = new Vector2(25.0f, 19.0f);
     [HideInInspector]
-    public Vector2 CROUCHING_COLLIDER_OFFSET = new Vector2(0.0f, -12.0f); // the collider box needs to be offset from center
+    public Vector2 CROUCHING_COLLIDER_OFFSET;
 
     public Vector2 velocity;
     [HideInInspector]
@@ -56,9 +56,17 @@ public class CharacterStats : MonoBehaviour
     public float bezier_distance;
     #endregion
 
+    // Early Initialization (references)
+    private void Awake()
+    {
+        // To be robust, the crouch collider box needs to be offset from center, such that the bottom is at the same y coordinate as when standing.
+        CROUCHING_COLLIDER_OFFSET = new Vector2( 0.0f, ( CROUCHING_COLLIDER_SIZE.y - STANDING_COLLIDER_SIZE.y ) / 2.0f + STANDING_COLLIDER_OFFSET.y );
+        char_collider = GetComponent<BoxCollider2D>();
+    }
+
+    // Initialization
     void Start()
     {
-        char_collider = GetComponent<BoxCollider2D>();
         char_collider.size = STANDING_COLLIDER_SIZE;
         char_collider.offset = STANDING_COLLIDER_OFFSET;
         velocity = new Vector2( 0.0f, 0.0f );
