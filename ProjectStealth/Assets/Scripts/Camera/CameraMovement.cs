@@ -9,36 +9,42 @@ public class CameraMovement : MonoBehaviour
     [SerializeField]
     private float damp_time = 0.15f;
 
-    private Vector3 velocity = Vector3.zero;
-    private Vector3 accumulated_position;   // accumulate fractional x, y coordinates. camera position will always be whole number.
+    private Vector3 accumulated_position;   // accumulate fractional x, y coordinates. camera position must always be whole number.
     private Camera cam;
     private BoxCollider2D boundingBox;
+
+    // Camera config
+    private const float CAMERA_Z = -10.0f;
+    private const float MAX_VELOCITY = 640.0f; // pixels / second
     #endregion
 
+    // Early initialization (references)
     private void Awake()
     {
-        focal_target = GameObject.Find( "PlayerCharacter/CameraFocalPoint" ).transform;
+        focal_target = GameObject.Find( "PlayerCharacter/CameraFocalPoint" ).transform; // slow
+        boundingBox = GameObject.Find( "BoundingBox" ).GetComponent<BoxCollider2D>();   // slow
+        cam = GetComponent<Camera>();
     }
 
     // Use this for initialization
     void Start()
     {
-        cam = GetComponent<Camera>();
-
-        boundingBox = GameObject.Find( "BoundingBox" ).GetComponent<BoxCollider2D>(); //bad
+        transform.position = new Vector3( transform.position.x, transform.position.y, CAMERA_Z ); // lock z
         accumulated_position = transform.position;
     }
 
     // Update is called once per frame
-    void Update()
+    void LateUpdate()
     {
-        //transform.position = focal_target.position;
+        // Moved to lateupdate so camera hits the target after motion is applied to the player.
+        //BASICALLY: transform.position = focal_target.position;
+
         if ( focal_target )
         {
             #region clamp
             Vector3 clamped_focal_target = focal_target.position;
 
-            if ( !boundingBox )
+            if ( ! boundingBox )
             {
                 Debug.LogError( "Someone forgot to put a bounding box around the level / messed it up." );
             }
@@ -75,14 +81,22 @@ public class CameraMovement : MonoBehaviour
             }
             #endregion
 
-            //smoothly move the camera to the focal point
+            // smoothly move the camera to the focal point
             Vector3 point = cam.WorldToViewportPoint( clamped_focal_target );
-            Vector3 delta = clamped_focal_target - cam.ViewportToWorldPoint( new Vector3( 0.5f, 0.5f, point.z ) );
+            Vector3 screen_center = cam.ViewportToWorldPoint( new Vector3( 0.5f, 0.5f, point.z ) );
+            Vector3 delta = clamped_focal_target - screen_center;
             Vector3 destination = transform.position + delta;
-            accumulated_position = Vector3.SmoothDamp( accumulated_position, destination, ref velocity, damp_time );
-            // Disabled. Making it less smooth looks bad. We should either go all-in on low res before enabling this, or don't do it.
-            transform.position = new Vector3( (int) accumulated_position.x, (int) accumulated_position.y, accumulated_position.z );
-            //transform.position = accumulated_position;
+
+            if ( delta.magnitude <= ( MAX_VELOCITY * Time.deltaTime * Time.timeScale ) ) // arrive without overshooting
+            {
+                accumulated_position = new Vector3( destination.x, destination.y, CAMERA_Z );
+                transform.position = new Vector3( (int) destination.x, (int) destination.y, CAMERA_Z );
+            }
+            else // just move.
+            {
+                accumulated_position += new Vector3( delta.normalized.x, delta.normalized.y, 0.0f ) * MAX_VELOCITY * Time.deltaTime * Time.timeScale;
+                transform.position = new Vector3( (int) ( accumulated_position.x ), (int) ( accumulated_position.y ) , CAMERA_Z );
+            }
         }
 
     }
@@ -92,7 +106,7 @@ public class CameraMovement : MonoBehaviour
     /// </summary>
     public void SnapToFocalPoint()
     {
-        accumulated_position = new Vector3( (int) focal_target.position.x, (int) focal_target.position.y, focal_target.position.z );
+        accumulated_position = new Vector3( (int) focal_target.position.x, (int) focal_target.position.y, CAMERA_Z );
         transform.position = accumulated_position;
     }
 }

@@ -879,6 +879,13 @@ public class SimpleCharacterCore : MonoBehaviour
     /// <param name="change">The change to apply this frame to the player's position.</param>
     private void ApplyMoveWithCollision( Vector3 change )
     {
+        // Validation
+        if ( change.sqrMagnitude == 0.0f )
+        {
+            Debug.Log( "Don't be a troll." );
+            return;
+        }
+
         BoxCollider2D collider = GetComponent<BoxCollider2D>();
         if ( collider == null )
         {
@@ -886,22 +893,20 @@ public class SimpleCharacterCore : MonoBehaviour
             return;
         }
 
+        // Collision check.
         Vector2 size = new Vector2( collider.size.x, collider.size.y );
         RaycastHit2D hit = Physics2D.BoxCast( this.gameObject.transform.position, size, 0.0f, change, change.magnitude, CollisionMasks.all_collision_mask );
 
-        if ( hit.collider != null )
+        if ( hit.collider != null ) // Collided with something.
         {
-            if ( change.magnitude == 0.0f )
-            {
-                Debug.Log( "Don't be a troll." );
-                return;
-            }
+            if ( hit.distance < ONE_PIXEL_BUFFER ) { return; } // prevent jitter by not moving if you are point-blank with a collider.
 
+            // Move very close to the collider.
             this.gameObject.transform.position += new Vector3( 
                 ( hit.distance - ONE_PIXEL_BUFFER ) * Mathf.Cos( Mathf.Atan2( change.y, change.x ) ), 
-                ( hit.distance - ONE_PIXEL_BUFFER ) * Mathf.Sin( Mathf.Atan2( change.y, change.x) ), 0.0f );
+                ( hit.distance - ONE_PIXEL_BUFFER ) * Mathf.Sin( Mathf.Atan2( change.y, change.x ) ), 0.0f );
         }
-        else
+        else // Collided with nothing. Move it.
         {
             this.gameObject.transform.position += change;
         }
