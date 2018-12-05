@@ -44,6 +44,7 @@ public class Parallax : MonoBehaviour
     // Update is called once per frame
     void LateUpdate()
     {
+        // Use lateupdate to sync with the camera update.
         float delta = Camera.main.transform.position.x - previous_camera_position.x;
         transform.position = transform.position + Offset( delta, scale );
 

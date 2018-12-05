@@ -882,7 +882,7 @@ public class SimpleCharacterCore : MonoBehaviour
         // Validation
         if ( change.sqrMagnitude == 0.0f )
         {
-            Debug.Log( "Don't be a troll." );
+            //Debug.Log( "Don't be a troll." );
             return;
         }
 

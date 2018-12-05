@@ -176,6 +176,12 @@ public class Player : SimpleCharacterCore
     /// <returns>The player's maximum amount of energy</returns>
     public float GetEnergyMax() { return player_stats.GetEnergyMax(); }
 
+    /// <returns>True if the player's animation changed to idle since the last frame.</returns>
+    public bool BecameIdleThisFrame
+    {
+        get { return player_stats.BecameIdleThisFrame; }
+    }
+
     /// <summary>
     /// Saves checkpoint location to respawn at.
     /// </summary>

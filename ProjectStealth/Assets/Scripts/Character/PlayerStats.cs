@@ -100,6 +100,9 @@ public class PlayerStats : MonoBehaviour
     private CharacterAnimationLogic char_anims;
     IInputManager input_manager;
     private float walk_animation_timer;
+
+    private bool is_idle  = true;
+    private bool was_idle = true;
     #endregion
 
     #region stat accessors
@@ -146,6 +149,22 @@ public class PlayerStats : MonoBehaviour
     public void StartWalking()
     {
         walk_animation_timer = 0.15f;
+    }
+
+    /// <summary>
+    /// Returns true if the player is in the idle animation.
+    /// </summary>
+    public bool IsIdle
+    {
+        get { return is_idle; }
+    }
+
+    /// <summary>
+    /// Returns true if the player became idle this frame.
+    /// </summary>
+    public bool BecameIdleThisFrame
+    {
+        get { return is_idle && !was_idle; }
     }
 
     /// <summary>
@@ -722,6 +741,10 @@ public class PlayerStats : MonoBehaviour
         }
         #endregion
         #endregion
+
+        // Idle check
+        was_idle = is_idle;
+        is_idle = char_anims.animator.GetCurrentAnimatorStateInfo( 0 ).IsName( "valerie_idle" );
     }
 
 }
