@@ -584,7 +584,7 @@ public class SimpleCharacterCore : MonoBehaviour
              FallingLogic();
              return;
         }
-        
+
         CollisionType collision_type = hit.transform.gameObject.GetComponent<CollisionType>();
         float hit_distance = hit.distance - ONE_PIXEL_BUFFER;
         if ( hit_distance <= Mathf.Abs( char_stats.velocity.y * Time.deltaTime * Time.timeScale ) )
@@ -665,7 +665,7 @@ public class SimpleCharacterCore : MonoBehaviour
         // issue can't fall down when straddling two fallthrough platforms 
         // (but there shouldn't be a need to have two passthrough platforms touch, they can just merge into 1)
         if ( ( floor_collision_type.CanWalkOffRightEdge && char_stats.char_collider.bounds.max.x > floor_collider.bounds.max.x ) ||
-                ( floor_collision_type.CanWalkOffLeftEdge  && char_stats.char_collider.bounds.min.x < floor_collider.bounds.min.x ) )
+             ( floor_collision_type.CanWalkOffLeftEdge  && char_stats.char_collider.bounds.min.x < floor_collider.bounds.min.x ) )
         {
             fallthrough = false;
             return false;

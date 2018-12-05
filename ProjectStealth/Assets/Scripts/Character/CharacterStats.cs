@@ -67,8 +67,7 @@ public class CharacterStats : MonoBehaviour
     // Initialization
     void Start()
     {
-        char_collider.size = STANDING_COLLIDER_SIZE;
-        char_collider.offset = STANDING_COLLIDER_OFFSET;
+        StandingHitBox();
         velocity = new Vector2( 0.0f, 0.0f );
         acceleration = new Vector2( 0.0f, 0.0f );
         jump_input_time = 0.0f;
