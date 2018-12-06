@@ -7,6 +7,7 @@ public class LineOfSightOccluder : MonoBehaviour
     #region vars
     private float MAX_DISTANCE = 0.0f;
     private const float SMALL_DELTA = 0.01f; // radians
+    private const float DEEPEST_Z = 11.0f;
     #endregion
 
     // Use this for initialization
@@ -18,8 +19,24 @@ public class LineOfSightOccluder : MonoBehaviour
     // Update is called once per frame
     void Update ()
     {
+        // Get all colliders
+        Collider2D[] colliders = GetCollidersInScene();
 
-        // Grab all light-occluding geometry in the scene
+        List<CastData> list = new List<CastData>();
+        CastToScreenCorners( ref list );
+        CastAtColliders( colliders, ref list );
+        ConstructTriangleFan( ref list );
+    }
+
+
+    /// <summary>
+    /// Gets all the line of sight affecting colliders in the relevant area of the scene.
+    /// </summary>
+    /// <returns>An array of all the colliders that affect line of sight</returns>
+    private Collider2D[] GetCollidersInScene()
+    {
+        // Grab all light-occluding geometry on the screen + extra buffer
+        // ( error-free would need all in the scene, this should work OK enough though, with certain topology restrictions)
         Vector3 min3D    = Camera.main.ViewportToWorldPoint( new Vector3( 0.0f, 0.0f, 0.0f ) );
         Vector3 max3D    = Camera.main.ViewportToWorldPoint( new Vector3( 1.0f, 1.0f, 0.0f ) );
         Vector3 center3D = Camera.main.ViewportToWorldPoint( new Vector3( 0.5f, 0.5f, 0.0f ) );
@@ -29,23 +46,46 @@ public class LineOfSightOccluder : MonoBehaviour
         Vector2 center = new Vector2( center3D.x, center3D.y );
         // Set max distance. TODO: optimize
         Vector2 size   = new Vector2( max3D.x - min3D.x, max3D.y - min3D.y );
-        MAX_DISTANCE = size.magnitude / 1.5f; // 1/2 WOULD work, if the camera were not offset from the player.
+        MAX_DISTANCE = size.magnitude; // 1/2 WOULD work, if the camera were not offset from the player.
 
-        List<CastData> list = new List<CastData>();
-        Collider2D[] hits = Physics2D.OverlapAreaAll( min, max, CollisionMasks.light_occlusion_mask );
+        // Make the area 2 screens wide and 2 screen high, so things slightly offscreen don't end up causing odd shadowing.
+        min = new Vector2( min.x - size.x, min.y - size.y );
+        max = new Vector2( max.x + size.x, max.y + size.y );
 
-        // For special case: no hits, draw fullscreen no blackout
-        // cast to the 4 corners of the screen.
-        RayCast( min, ref list );
-        RayCast( new Vector2( min.x, max.y ), ref list );
-        RayCast( max, ref list );
-        RayCast( new Vector2( max.x, min.y ), ref list );
+        return Physics2D.OverlapAreaAll( min, max, CollisionMasks.light_occlusion_mask );
+    }
 
-        foreach ( Collider2D hit in hits )
+    /// <summary>
+    /// Casts sight rays to the 4 corners of the screen.
+    /// These casts need to be added so the sight occlusion blackout mesh gets drawn correctly.
+    /// </summary>
+    /// <param name="list">The list of sight raycast data. Will have additional information added to it.</param>
+    private void CastToScreenCorners( ref List<CastData> list )
+    {
+        // For the special case: no colliders on screen, make the mask fullscreen so no blackout.
+        Vector3 min3D    = Camera.main.ViewportToWorldPoint( new Vector3( 0.0f, 0.0f, 0.0f ) );
+        Vector3 max3D    = Camera.main.ViewportToWorldPoint( new Vector3( 1.0f, 1.0f, 0.0f ) );
+        Vector2 min = new Vector2( min3D.x, min3D.y );
+        Vector2 max = new Vector2( max3D.x, max3D.y );
+
+        TriRayCast( min, ref list );
+        TriRayCast( new Vector2( min.x, max.y ), ref list );
+        TriRayCast( max, ref list );
+        TriRayCast( new Vector2( max.x, min.y ), ref list );
+    }
+
+    /// <summary>
+    /// Casts sight rays against the 4 corners of all rect geometry (virtually all of it)
+    /// </summary>
+    /// <param name="colliders">The array of colliders to cast rays against.</param>
+    /// <param name="list">The list of sight raycast data. Will have additional information added to it.</param>
+    private void CastAtColliders( Collider2D[] colliders, ref List<CastData> list )
+    {
+        foreach ( Collider2D collider in colliders )
         {
-            if ( hit == null ) { return; }
+            if ( collider == null ) { return; }
 
-            BoxCollider2D box = hit.gameObject.GetComponent<BoxCollider2D>();
+            BoxCollider2D box = collider.gameObject.GetComponent<BoxCollider2D>();
             if ( box == null ) { return; }
 
             // raycast 3 rays at each corner
@@ -55,15 +95,20 @@ public class LineOfSightOccluder : MonoBehaviour
             Vector2 bottom_right = new Vector2( box.bounds.max.x, box.bounds.min.y );
 
             // store distance/pt of impact of each ray, sort by angle
-            RayCast( top_left, ref list );
-            RayCast( top_right, ref list );
-            RayCast( bottom_left, ref list );
-            RayCast( bottom_right, ref list );
+            TriRayCast( top_left,     ref list );
+            TriRayCast( top_right,    ref list );
+            TriRayCast( bottom_left,  ref list );
+            TriRayCast( bottom_right, ref list );
         }
+    }
 
-        // create triangle fan by connecting dots w/ player position, to cut out of the blackness
-
-        list.Sort();
+    /// <summary>
+    /// Creates a triangle fan "mask" by connecting the dots with the player's position, to cut out of the fullscreen blackout mesh.
+    /// </summary>
+    /// <param name="list">The list of sight raycast data, to construct the mesh out of.</param>
+    private void ConstructTriangleFan( ref List<CastData> list )
+    {
+        // Validation.
         MeshFilter mesh_filter = GetComponent<MeshFilter>();
         if ( mesh_filter == null )
         {
@@ -73,14 +118,17 @@ public class LineOfSightOccluder : MonoBehaviour
             return;
         }
 
+        // Mesh data
+        float z = DEEPEST_Z; // mask needs to be behind the furthest back geometry in the scene, so the stencil buffer doesn't mask out unintended stuff.
         List<Vector3> vertices = new List<Vector3>();
         List<Vector2> uvs = new List<Vector2>();
-
-        float z = 11.0f;
-        // center point
+        
+        // Add center point as 0th vert.
         vertices.Add( new Vector3( (int) transform.position.x, (int) transform.position.y, z ) - new Vector3( (int) transform.position.x, (int) transform.position.y, transform.position.z ) );
         uvs.Add( new Vector2( 0.0f, 0.0f ) );
 
+        // Add all other verts, in counterclockwise angular order from angle 0 - 360 degrees.
+        list.Sort();
         foreach ( CastData cast in list )
         {
             vertices.Add( new Vector3( cast.point.x, cast.point.y, z ) - transform.position );
@@ -97,6 +145,7 @@ public class LineOfSightOccluder : MonoBehaviour
             if ( i == vertices.Count - 1 ) { indecies[ i * 3 + 2] = 1; }
         }
 
+        // Actually create the mesh, and display it.
         Mesh mesh = new Mesh();
         mesh.SetVertices( vertices );
         mesh.SetUVs( 0, uvs );
@@ -109,23 +158,35 @@ public class LineOfSightOccluder : MonoBehaviour
     /// </summary>
     /// <param name="point">The point to cast the ray to.</param>
     /// <param name="list">List of ray cast data, used to aggregate results</param>
-    private void RayCast( Vector2 point, ref List<CastData> list )
+    private void TriRayCast( Vector2 point, ref List<CastData> list )
     {
         Vector2 origin = new Vector2( (int) transform.position.x, (int) transform.position.y );
         float angle = Mathf.Atan2( point.y - origin.y, point.x - origin.x );
 
         CastData[] cast_data = new CastData[3];
-        cast_data[ 0 ] = Cast2( origin, angle - SMALL_DELTA );
-        cast_data[ 1 ] = Cast2( origin, angle );
-        cast_data[ 2 ] = Cast2( origin, angle + SMALL_DELTA );
-        // TODO: collapse if distance is within 1 px
+        cast_data[ 0 ] = RayCast( origin, angle - SMALL_DELTA );
+        cast_data[ 1 ] = RayCast( origin, angle );
+        cast_data[ 2 ] = RayCast( origin, angle + SMALL_DELTA );
 
-        list.Add( cast_data[ 0 ] );
-        list.Add( cast_data[ 1 ] );
-        list.Add( cast_data[ 2 ] );
+        for ( int i = 0; i < 3; i++ )
+        {
+            list.Add( cast_data[ i ] );
+        }
+
+        // Jittery, went with the less efficient approach for smoothness.
+        // Optimization: collapse if distance is within 1 px
+        //list.Add( cast_data[ 1 ] );
+        //if ( Mathf.Abs( cast_data[ 1 ].distance - cast_data[ 0 ].distance ) >= 1.0f ) { list.Add( cast_data[ 0 ] ); }
+        //if ( Mathf.Abs( cast_data[ 1 ].distance - cast_data[ 2 ].distance ) >= 1.0f ) { list.Add( cast_data[ 2 ] ); }
     }
 
-    private CastData Cast2( Vector2 origin, float angle )
+    /// <summary>
+    /// Casts a ray from the specified origin at the specified angle.
+    /// </summary>
+    /// <param name="origin">The starting point of the ray.</param>
+    /// <param name="angle">The angle to fire the ray at, in radians.</param>
+    /// <returns></returns>
+    private CastData RayCast( Vector2 origin, float angle )
     {
         Vector2 direction = new Vector2( Mathf.Cos( angle ), Mathf.Sin( angle ) );
 
@@ -148,11 +209,11 @@ public class LineOfSightOccluder : MonoBehaviour
         Debug.DrawLine( origin, impact_point );
         #endif
 
-        return new CastData( angle, distance, impact_point );
+        return new CastData( angle, /*distance,*/ impact_point );
     }
 }
 
-//
+// Stores subset of raycast data in sortable format.
 public class CastData: System.IComparable<CastData>
 {
     #region vars
@@ -166,7 +227,7 @@ public class CastData: System.IComparable<CastData>
         return angle.CompareTo( other.angle );
     }
 
-    public CastData( float angle, float distance, Vector2 point )
+    public CastData( float angle, /*float distance,*/ Vector2 point )
     {
         this.angle = ( ( angle % ( Mathf.PI * 2.0f ) ) + ( Mathf.PI * 2.0f ) ) % ( Mathf.PI * 2.0f ); // in 0 - 2PI range
         //this.distance = distance;
