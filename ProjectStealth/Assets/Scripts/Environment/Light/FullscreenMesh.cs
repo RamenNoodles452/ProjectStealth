@@ -35,7 +35,7 @@ public class FullscreenMesh : MonoBehaviour
         {
             return;
         }
-        mesh_filter.mesh = FullscreenMesh.Mesh( 0.5f, -1.0f * new Vector3( transform.position.x, transform.position.y, 0.0f ) );
+        mesh_filter.mesh = FullscreenMesh.Mesh( 0.5f, -1.0f * new Vector3( transform.position.x, transform.position.y, transform.position.z ) );
     }
 
     /// <summary>
