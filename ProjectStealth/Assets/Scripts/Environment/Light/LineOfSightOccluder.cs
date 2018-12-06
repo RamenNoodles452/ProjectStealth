@@ -19,7 +19,7 @@ public class LineOfSightOccluder : MonoBehaviour
     void Update ()
     {
 
-        // Grab all light-occluding geometry on the screen
+        // Grab all light-occluding geometry in the scene
         Vector3 min3D    = Camera.main.ViewportToWorldPoint( new Vector3( 0.0f, 0.0f, 0.0f ) );
         Vector3 max3D    = Camera.main.ViewportToWorldPoint( new Vector3( 1.0f, 1.0f, 0.0f ) );
         Vector3 center3D = Camera.main.ViewportToWorldPoint( new Vector3( 0.5f, 0.5f, 0.0f ) );
@@ -29,12 +29,12 @@ public class LineOfSightOccluder : MonoBehaviour
         Vector2 center = new Vector2( center3D.x, center3D.y );
         // Set max distance. TODO: optimize
         Vector2 size   = new Vector2( max3D.x - min3D.x, max3D.y - min3D.y );
-        MAX_DISTANCE = size.magnitude;
+        MAX_DISTANCE = size.magnitude / 1.5f; // 1/2 WOULD work, if the camera were not offset from the player.
 
         List<CastData> list = new List<CastData>();
         Collider2D[] hits = Physics2D.OverlapAreaAll( min, max, CollisionMasks.light_occlusion_mask );
 
-        // TODO: special case: no hits, draw fullscreen no blackout
+        // For special case: no hits, draw fullscreen no blackout
         // cast to the 4 corners of the screen.
         RayCast( min, ref list );
         RayCast( new Vector2( min.x, max.y ), ref list );
@@ -75,9 +75,8 @@ public class LineOfSightOccluder : MonoBehaviour
 
         List<Vector3> vertices = new List<Vector3>();
         List<Vector2> uvs = new List<Vector2>();
-        int[] indecies = new int[ list.Count * 3 ];
 
-        float z = 0.0f;
+        float z = 11.0f;
         // center point
         vertices.Add( new Vector3( (int) transform.position.x, (int) transform.position.y, z ) - new Vector3( (int) transform.position.x, (int) transform.position.y, transform.position.z ) );
         uvs.Add( new Vector2( 0.0f, 0.0f ) );
@@ -89,12 +88,13 @@ public class LineOfSightOccluder : MonoBehaviour
         }
 
         // Build the triangle fan out of the verts
-        for ( int i = 0; i < list.Count; i++ )
+        int[] indecies = new int[ vertices.Count * 3 ];
+        for ( int i = 0; i < vertices.Count; i++ )
         {
             indecies[ i * 3 ]     = 0;     // center point
             indecies[ i * 3 + 1 ] = i;     // ith vertex
             indecies[ i * 3 + 2 ] = i + 1; // next vertex (or 1st if ith vertex is last vertex)
-            if ( i == list.Count - 1 ) { indecies[ i * 3 + 2] = 1; }
+            if ( i == vertices.Count - 1 ) { indecies[ i * 3 + 2] = 1; }
         }
 
         Mesh mesh = new Mesh();
@@ -143,6 +143,10 @@ public class LineOfSightOccluder : MonoBehaviour
             impact_point = hit.point;
             distance = hit.distance;
         }
+
+        #if UNITY_EDITOR
+        Debug.DrawLine( origin, impact_point );
+        #endif
 
         return new CastData( angle, distance, impact_point );
     }
