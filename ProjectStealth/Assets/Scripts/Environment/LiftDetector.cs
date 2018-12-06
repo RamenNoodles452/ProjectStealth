@@ -76,6 +76,7 @@ public class LiftDetector : MonoBehaviour
     /// <summary>
     /// Aligns the sub-pixel x coordinate offset of this object with the player's sub-pixel x coordinate offset, so they move together smoothly.
     /// The slight transform should not be noticable, should not aggregate when performed multiple times, and should be removed by pathing AI, making this change STABLE.
+    /// This does not need to be done with moving platforms in the horizontal direction due to gravity and collisions doing it automatically for us.
     /// </summary>
     private void HorizontallyAlignWithPlayer()
     {

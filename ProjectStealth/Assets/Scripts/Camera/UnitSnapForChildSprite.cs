@@ -27,6 +27,8 @@ public class UnitSnapForChildSprite : MonoBehaviour
         // Snap the sprite to the nearest whole unit in the x, y axes.
         Vector3 parent_position = transform.parent.position;
         Vector2Int snapped_position = new Vector2Int( (int) parent_position.x, (int) parent_position.y );
+        // int cast truncates by default.
+        // Vector2Int snapped_position = new Vector2Int( (int) Mathf.Round( parent_position.x ), (int) Mathf.Round( parent_position.y ) );
         // Position of child is set in world space
         transform.position = new Vector3( snapped_position.x, 
                                           snapped_position.y, 
