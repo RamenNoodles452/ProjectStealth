@@ -95,6 +95,8 @@ public class PlayerStats : MonoBehaviour
 
     // Noise Prefab: Set in Editor
     public GameObject noise_prefab;
+    public GameObject bullet_prefab;
+    public GameObject charged_bullet_prefab;
 
     private CharacterStats char_stats;
     private CharacterAnimationLogic char_anims;
@@ -334,7 +336,12 @@ public class PlayerStats : MonoBehaviour
         // Actually fire bullets
         // Start with closest tagged enemies (if any)?
 
-        // spawn bullet prefab, set appropriate charge level. (streak quickly, particle fx?)
+        // spawn bullet prefab, set appropriate charge level.
+        GameObject bullet_obj = Instantiate( bullet_prefab, transform.position, Quaternion.identity );
+        BulletRay bullet = bullet_obj.GetComponent<BulletRay>();
+        bullet.is_player_owned = true;
+        bullet.damage = 50.0f;
+        bullet.angle = 0.0f;
     }
 
     /// <summary>
