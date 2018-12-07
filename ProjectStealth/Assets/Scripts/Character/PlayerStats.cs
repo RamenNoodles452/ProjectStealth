@@ -230,6 +230,7 @@ public class PlayerStats : MonoBehaviour
         else*/
         //{
         this.gameObject.transform.position = new Vector3( checkpoint.x, checkpoint.y, this.gameObject.transform.position.z );
+        Camera.main.GetComponent<CameraMovement>().SnapToFocalPoint();
         //}
 
         // Reset stats
@@ -296,6 +297,9 @@ public class PlayerStats : MonoBehaviour
         get { return SHIELD_REGENERATION_DELAY; }
     }
 
+    /// <summary>
+    /// Accessor for whether the player is in adrenaline rush mode (slows time, "infinite stamina")
+    /// </summary>
     public bool IsAdrenalRushing
     {
         get { return is_adrenal_rushing; }
@@ -329,6 +333,8 @@ public class PlayerStats : MonoBehaviour
 
         // Actually fire bullets
         // Start with closest tagged enemies (if any)?
+
+        // spawn bullet prefab, set appropriate charge level. (streak quickly, particle fx?)
     }
 
     /// <summary>
@@ -543,6 +549,21 @@ public class PlayerStats : MonoBehaviour
         adrenal_rush_timer = 0.0f;
         Time.timeScale = 1.0f;
         Camera.main.GetComponent<RenderEffects>().desaturation = 0.0f;
+    }
+
+    // TODO: autotarget
+    private void AutoTarget()
+    {
+        // memory, if valid ray
+        // closest, in facing, with valid ray
+        // free-aim / straight
+    }
+
+
+
+    private void EngageFreeAim()
+    {
+
     }
 
     /// <summary>

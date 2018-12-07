@@ -22,6 +22,7 @@ public class MagGripUpgrade : MonoBehaviour
     public Collider2D grab_collider; 
     public enum ClimbState { NotClimb, WallClimb, CeilingClimb, Transition };
     public ClimbState current_climb_state = ClimbState.NotClimb;
+    public bool is_looking_away = false;
 
     private const float WALL_CLIMB_SPEED = 70.0f;  // pixels / second
     private const float WALL_SLIDE_SPEED = 160.0f; // pixels / second
@@ -33,8 +34,6 @@ public class MagGripUpgrade : MonoBehaviour
 
     //consts
     protected const float JUMP_ACCELERATION = 240.0f; // base acceleration for jump off the wall with no input (pixels / second / second)
-
-    private bool is_looking_away = false;
     #endregion
 
     // Use this for initialization

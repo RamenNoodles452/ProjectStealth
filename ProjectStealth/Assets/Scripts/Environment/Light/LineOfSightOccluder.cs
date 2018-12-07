@@ -85,21 +85,55 @@ public class LineOfSightOccluder : MonoBehaviour
         {
             if ( collider == null ) { return; }
 
-            BoxCollider2D box = collider.gameObject.GetComponent<BoxCollider2D>();
-            if ( box == null ) { return; }
-
-            // raycast 3 rays at each corner
-            Vector2 top_left     = new Vector2( box.bounds.min.x, box.bounds.max.y );
-            Vector2 top_right    = new Vector2( box.bounds.max.x, box.bounds.max.y );
-            Vector2 bottom_left  = new Vector2( box.bounds.min.x, box.bounds.min.y );
-            Vector2 bottom_right = new Vector2( box.bounds.max.x, box.bounds.min.y );
-
-            // store distance/pt of impact of each ray, sort by angle
-            TriRayCast( top_left,     ref list );
-            TriRayCast( top_right,    ref list );
-            TriRayCast( bottom_left,  ref list );
-            TriRayCast( bottom_right, ref list );
+            ProcessCompositeCollider( collider, ref list );
+            ProcessBoxCollider( collider, ref list );
         }
+    }
+
+    /// <summary>
+    /// Gets all the end points out of the composite collider, and casts rays against them.
+    /// </summary>
+    /// <param name="collider">The collider to process</param>
+    /// <param name="list">Outputs the resulting raycast results</param>
+    private void ProcessCompositeCollider( Collider2D collider, ref List<CastData> list )
+    {
+        // Composite collider 2D geometry
+        CompositeCollider2D composite = collider.gameObject.GetComponent<CompositeCollider2D>();
+        if ( composite == null ) { return; }
+        
+        for ( int i = 0; i < composite.pathCount; i++ )
+        {
+            Vector2[] points = new Vector2[ composite.GetPathPointCount( i ) ];
+            int point_count = composite.GetPath( i, points );
+            for ( int j = 0; j < point_count; j++ )
+            {
+                TriRayCast( points[ j ], ref list );
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets the corners out of the box collider, and casts rays against them.
+    /// </summary>
+    /// <param name="collider">The collider to process</param>
+    /// <param name="list">Outputs the resulting raycast results</param>
+    private void ProcessBoxCollider( Collider2D collider, ref List<CastData> list )
+    {
+        // Box collider 2D geometry
+        BoxCollider2D box = collider.gameObject.GetComponent<BoxCollider2D>();
+        if ( box == null ) { return; }
+
+        // raycast 3 rays at each corner
+        Vector2 top_left     = new Vector2( box.bounds.min.x, box.bounds.max.y );
+        Vector2 top_right    = new Vector2( box.bounds.max.x, box.bounds.max.y );
+        Vector2 bottom_left  = new Vector2( box.bounds.min.x, box.bounds.min.y );
+        Vector2 bottom_right = new Vector2( box.bounds.max.x, box.bounds.min.y );
+
+        // store distance/pt of impact of each ray, sort by angle
+        TriRayCast( top_left, ref list );
+        TriRayCast( top_right, ref list );
+        TriRayCast( bottom_left, ref list );
+        TriRayCast( bottom_right, ref list );
     }
 
     /// <summary>
@@ -131,7 +165,7 @@ public class LineOfSightOccluder : MonoBehaviour
         list.Sort();
         foreach ( CastData cast in list )
         {
-            vertices.Add( new Vector3( cast.point.x, cast.point.y, z ) - transform.position );
+            vertices.Add( new Vector3( (int) Mathf.Round( cast.point.x ), (int) Mathf.Round( cast.point.y ), z ) - transform.position );
             uvs.Add( new Vector2( 0.0f, 0.0f ) );
         }
 
@@ -206,7 +240,7 @@ public class LineOfSightOccluder : MonoBehaviour
         }
 
         #if UNITY_EDITOR
-        Debug.DrawLine( origin, impact_point );
+        //Debug.DrawLine( origin, impact_point );
         #endif
 
         return new CastData( angle, /*distance,*/ impact_point );

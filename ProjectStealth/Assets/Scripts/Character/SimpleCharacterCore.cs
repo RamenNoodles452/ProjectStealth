@@ -600,7 +600,9 @@ public class SimpleCharacterCore : MonoBehaviour
             }
             else
             {
+                #if UNITY_EDITOR
                 Debug.LogError( "Improper configuration: platform is missing a CollisionType component." );
+                #endif
             }
 
             if ( did_touch_ground )

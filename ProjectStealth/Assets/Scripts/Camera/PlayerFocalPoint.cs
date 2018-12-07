@@ -4,64 +4,88 @@ using System.Collections;
 // sets the focal point for the camera
 public class PlayerFocalPoint : MonoBehaviour
 {
-    private CharacterStats charStats;
-    private int DEFAULT_X = 40;
-    private int DEFAULT_Y = 20;
-    private int depth = -10;
+    #region vars
+    private CharacterStats char_stats;
+    private MagGripUpgrade mag_grip;
+    private const int DEFAULT_X = 40;
+    private const int DEFAULT_Y = 20;
+    private const float FLIP_DURATION = 0.4f; // seconds
+    private const int depth = -10; // camera z depth
+
     private Vector3 right_position;
     private Vector3 left_position;
     private float focal_point_slider;
-    private bool focal_point_lock;
+    private bool is_following_player;
+    #endregion
+
+    // Use this for early initialization (references)
+    private void Awake()
+    {
+        char_stats = GetComponentInParent<CharacterStats>();
+        mag_grip   = GetComponentInParent<MagGripUpgrade>();
+    }
 
     // Use this for initialization
     void Start()
     {
-        charStats = GetComponentInParent<CharacterStats>();
         right_position = new Vector3(  DEFAULT_X, DEFAULT_Y, depth );
         left_position  = new Vector3( -DEFAULT_X, DEFAULT_Y, depth );
         focal_point_slider = 1.0f;
-        focal_point_lock = true;
+        is_following_player = true;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if ( focal_point_lock == true )
+        if ( is_following_player == true )
         {
-            if ( charStats.current_master_state == CharEnums.MasterState.DefaultState && charStats.IsFacingRight() ||
-                 charStats.current_master_state == CharEnums.MasterState.ClimbState && charStats.IsFacingLeft() )
+            float increment = 0.0f;
+            if ( ( char_stats.current_master_state == CharEnums.MasterState.DefaultState && char_stats.IsFacingRight() ) ||
+                 ( char_stats.current_master_state == CharEnums.MasterState.ClimbState && char_stats.IsFacingLeft() && mag_grip.is_looking_away ) )
             {
-                if ( focal_point_slider < 1.0f )
-                {
-                    focal_point_slider += Time.deltaTime * 2.5f;
-                }
+                increment = Time.deltaTime * Time.timeScale / FLIP_DURATION;
             }
-            else if ( charStats.current_master_state == CharEnums.MasterState.DefaultState && charStats.IsFacingLeft() ||
-                      charStats.current_master_state == CharEnums.MasterState.ClimbState && charStats.IsFacingRight() )
+            else if ( ( char_stats.current_master_state == CharEnums.MasterState.DefaultState && char_stats.IsFacingLeft() ) ||
+                      ( char_stats.current_master_state == CharEnums.MasterState.ClimbState && char_stats.IsFacingRight() && mag_grip.is_looking_away ) )
             {
-                if ( focal_point_slider > 0.0f )
-                {
-                    focal_point_slider -= Time.deltaTime * 2.5f;
-                }
+                increment = -1.0f * Time.deltaTime * Time.timeScale / FLIP_DURATION;
             }
+            else if ( ( char_stats.current_master_state == CharEnums.MasterState.ClimbState && char_stats.IsFacingLeft() && ! mag_grip.is_looking_away ) ||
+                 ( char_stats.current_master_state == CharEnums.MasterState.ClimbState && char_stats.IsFacingRight() && ! mag_grip.is_looking_away ) )
+            {
+                // aim for center ( 0.5 value )
+                float dist_to_center = 0.5f - focal_point_slider;
+                increment = Time.deltaTime * Time.timeScale / FLIP_DURATION;
+                if ( dist_to_center < 0.0f ) { increment = -1.0f * increment; }
+                if ( Mathf.Abs( dist_to_center ) < Mathf.Abs( increment ) ) { increment = dist_to_center; }
+            }
+
+            focal_point_slider = Mathf.Clamp( focal_point_slider + increment, 0.0f, 1.0f );
             transform.localPosition = Vector3.Lerp( left_position, right_position, focal_point_slider );
         }
-
     }
 
-    // stops the FocalPoint from following the player
-    void UnlockFocalPoint()
+    /// <summary>
+    /// Stops the focal point from following the player
+    /// </summary>
+    void StopFollowingPlayer()
     {
-        focal_point_lock = false;
+        is_following_player = false;
     }
 
-    // sets the flocal point to follow the player
-    void LockFlocalPoint()
+    /// <summary>
+    /// Sets the focal point to follow the player
+    /// </summary>
+    void FollowPlayer()
     {
-        focal_point_lock = true;
+        is_following_player = true;
     }
 
-    // moves the focal point to a specific location respect to the player
+    /// <summary>
+    /// Moves the focal point to a specific location relative to the player
+    /// </summary>
+    /// <param name="x">The x offset relative to the player's center.</param>
+    /// <param name="y">The y offset relative to the player's center.</param>
     void SetFocalPoint( int x, int y )
     {
         right_position = new Vector3(  x, y, depth );
