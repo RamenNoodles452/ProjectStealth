@@ -139,13 +139,13 @@ public class Player : SimpleCharacterCore
 
     public override void OnTouchWall( GameObject collisionObject )
     {
-        mag_grip.InitiateWallGrab( collisionObject.GetComponent<Collider2D>() );
+        mag_grip.InitiateWallGrab( collisionObject.GetComponent<CompositeCollider2D>() );
     }
 
     public override void OnTouchCeiling( GameObject collisionObject )
     {
         char_anims.FallTrigger();
-        mag_grip.InitiateCeilingGrab( collisionObject.GetComponent<Collider2D>() );
+        mag_grip.InitiateCeilingGrab( collisionObject.GetComponent<CompositeCollider2D>() );
     }
 
     /// <returns>The coordinates of the center point of the player (in pixels)</returns>

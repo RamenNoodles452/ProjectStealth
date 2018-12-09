@@ -495,7 +495,7 @@ public class MagGripUpgrade : MonoBehaviour
                 }
                 char_stats.velocity.x = 0.0f;
                 // assign the grab_collider now that the grab is actually happening
-                grab_collider = collision_object.GetComponent<Collider2D>();
+                grab_collider = collision_object.GetComponent<CompositeCollider2D>();
                 //trigger the signal to start the wall climb animation
                 char_anims.WallGrabTrigger();
                 char_anims.ResetJumpDescend();
