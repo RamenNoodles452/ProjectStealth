@@ -69,6 +69,14 @@ public class PlayerStats : MonoBehaviour
     private float silencer_regen = 1.0f;
     #endregion
 
+    #region aim
+    private GameObject aim_enemy_memory;
+    private GameObject aim_auto_target; // closest enemy in facing that is targetable
+    private Vector2 aim_auto_reticle_position;
+    private Vector2 aim_manual_reticle_position;
+    private GameObject aim_reticle;
+    #endregion
+
     private bool is_in_shadow = false;
 
     [SerializeField]
@@ -337,11 +345,13 @@ public class PlayerStats : MonoBehaviour
         // Start with closest tagged enemies (if any)?
 
         // spawn bullet prefab, set appropriate charge level.
-        GameObject bullet_obj = Instantiate( bullet_prefab, transform.position, Quaternion.identity );
+        Vector2 origin =  GetShotOrigin();
+        GameObject bullet_obj = Instantiate( bullet_prefab, new Vector3( origin.x, origin.y, transform.position.z ), Quaternion.identity );
         BulletRay bullet = bullet_obj.GetComponent<BulletRay>();
         bullet.is_player_owned = true;
         bullet.damage = 50.0f;
-        bullet.angle = 0.0f;
+
+        bullet.angle = Mathf.Atan2( aim_auto_reticle_position.y - origin.y, aim_auto_reticle_position.x - origin.x );
     }
 
     /// <summary>
@@ -558,12 +568,71 @@ public class PlayerStats : MonoBehaviour
         Camera.main.GetComponent<RenderEffects>().desaturation = 0.0f;
     }
 
-    // TODO: autotarget
+    /// <summary>
+    /// Automatically targets an enemy.
+    /// </summary>
     private void AutoTarget()
     {
-        // memory, if valid ray
-        // closest, in facing, with valid ray
-        // free-aim / straight
+        const float MAX_RANGE = 640.0f; //640 px, 20 tiles
+        Vector2 origin = GetShotOrigin();
+
+        // If you fired at an enemy, stay locked on (if in range).
+        if ( aim_enemy_memory != null )
+        {
+            aim_auto_reticle_position = new Vector2( aim_enemy_memory.transform.position.x, aim_enemy_memory.transform.position.y );
+            // TODO: LOS check?
+            if ( Vector2.Distance( origin, aim_auto_reticle_position ) <= MAX_RANGE )
+            {
+                aim_reticle.transform.position = new Vector3( aim_auto_reticle_position.x, aim_auto_reticle_position.y, aim_reticle.transform.position.z );
+                return;
+            }
+        }
+
+        // Find the closest enemy in your facing, within range, with a clear shot to them.
+        float minimum_distance = MAX_RANGE;
+        foreach ( GameObject enemy in Referencer.instance.enemies )
+        {
+            // Is enemy in direction you are facing?
+            if ( char_stats.facing_direction == CharEnums.FacingDirection.Left )
+            {
+                if ( enemy.transform.position.x > transform.position.x ) { continue; }
+            }
+            else
+            {
+                if ( enemy.transform.position.x < transform.position.x ) { continue; }
+            }
+
+            // Is enemy in range?
+            Vector2 direction = new Vector2( enemy.transform.position.x - origin.x, enemy.transform.position.y - origin.y );
+            float distance_to_enemy = direction.magnitude;
+            if ( distance_to_enemy >= minimum_distance )
+            {
+                continue;
+            }
+
+            // Is there a clear shot?
+            RaycastHit2D hit = Physics2D.Raycast( origin, direction, distance_to_enemy + 1.0f, CollisionMasks.player_shooting_mask );
+            if ( hit.collider == null ) { continue; }
+
+            if ( Utils.IsEnemyCollider( hit.collider ) )
+            {
+                aim_auto_reticle_position = new Vector2( enemy.transform.position.x, enemy.transform.position.y );
+                minimum_distance = distance_to_enemy;
+            }
+        }
+
+        // Fire straight ahead! / manual mode
+        if ( minimum_distance == MAX_RANGE )
+        {
+            RaycastHit2D hit = Physics2D.Raycast( origin, GetFacingVector(), MAX_RANGE, CollisionMasks.player_shooting_mask );
+            if ( hit.collider == null ) { aim_auto_reticle_position = new Vector2( transform.position.x, transform.position.y ) + MAX_RANGE * GetFacingVector(); }
+            else
+            {
+                aim_auto_reticle_position = hit.point;
+            }
+        }
+
+        aim_reticle.transform.position = new Vector3( aim_auto_reticle_position.x, aim_auto_reticle_position.y, aim_reticle.transform.position.z );
     }
 
 
@@ -571,6 +640,39 @@ public class PlayerStats : MonoBehaviour
     private void EngageFreeAim()
     {
 
+    }
+
+    /// <summary>
+    /// Gets the origin point for bullets fired from the player's weapon
+    /// </summary>
+    /// <returns>The origin point.</returns>
+    private Vector2 GetShotOrigin()
+    {
+        return new Vector2( transform.position.x, transform.position.y ) + char_stats.STANDING_COLLIDER_SIZE.x / 2.0f * GetFacingVector();
+    }
+
+    /// <summary>
+    /// Gets the vector for the player's facing.
+    /// </summary>
+    /// <returns>The vector pointing left or right.</returns>
+    private Vector2 GetFacingVector()
+    {
+        if ( char_stats.facing_direction == CharEnums.FacingDirection.Left )
+        {
+            return new Vector2( -1.0f, 0.0f );
+        }
+        else
+        {
+            return new Vector2( 1.0f, 0.0f );
+        }
+    }
+
+    /// <summary>
+    /// Early initialization
+    /// </summary>
+    private void Awake()
+    {
+        aim_reticle = transform.Find( "Reticle" ).gameObject;
     }
 
     /// <summary>
@@ -769,6 +871,8 @@ public class PlayerStats : MonoBehaviour
         }
         #endregion
         #endregion
+
+        AutoTarget();
 
         // Idle check
         was_idle = is_idle;

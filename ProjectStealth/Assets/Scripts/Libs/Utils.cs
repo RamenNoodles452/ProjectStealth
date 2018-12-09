@@ -32,4 +32,18 @@ public class Utils
         }
         return false;
     }
+
+    /// <summary>
+    /// Checks if a collider is an enemy's collider
+    /// </summary>
+    /// <param name="collider">The collider to check</param>
+    /// <returns>True if the collider belongs to an enemy</returns>
+    public static bool IsEnemyCollider( Collider2D collider )
+    {
+        if ( collider.gameObject.layer == LayerMask.NameToLayer( "enemy" ) )
+        {
+            return true;
+        }
+        return false;
+    }
 }

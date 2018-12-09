@@ -2,6 +2,7 @@
 {
 	Properties
 	{
+		_Color( "Blackout Color", Color ) = (0, 0, 0, 0.5)
 	}
 	SubShader
 	{
@@ -10,7 +11,8 @@
 		//Lighting Off
 		ZWrite Off
 		ZTest Always
-		Blend One OneMinusSrcAlpha
+		//Blend One OneMinusSrcAlpha
+		Blend SrcAlpha OneMinusSrcAlpha
 
 		Tags
 		{
@@ -53,9 +55,12 @@
 				return o;
 			}
 
+			fixed4 _Color;
+
 			fixed4 frag (v2f i) : SV_Target
 			{
-				return fixed4( 0, 0, 0, 0.5 );
+				//return fixed4( 0, 0, 0, 0.5 );
+				return _Color;
 			}
 			ENDCG
 		}

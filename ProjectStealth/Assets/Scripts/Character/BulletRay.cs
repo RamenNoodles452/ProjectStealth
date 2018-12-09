@@ -32,6 +32,8 @@ public class BulletRay : MonoBehaviour
     // Update is called once per frame
     void Update ()
     {
+        transform.eulerAngles = new Vector3( 0.0f, 0.0f, angle * Mathf.Rad2Deg );
+
         float distance = speed * Time.deltaTime * Time.timeScale;
         Vector2 direction = new Vector2( Mathf.Cos( angle ), Mathf.Sin( angle ) );
 
@@ -43,13 +45,17 @@ public class BulletRay : MonoBehaviour
             line_renderer.SetPosition( 0, new Vector3( -current_length, 0.0f, 0.0f ) );
 
             // Check if you hit a wall or enemy
-            RaycastHit2D hit = Physics2D.Raycast( transform.position, direction, distance + 1.0f, CollisionMasks.all_collision_mask );
+            int mask;
+            if ( is_player_owned ) { mask = CollisionMasks.player_shooting_mask; }
+            else { mask = CollisionMasks.enemy_shooting_mask; }
+            RaycastHit2D hit = Physics2D.Raycast( transform.position, direction, distance + 1.0f, mask );
 
             // Now, move visually.
-            transform.Translate( new Vector3( direction.x * distance, direction.y * distance, 0.0f ) );
+            transform.Translate( new Vector3( direction.x * distance, direction.y * distance, 0.0f ), Space.World );
 
             if ( hit.collider == null ) { return; } // Didn't hit anything, keep going.
             // It hit something.
+            // Player?
             if ( Utils.IsPlayersCollider( hit.collider ) )
             {
                 if ( ! is_player_owned ) 
@@ -59,12 +65,16 @@ public class BulletRay : MonoBehaviour
                 }
                 else { return; } // player can't hit themselves with their own bullet. Ignore this hit.
             }
-            // TODO: if is enemy
-            if ( is_player_owned )
+            // Enemy?
+            if ( Utils.IsEnemyCollider( hit.collider ) )
             {
-                // TODO: damage
+                if ( is_player_owned )
+                {
+                    // TODO: damage
+                    is_dying = true;
+                }
+                else { return; } // enemies can't hit themselves. Ignore this hit.
             }
-            else { return; } // enemies can't hit themselves. Ignore this hit.
 
             // prepare to clean up.
             transform.Translate( new Vector3( direction.x * -distance, direction.y * -distance, 0.0f ) ); // undo
