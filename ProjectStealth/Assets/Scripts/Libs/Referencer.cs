@@ -11,6 +11,7 @@ public class Referencer : MonoBehaviour
 
     public Player player;
     public UIScript hud_ui;
+    public Grid tilemap_grid;
 
     public List<GameObject> enemies = new List<GameObject>();
     public List<Noise> noises = new List<Noise>();
@@ -25,6 +26,7 @@ public class Referencer : MonoBehaviour
         {
             instance = this;
             RegisterPlayer();
+            RegisterScene();
             RegisterHUDUI();
         }
         else if ( instance != this )
@@ -46,6 +48,14 @@ public class Referencer : MonoBehaviour
     public void RegisterHUDUI()
     {
         hud_ui = GameObject.Find( "UI Canvas" ).GetComponent<UIScript>();
+    }
+
+    /// <summary>
+    /// Registers certain important objects in the scene.
+    /// </summary>
+    public void RegisterScene()
+    {
+        tilemap_grid = GameObject.Find( "Grid" ).GetComponent<Grid>();
     }
 
     /// <summary>

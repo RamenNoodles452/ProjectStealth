@@ -465,14 +465,15 @@ public class SimpleCharacterCore : MonoBehaviour
         float hit_distance = hit.distance - ONE_PIXEL_BUFFER;
         if ( hit_distance <= Mathf.Abs( char_stats.velocity.x * Time.deltaTime * Time.timeScale ) )
         {
-            CollisionType hit_collision_type = hit.collider.GetComponent<CollisionType>();
-            if ( hit_collision_type != null )
+            CollisionType collision_type = Utils.GetCollisionType( hit.collider, hit.point + direction.normalized );
+
+            if ( collision_type != null )
             {
-                if ( hit_collision_type.CanVaultOver == true && char_stats.IsGrounded )
+                if ( collision_type.CanVaultOver == true && char_stats.IsGrounded )
                 {
                     char_stats.touched_vault_obstacle = hit.collider;
                 }
-                if ( ! hit_collision_type.IsBlocking ) { return; }
+                if ( ! collision_type.IsBlocking ) { return; }
             }
             // we touched a wall
             Vector3 gap;
@@ -480,7 +481,7 @@ public class SimpleCharacterCore : MonoBehaviour
             else                                { gap = new Vector3( -hit_distance, 0.0f, 0.0f ); }
             this.gameObject.transform.Translate( gap );
             char_stats.velocity.x = 0.0f;
-            OnTouchWall( hit.collider.gameObject );
+            OnTouchWall( hit.collider.gameObject, hit.point + direction.normalized );
         }
     }
 
@@ -550,13 +551,15 @@ public class SimpleCharacterCore : MonoBehaviour
 
         Vector2 collision_box_size = new Vector2( char_stats.char_collider.bounds.size.x, 1.0f ); // width x 1 px box
         Vector2 origin             = new Vector2( char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.max.y - collision_box_size.y );
-        RaycastHit2D hit           = Physics2D.BoxCast( origin, collision_box_size, 0.0f, Vector2.up, 50.0f, CollisionMasks.upwards_collision_mask );
+        Vector2 direction          = Vector2.up;
+        RaycastHit2D hit           = Physics2D.BoxCast( origin, collision_box_size, 0.0f, direction, 50.0f, CollisionMasks.upwards_collision_mask );
         if ( hit.collider == null ) { return; }
 
         float hit_distance = hit.distance - ONE_PIXEL_BUFFER;
         if ( hit_distance <= Mathf.Abs( char_stats.velocity.y * Time.deltaTime * Time.timeScale ) )
         {
-            CollisionType collision_type = hit.transform.gameObject.GetComponent<CollisionType>();
+            CollisionType collision_type = Utils.GetCollisionType( hit.collider, hit.point + direction.normalized );
+
             if ( collision_type != null )
             {
                 if ( ! collision_type.IsBlocking ) { return; }
@@ -565,7 +568,7 @@ public class SimpleCharacterCore : MonoBehaviour
             this.gameObject.transform.Translate( new Vector3( 0.0f, hit_distance, 0.0f ) );
             char_stats.velocity.y = 0.0f;
             char_stats.is_jumping = false;
-            OnTouchCeiling( hit.collider.gameObject );
+            OnTouchCeiling( hit.collider.gameObject, hit.point + direction.normalized );
         }
     }
 
@@ -578,14 +581,16 @@ public class SimpleCharacterCore : MonoBehaviour
 
         Vector2 collision_box_size = new Vector2( char_stats.char_collider.bounds.size.x, 1.0f ); // width x 1 px box
         Vector2 origin             = new Vector2( char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.min.y + collision_box_size.y );
-        RaycastHit2D hit           = Physics2D.BoxCast( origin, collision_box_size, 0.0f, Vector2.down, 50.0f, CollisionMasks.all_collision_mask );
+        Vector2 direction          = Vector2.down;
+        RaycastHit2D hit           = Physics2D.BoxCast( origin, collision_box_size, 0.0f, direction, 50.0f, CollisionMasks.all_collision_mask );
         if ( hit.collider == null ) // if there is no floor, just fall
         {
              FallingLogic();
              return;
         }
 
-        CollisionType collision_type = hit.transform.gameObject.GetComponent<CollisionType>();
+        CollisionType collision_type = Utils.GetCollisionType( hit.collider, hit.point + direction.normalized );
+
         float hit_distance = hit.distance - ONE_PIXEL_BUFFER;
         if ( hit_distance <= Mathf.Abs( char_stats.velocity.y * Time.deltaTime * Time.timeScale ) )
         {
@@ -600,8 +605,9 @@ public class SimpleCharacterCore : MonoBehaviour
             }
             else
             {
+                // If you're hanging off the edge of a tilemap tile, this can happen, because it looks for a tile that doesn't exist.
                 #if UNITY_EDITOR
-                Debug.LogError( "Improper configuration: platform is missing a CollisionType component." );
+                Debug.LogWarning( "Improper configuration: platform is missing a CollisionType component. Will use default behaviour." );
                 #endif
             }
 
@@ -759,7 +765,9 @@ public class SimpleCharacterCore : MonoBehaviour
     /// <summary>
     /// Called when a character bumps into a wall.
     /// </summary>
-    public virtual void OnTouchWall( GameObject collisionObject )
+    /// <param name="collisionObject">The collider of the object the player collided with.</param>
+    /// <param name="hit_point">A point within the tile the player collided with, if it was a tile.</param>
+    public virtual void OnTouchWall( GameObject collisionObject, Vector2 hit_point )
     {
         //base class does nothing with this function. gets overridden at the subclass level to handle such occasions
     }
@@ -767,8 +775,9 @@ public class SimpleCharacterCore : MonoBehaviour
     /// <summary>
     /// Called when a character bumps into the ceiling.
     /// </summary>
-    /// <param name="collisionObject"></param>
-    public virtual void OnTouchCeiling( GameObject collisionObject )
+    /// <param name="collisionObject">The collider of the object the player collided with.</param>
+    /// <param name="hit_point">A point within the tile the player collided with, if it was a tile.</param>
+    public virtual void OnTouchCeiling( GameObject collisionObject, Vector2 hit_point )
     {
         //base class does nothing with this function. gets overridden at the subclass level to handle such occasions
         //char_anims.FallTrigger() needs to be incluseded in the override somewhere

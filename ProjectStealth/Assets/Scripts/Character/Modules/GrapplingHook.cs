@@ -82,7 +82,9 @@ public class GrapplingHook : MonoBehaviour
 
         // TODO: hmm.... So if an enemy bullet gets in the way while aiming, hookshotting fails? Fishy. Might need to adjust masking?
         // TODO: check for enemies.
-        CollisionType collision_type = hit.collider.GetComponent<CollisionType>();
+        CollisionType collision_type = Utils.GetCollisionType( hit.collider, hit.point + direction.normalized );
+
+
         if ( collision_type == null )       { return; }
         if ( collision_type.CanHookshotTo ) { hit_good_surface = true; }
         else                                { hit_bad_surface  = true; }

@@ -425,7 +425,8 @@ public class MagGripUpgrade : MonoBehaviour
 
         if ( grabCheck.collider == null )         { AbortWallClimbFromLedge(); return; }  // didn't hit anything, too short.
         if ( hit.collider == null )               { AbortWallClimbFromLedge(); return; }  // no floor.
-        CollisionType collision_type = hit.collider.gameObject.GetComponent<CollisionType>();
+        CollisionType collision_type = Utils.GetCollisionType( hit.collider, hit.point + direction.normalized );
+
         if ( collision_type == null )             { AbortWallClimbFromLedge(); return; }  // invalid configuration
         if ( ! collision_type.IsWallClimbable )   { AbortWallClimbFromLedge(); return; }  // unclimbable object
         if ( grabCheck.collider != hit.collider ) { AbortWallClimbFromLedge(); return; }  // hit a different object, too short
@@ -446,11 +447,13 @@ public class MagGripUpgrade : MonoBehaviour
     /// if the player jumps into a wall, grab onto it if they meet requirements
     /// </summary>
     /// <param name="collisionObject">The collider of the object we might want to grab onto</param>
-    public void InitiateWallGrab( Collider2D collision_object )
+    /// <param name="hit_point">A point within the tile the player collided with, if they collided with a tile.</param>
+    public void InitiateWallGrab( Collider2D collision, Vector2 hit_point )
     {
         // Validation
         if ( ! player_stats.acquired_mag_grip )           { return; } // can't climb without this upgrade
-        CollisionType collision_type = collision_object.gameObject.GetComponent<CollisionType>();
+        CollisionType collision_type = Utils.GetCollisionType( collision, hit_point );
+
         if ( collision_type == null )                     { return; } // invalid config
         if ( ! collision_type.IsWallClimbable )           { return; } // unclimbable
         if ( current_climb_state != ClimbState.NotClimb ) { return; } // don't start climbing if you already are
@@ -458,7 +461,7 @@ public class MagGripUpgrade : MonoBehaviour
         if ( wall_grab_delay_timer < WALL_GRAB_DELAY )    { return; } // wait for it
 
         // only grab the wall if we aren't popping out under it or over it
-        if ( collision_object.bounds.min.y <= char_stats.char_collider.bounds.min.y )
+        if ( collision.bounds.min.y <= char_stats.char_collider.bounds.min.y )
         {
             // if character is a bit too above the ledge, bump them down till they're directly under it
             // if this block is commented out, then the character will not snap directly to the ledge if slightly above it and will slide down till they grab on
@@ -479,7 +482,7 @@ public class MagGripUpgrade : MonoBehaviour
             }
             */
             // if we're good to grab, get everything in order
-            if ( collision_object.bounds.max.y >= char_stats.char_collider.bounds.max.y )
+            if ( collision.bounds.max.y >= char_stats.char_collider.bounds.max.y )
             {
                 char_stats.ResetJump();
                 current_climb_state = ClimbState.WallClimb;
@@ -487,7 +490,7 @@ public class MagGripUpgrade : MonoBehaviour
 
                 // variable sets to prevent weird turning when grabbing onto a wall
                 // if the wall is to our left
-                if ( collision_object.bounds.center.x < char_stats.char_collider.bounds.center.x )
+                if ( collision.bounds.center.x < char_stats.char_collider.bounds.center.x )
                 {
                     char_stats.facing_direction = CharEnums.FacingDirection.Left;
                     sprite_renderer.flipX = true;
@@ -500,7 +503,7 @@ public class MagGripUpgrade : MonoBehaviour
                 }
                 char_stats.velocity.x = 0.0f;
                 // assign the grab_collider now that the grab is actually happening
-                grab_collider = collision_object.GetComponent<Collider2D>();
+                grab_collider = collision.GetComponent<Collider2D>();
                 //trigger the signal to start the wall climb animation
                 char_anims.WallGrabTrigger();
                 char_anims.ResetJumpDescend();
@@ -511,12 +514,14 @@ public class MagGripUpgrade : MonoBehaviour
     /// <summary>
     /// if the player jumps into a ceiling and meet requirements, grab onto it if they meet requirements
     /// </summary>
-    /// <param name="collision_object">The collider of the object we might want to grab onto</param>
-    public void InitiateCeilingGrab( Collider2D collision_object )
+    /// <param name="collision">The collider of the object we might want to grab onto</param>
+    /// <param name="hit_point">A point in world coordinates within the hit object.</param>
+    public void InitiateCeilingGrab( Collider2D collision, Vector2 hit_point )
     {
         // Validation
         if ( ! player_stats.acquired_mag_grip )           { return; } // need the upgrade to do this TODO: separate wall and ceiling upgrades into 2 bools
-        CollisionType collision_type = collision_object.gameObject.GetComponent<CollisionType>();
+        CollisionType collision_type = Utils.GetCollisionType( collision, hit_point );
+
         if ( collision_type == null )                     { return; } // invalid config
         if ( ! collision_type.IsCeilingClimbable )        { return; } // unclimbable
         if ( current_climb_state != ClimbState.NotClimb ) { return; } // don't start climbing if you already are
