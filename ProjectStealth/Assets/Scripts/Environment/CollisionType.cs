@@ -10,14 +10,14 @@ public class CollisionType
 {
     #region vars
     [SerializeField]
-    private bool is_blocking = true;
+    private bool is_blocking = true; // Layer-restricted (nonblocking layer only).
 
     [SerializeField]
     private bool can_climb_side = false;
     [SerializeField]
     private bool can_climb_bottom = false;
     [SerializeField]
-    private bool can_fall_through = false;
+    private bool can_fall_through = false; // Layer-restricted (jumpthrough objects layer only).
     [SerializeField]
     private bool can_vault_over = false;
 
@@ -97,7 +97,9 @@ public class CollisionType
     }
 
     /// <summary>
-    ///  Is this blocking? (use no for "background" objects and unset for destructible objects)
+    ///  Is this blocking? 
+    ///  (use no for "background" objects and unset for destructible objects)
+    ///  (Remember to move non-blocking objects to the nonblocking layer)
     /// </summary>
     public bool IsBlocking
     {

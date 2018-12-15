@@ -39,11 +39,11 @@ public class LineOfSightOccluder : MonoBehaviour
         // ( error-free would need all in the scene, this should work OK enough though, with certain topology restrictions)
         Vector3 min3D    = Camera.main.ViewportToWorldPoint( new Vector3( 0.0f, 0.0f, 0.0f ) );
         Vector3 max3D    = Camera.main.ViewportToWorldPoint( new Vector3( 1.0f, 1.0f, 0.0f ) );
-        Vector3 center3D = Camera.main.ViewportToWorldPoint( new Vector3( 0.5f, 0.5f, 0.0f ) );
+        //Vector3 center3D = Camera.main.ViewportToWorldPoint( new Vector3( 0.5f, 0.5f, 0.0f ) );
 
         Vector2 min = new Vector2( min3D.x, min3D.y );
         Vector2 max = new Vector2( max3D.x, max3D.y );
-        Vector2 center = new Vector2( center3D.x, center3D.y );
+        //Vector2 center = new Vector2( center3D.x, center3D.y );
         // Set max distance. TODO: optimize
         Vector2 size   = new Vector2( max3D.x - min3D.x, max3D.y - min3D.y );
         MAX_DISTANCE = size.magnitude; // 1/2 WOULD work, if the camera were not offset from the player.

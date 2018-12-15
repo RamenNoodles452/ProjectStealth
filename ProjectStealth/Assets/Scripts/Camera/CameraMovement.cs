@@ -6,8 +6,6 @@ public class CameraMovement : MonoBehaviour
     #region vars
     [SerializeField]
     private Transform focal_target;
-    [SerializeField]
-    private float damp_time = 0.15f;
 
     private Vector3 accumulated_position;   // accumulate fractional x, y coordinates. camera position must always be whole number.
     private Camera cam;
