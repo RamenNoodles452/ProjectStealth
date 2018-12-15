@@ -23,32 +23,27 @@ using Object = UnityEngine.Object;
 public class CustomTile : TileBase
 {
     #region vars
-    #endregion
-
-    #region properties
-    // Nonstandard naming convention, using Unity style here
-    #region standard
-    public Sprite sprite{ get; set; }
-    public Color color { get; set; }
-    public Matrix4x4 transform { get; set; }
-    //public GameObject gameObject { get; set; }
-    public TileFlags flags { get; set; }
-    public Tile.ColliderType colliderType { get; set; }
-    #endregion
-
-    #region custom
     // THIS is the "big" custom addition to my custom tile assets.
-    public GameObject prefab { get; set; }
-    // Tracks the instance of the prefab, for retreival via GetTileData.
-    private GameObject instance { get; set; }
+    public GameObject prefab;
+
+    // nonstandard naming convention applied here to match Unity style.
+    public Sprite sprite;
+    public Color color;
+    public Matrix4x4 transform;
+    public TileFlags flags;
+    public Tile.ColliderType colliderType;
     #endregion
 
     #region gutter garbage
+    // This was one earlier approach: store a mapping to a gameobject in the custom tile. Left as a reminder not to try this.
+    // This didn't work b/c scriptable objects share data as if it is static, so storing unique values here isn't supported.
+    // Tracks the instance of the prefab, for retreival via GetTileData.
+    //private GameObject instance { get; set; }
+
     // This was one earlier approach: add data to the tile. 
     // It didn't work (Tilemap limitations). Left as a reminder not to try this.
     //[SerializeField]
     //public CollisionType collisionType { get; set; }
-    #endregion
     #endregion
 
     /// <summary>
@@ -59,7 +54,6 @@ public class CustomTile : TileBase
     public override void RefreshTile( Vector3Int position, ITilemap tilemap )
     {
         tilemap.RefreshTile( position );
-        //base.RefreshTile( position, tilemap );
     }
 
     /// <summary>
@@ -70,13 +64,23 @@ public class CustomTile : TileBase
     /// <param name="tileData">Output param, returns the tile data.</param>
     public override void GetTileData( Vector3Int position, ITilemap tilemap, ref TileData tileData )
     {
-        tileData.gameObject = instance;
+        if ( Application.isPlaying ) // In editor mode, we skip this. In play mode, we don't.
+        {
+            if ( Referencer.instance != null )
+            {
+                tileData.gameObject = Referencer.instance.GetTileObjectAtPosition( position );
+            }
+        }
+        else
+        {
+            tileData.gameObject = null;
+        }
+
         tileData.sprite = sprite;
         tileData.color = color;
         tileData.transform = tileData.transform;
         tileData.colliderType = colliderType;
         tileData.flags = flags;
-        //base.GetTileData( position, tilemap, ref tileData );
     }
 
     /// <summary>
@@ -100,9 +104,12 @@ public class CustomTile : TileBase
     /// <returns></returns>
     public override bool StartUp( Vector3Int position, ITilemap tilemap, GameObject go )
     {
-        instance = InstantiateGameObject( position, tilemap ); // Always making real gameobjects for this is bad for performance.
+        // Always making real gameobjects for this is not very good for performance.
+        if ( Application.isPlaying ) // Skip in edit mode, but not in play mode.
+        {
+            Referencer.instance.RegisterTileGameObject( position, InstantiateGameObject( position, tilemap ) );
+        }
         return true;
-        //return base.StartUp( position, tilemap, go );
     }
 
     // Instantiates the prefab.
@@ -121,7 +128,7 @@ public class CustomTile : TileBase
         // 3) I don't want to hack it by hardcoding.
 
         // So we grab the grid from the scene on awake, and make it accessible.
-        Grid grid = Referencer.instance.tilemap_grid;
+        Grid grid = Referencer.instance.geometry_tilemap_grid;
         if ( grid == null ) { return null; }
 
         // Startup is called by each tile in the tilemap once AND by each tile in the tile palette once. 
@@ -170,11 +177,10 @@ public class MyTileEditor : Editor
 
         tile.sprite = (Sprite) EditorGUILayout.ObjectField( "Sprite", tile.sprite, typeof( Sprite ), true );
         tile.color = EditorGUILayout.ColorField( "Color", tile.color );
-        tile.colliderType = (Tile.ColliderType) EditorGUILayout.EnumPopup( "Collider Type", tile.colliderType ); // Should typically be set to "grid" for our purposes.
+        // Doesn't matter anymore. (Used to be: Should typically be set to "grid" for our purposes.)
+        tile.colliderType = (Tile.ColliderType) EditorGUILayout.EnumPopup( "Collider Type", tile.colliderType ); 
         // This is the big custom change.
         tile.prefab = (GameObject) EditorGUILayout.ObjectField( "Prefab", tile.prefab, typeof( GameObject ), true );
-
-        // An earlier approach had fields for collision data here, too.
 
         // If it was changed
         if ( EditorGUI.EndChangeCheck() )
@@ -195,7 +201,7 @@ public class MyTileEditor : Editor
                 MethodInfo method = type.GetMethod( "RenderStaticPreview", new[] { typeof( Sprite ), typeof( Color ), typeof( int ), typeof( int ) } );
                 if ( method != null )
                 {
-                    object ret = method.Invoke("RenderStaticPreview", new object[] { GetEditorPreviewSprite(), Color.white, width, height });
+                    object ret = method.Invoke( "RenderStaticPreview", new object[] { GetEditorPreviewSprite(), Color.white, width, height } );
                     if ( ret is Texture2D )
                     {
                         return ret as Texture2D;

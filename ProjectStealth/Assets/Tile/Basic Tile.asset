@@ -11,3 +11,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db799861ea82fe149be88731b6c124db, type: 3}
   m_Name: Basic Tile
   m_EditorClassIdentifier: 
+  prefab: {fileID: 1673668217709178, guid: 7002103b9b510d84a891e0137f8828b5, type: 2}
+  sprite: {fileID: 21300000, guid: 923e3ffca80015d4c8e98b20e628d741, type: 3}
+  color: {r: 0, g: 0, b: 0, a: 0}
+  transform:
+    e00: 0
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 0
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 0
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 0
+  flags: 0
+  colliderType: 0

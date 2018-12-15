@@ -13,14 +13,17 @@ public class CustomTileData : MonoBehaviour
     public CollisionType collision_type;
     #endregion
 
-    #if UNITY_EDITOR
-    // Editor-only error catch, omitted auto-fix for build version to keep this as lightweight and performant as possible.
     private void Awake()
     {
-        if ( GetComponent<Tilemap>() != null )
+        #if UNITY_EDITOR
+        if ( collision_type.CanFallthrough && gameObject.layer != CollisionMasks.jump_through_mask )
         {
-            Debug.LogError( "A CustomTileData component was added to an object with a tilemap. Remove the CustomTileData component." );
+            Debug.LogError( gameObject.name + " Invalid configuration: Object's collision type is set to fallthrough, but is not on the jumpthrough objects layer." );
         }
+        if ( ! collision_type.IsBlocking && gameObject.layer != CollisionMasks.non_blocking_mask )
+        {
+            Debug.LogError( gameObject.name + " Invalid configuration: Object's collision type is set to non-blocking, but is not on the nonblocking layer." );
+        }
+        #endif
     }
-    #endif
 }

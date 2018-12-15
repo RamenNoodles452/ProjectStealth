@@ -16,7 +16,7 @@ public class SimpleCharacterCore : MonoBehaviour
     //gravity vars
     private const float MAX_VERTICAL_SPEED          =   600.0f; // (pixels / second)
     private const float GRAVITATIONAL_ACCELERATION  = -1800.0f; // (pixels / second / second)
-    private const float HANG_TIME_FACTOR            = -400.0f;  // value to subtract from gravity during apex of a jump
+    private const float HANG_TIME_FACTOR            =  -400.0f; // value to subtract from gravity during apex of a jump
 
     //jump vars
     protected const float JUMP_HORIZONTAL_SPEED_MIN =   150.0f; // (pixels / seond)
@@ -273,8 +273,8 @@ public class SimpleCharacterCore : MonoBehaviour
                     }
                     else
                     {
-                        // TODO: FIX BUG?: smooth?
-                        // If a character is moving with 50% axis input, they'll smooth to the sneak speed, then snap to half of it. That seems silly.
+                        // TODO: improve?
+                        // If a character is moving with 50% axis input, they'll smooth to the sneak speed, then snap to half of it.
                         char_stats.velocity.x = SNEAK_SPEED * input_manager.HorizontalAxis;
                     }
                 }
@@ -287,7 +287,6 @@ public class SimpleCharacterCore : MonoBehaviour
                     {
                         if ( Mathf.Abs( char_stats.velocity.x ) > SNEAK_SPEED )
                         {
-                            //print("SKID BOIS");
                             IncreaseMagnitude( ref char_stats.velocity.x, -DRAG * Time.deltaTime * Time.timeScale );
                         }
                         else
@@ -401,22 +400,30 @@ public class SimpleCharacterCore : MonoBehaviour
         // override the vertical velocity if we're in the middle of jumping
         if ( char_stats.is_jumping )
         {
-            char_stats.jump_input_time = char_stats.jump_input_time + Time.deltaTime * Time.timeScale;
+            float timer_at_end_of_frame = char_stats.jump_input_time + Time.deltaTime * Time.timeScale;
             if ( ( input_manager.JumpInput && char_stats.jump_input_time <= JUMP_CONTROL_TIME ) || char_stats.jump_input_time <= JUMP_DURATION_MIN )
             {
                 char_stats.velocity.y = JUMP_VERTICAL_SPEED;
+                // Overshoot correction: If, during this frame, the jump should peak, need to apply velocity dropoff
+                if ( timer_at_end_of_frame > JUMP_CONTROL_TIME ) // Not off by 1 frame, this will be timer's status at end of this frame.
+                {
+                    float overshoot_time = timer_at_end_of_frame - JUMP_CONTROL_TIME; // in seconds
+                    char_stats.velocity.y += ( GRAVITATIONAL_ACCELERATION - HANG_TIME_FACTOR ) * overshoot_time;
+                }
             }
             else
             {
                 char_stats.velocity.y += ( GRAVITATIONAL_ACCELERATION - HANG_TIME_FACTOR ) * Time.deltaTime * Time.timeScale;
             }
 
-            if( char_stats.velocity.y < 0 )
+            if ( char_stats.velocity.y < 0 )
             {
                 // jump has peaked
                 char_stats.is_jumping = false;
                 char_anims.FallTrigger();
             }
+            // update timer (do post-check b/c this is called the frame the jump starts)
+            char_stats.jump_input_time = timer_at_end_of_frame;
         }
         // if not jumping, be affected by gravity
         else
@@ -457,23 +464,26 @@ public class SimpleCharacterCore : MonoBehaviour
 
         Vector2 collision_box_size, collision_box_center, direction;
         SetupHorizontalCollision( out collision_box_center, out collision_box_size, out direction );
+        float distance = Mathf.Abs( char_stats.velocity.x ) * Time.deltaTime * Time.timeScale + ONE_PIXEL_BUFFER;
         char_stats.touched_vault_obstacle = null;
 
-        RaycastHit2D hit = Physics2D.BoxCast( collision_box_center, collision_box_size, 0.0f, direction, 50.0f, CollisionMasks.upwards_collision_mask );
+        RaycastHit2D hit = Physics2D.BoxCast( collision_box_center, collision_box_size, 0.0f, direction, distance, CollisionMasks.upwards_collision_mask );
         if ( hit.collider == null ) { return; }
         
         float hit_distance = hit.distance - ONE_PIXEL_BUFFER;
         if ( hit_distance <= Mathf.Abs( char_stats.velocity.x * Time.deltaTime * Time.timeScale ) )
         {
-            CollisionType collision_type = Utils.GetCollisionType( hit.collider, hit.point + direction.normalized );
+            CustomTileData tile_data = Utils.GetCustomTileData( hit.collider );
+            CollisionType collision_type = null;
+            if ( tile_data != null ) { collision_type = tile_data.collision_type; }
 
             if ( collision_type != null )
             {
                 if ( collision_type.CanVaultOver == true && char_stats.IsGrounded )
                 {
-                    char_stats.touched_vault_obstacle = hit.collider;
+                    char_stats.touched_vault_obstacle = tile_data.gameObject.GetComponent<Collider2D>();
                 }
-                if ( ! collision_type.IsBlocking ) { return; }
+                //if ( ! collision_type.IsBlocking ) { return; }  // non-blocking objects now are on their own layer so they are ignored by this boxcast
             }
             // we touched a wall
             Vector3 gap;
@@ -481,7 +491,10 @@ public class SimpleCharacterCore : MonoBehaviour
             else                                { gap = new Vector3( -hit_distance, 0.0f, 0.0f ); }
             this.gameObject.transform.Translate( gap );
             char_stats.velocity.x = 0.0f;
-            OnTouchWall( hit.collider.gameObject, hit.point + direction.normalized );
+
+            GameObject obj = hit.collider.gameObject;
+            if ( tile_data != null ) { obj = tile_data.gameObject; }
+            OnTouchWall( obj, hit.point + direction.normalized );
         }
     }
 
@@ -552,24 +565,30 @@ public class SimpleCharacterCore : MonoBehaviour
         Vector2 collision_box_size = new Vector2( char_stats.char_collider.bounds.size.x, 1.0f ); // width x 1 px box
         Vector2 origin             = new Vector2( char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.max.y - collision_box_size.y );
         Vector2 direction          = Vector2.up;
-        RaycastHit2D hit           = Physics2D.BoxCast( origin, collision_box_size, 0.0f, direction, 50.0f, CollisionMasks.upwards_collision_mask );
+        float distance             = Mathf.Abs( char_stats.velocity.y ) * Time.deltaTime * Time.timeScale + ONE_PIXEL_BUFFER;
+        RaycastHit2D hit           = Physics2D.BoxCast( origin, collision_box_size, 0.0f, direction, distance, CollisionMasks.upwards_collision_mask );
         if ( hit.collider == null ) { return; }
 
         float hit_distance = hit.distance - ONE_PIXEL_BUFFER;
-        if ( hit_distance <= Mathf.Abs( char_stats.velocity.y * Time.deltaTime * Time.timeScale ) )
-        {
-            CollisionType collision_type = Utils.GetCollisionType( hit.collider, hit.point + direction.normalized );
+        CustomTileData tile_data = Utils.GetCustomTileData( hit.collider );
+        CollisionType collision_type = null;
+        if ( tile_data != null ) { collision_type = tile_data.collision_type; }
 
-            if ( collision_type != null )
-            {
-                if ( ! collision_type.IsBlocking ) { return; }
-            }
-            // hit the ceiling, stop upward movement
-            this.gameObject.transform.Translate( new Vector3( 0.0f, hit_distance, 0.0f ) );
-            char_stats.velocity.y = 0.0f;
-            char_stats.is_jumping = false;
-            OnTouchCeiling( hit.collider.gameObject, hit.point + direction.normalized );
+        if ( collision_type != null )
+        {
+            //if ( ! collision_type.IsBlocking ) { return; }  // non-blocking objects now are on their own layer so they are ignored by this boxcast
+            // Prevents bug: if you had blocking and non-blocking geometry [X][ ][X],
+            // Boxcast collision only returns 1 hit. It could get only the non-blocking object, so you could pass through solid walls. 
+            // Moving it to its own layer was simpler than using Boxcastall + aggregation.
         }
+        // hit the ceiling, stop upward movement
+        this.gameObject.transform.Translate( new Vector3( 0.0f, hit_distance, 0.0f ) );
+        char_stats.velocity.y = 0.0f;
+        char_stats.is_jumping = false;
+
+        GameObject obj = hit.collider.gameObject;
+        if ( tile_data != null ) { obj = tile_data.gameObject; }
+        OnTouchCeiling( obj, hit.point + direction.normalized );
     }
 
     /// <summary>
@@ -582,49 +601,63 @@ public class SimpleCharacterCore : MonoBehaviour
         Vector2 collision_box_size = new Vector2( char_stats.char_collider.bounds.size.x, 1.0f ); // width x 1 px box
         Vector2 origin             = new Vector2( char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.min.y + collision_box_size.y );
         Vector2 direction          = Vector2.down;
-        RaycastHit2D hit           = Physics2D.BoxCast( origin, collision_box_size, 0.0f, direction, 50.0f, CollisionMasks.all_collision_mask );
+        float distance             = Mathf.Abs( char_stats.velocity.y ) * Time.deltaTime * Time.timeScale + ONE_PIXEL_BUFFER;
+        RaycastHit2D hit           = Physics2D.BoxCast( origin, collision_box_size, 0.0f, direction, distance, CollisionMasks.standard_collision_mask );
         if ( hit.collider == null ) // if there is no floor, just fall
         {
-             FallingLogic();
-             return;
+            FallingLogic();
+            return;
         }
+        // hit the floor, stop falling ... probably
 
-        CollisionType collision_type = Utils.GetCollisionType( hit.collider, hit.point + direction.normalized );
+        CustomTileData tile_data = Utils.GetCustomTileData( hit.collider );
+        CollisionType collision_type = null;
+        if ( tile_data != null ) { collision_type = tile_data.collision_type; }
+        Collider2D collider = hit.collider; // for enemies + objects lacking custom tile data
+        if ( tile_data != null ) { collider = tile_data.gameObject.GetComponent<Collider2D>(); }
 
-        float hit_distance = hit.distance - ONE_PIXEL_BUFFER;
-        if ( hit_distance <= Mathf.Abs( char_stats.velocity.y * Time.deltaTime * Time.timeScale ) )
+        bool did_touch_ground = true;
+        if ( collision_type != null )
         {
-            // hit the floor, stop falling ... probably
-            bool did_touch_ground = true;
-            if ( collision_type != null )
+            //if ( ! collision_type.IsBlocking ) { return; } // non-blocking objects now are on their own layer so they are ignored by this boxcast
+            // special types of floor can change behaviour.
+            if ( FallthroughPlatform( collision_type, collider ) ) { did_touch_ground = false; }
+            if ( ShuntPlayer( collision_type, collider ) )
             {
-                if ( ! collision_type.IsBlocking ) { return; }
-                // special types of floor can change behaviour.
-                if ( ShuntPlayer( collision_type, hit.collider ) )         { did_touch_ground = false; }
-                if ( FallthroughPlatform( collision_type, hit.collider ) ) { did_touch_ground = false; }
+                // Prevent bug: if a non-walkoff collider is adjacent to another collider, this could cause players to fall through the floor.
+                Vector2 shunted_origin = new Vector2( char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.min.y + collision_box_size.y );
+                RaycastHit2D shunt_hit = Physics2D.BoxCast( shunted_origin, collision_box_size, 0.0f, direction, distance, CollisionMasks.standard_collision_mask );
+                // Is the player cleared to continue falling?
+                if ( shunt_hit.collider == null )
+                {
+                    did_touch_ground = false;
+                }
             }
-            else
-            {
-                // If you're hanging off the edge of a tilemap tile, this can happen, because it looks for a tile that doesn't exist.
+        }
+        else
+        {
+            // Enemies and objects will use default behaviour. No tile should be missing this data, though.
+            if ( tile_data != null )
+            { 
                 #if UNITY_EDITOR
-                Debug.LogWarning( "Improper configuration: platform is missing a CollisionType component. Will use default behaviour." );
+                Debug.LogError( "Improper configuration: platform is missing a CollisionType component. Will use default behaviour." );
                 #endif
             }
+        }
 
-            if ( did_touch_ground )
-            {
-                // close the gap between the player's feet and the floor
-                transform.Translate( new Vector3( 0.0f, -1.0f * hit_distance, 0.0f ) );
-                char_stats.velocity.y = 0.0f;
-                OnTouchGround( hit.collider );
-            }
-        }
-        else // didn't collide with anything
+        if ( did_touch_ground )
         {
-            char_stats.on_ground_collider = null;
-            FallingLogic();
+            // close the gap between the player's feet and the floor
+
+            // min y (player) = max y (tile)
+            // center - 1/2 size = max y
+            // position + offset - 1/2 size = collider.bounds.max.y
+            transform.position = new Vector3( transform.position.x, collider.bounds.max.y + char_stats.char_collider.bounds.size.y / 2.0f  - char_stats.char_collider.offset.y + ONE_PIXEL_BUFFER / 2.0f, transform.position.z );
+            char_stats.velocity.y = 0.0f;
+            OnTouchGround( collider );
         }
-        CheckPlatformEdge( collision_type, hit.collider ); // TODO: move to horizontal collision, get floor collision data to it efficiently somehow.
+
+        CheckPlatformEdge( collision_type, collider ); // TODO: move to horizontal collision, get floor collision data to it efficiently somehow.
     }
 
     /// <summary>
@@ -640,14 +673,15 @@ public class SimpleCharacterCore : MonoBehaviour
         float character_left       = char_stats.char_collider.bounds.min.x;
         float character_right      = char_stats.char_collider.bounds.max.x;
 
+        // Need 1px buffer to prevent re-collision with the shunting geometry during the confirmationt test.
         if ( char_stats.velocity.x > 0.0f && floor_collider_right < char_stats.char_collider.bounds.center.x && floor_collision_type.CanWalkOffRightEdge == false )
         {
-            transform.Translate( floor_collider_right - character_left, 0.0f, 0.0f );
+            transform.Translate( floor_collider_right - character_left + ONE_PIXEL_BUFFER, 0.0f, 0.0f );
             return true;
         }
         if ( char_stats.velocity.x < 0.0f && floor_collider_left > char_stats.char_collider.bounds.center.x && floor_collision_type.CanWalkOffLeftEdge == false )
         {
-            transform.Translate( -1.0f * ( character_right - floor_collider_left ), 0.0f, 0.0f );
+            transform.Translate( -1.0f * ( character_right - floor_collider_left ) - ONE_PIXEL_BUFFER, 0.0f, 0.0f );
             return true;
         }
         return false;
@@ -672,6 +706,7 @@ public class SimpleCharacterCore : MonoBehaviour
         // make sure that the player character is not straddling a solid platform
         // issue can't fall down when straddling two fallthrough platforms 
         // (but there shouldn't be a need to have two passthrough platforms touch, they can just merge into 1)
+        // NOTE: adjacent fallthrough tiles can cause problems.
         if ( ( floor_collision_type.CanWalkOffRightEdge && char_stats.char_collider.bounds.max.x > floor_collider.bounds.max.x ) ||
              ( floor_collision_type.CanWalkOffLeftEdge  && char_stats.char_collider.bounds.min.x < floor_collider.bounds.min.x ) )
         {
@@ -728,7 +763,8 @@ public class SimpleCharacterCore : MonoBehaviour
         if ( distance_to_edge <= Mathf.Abs( char_stats.velocity.x * Time.deltaTime * Time.timeScale ) )
         {
             char_stats.velocity.x = 0.0f;
-            if ( Mathf.Abs( distance_to_edge ) == distance_to_edge ) { transform.Translate( new Vector3( distance_to_edge * sign, 0.0f, 0.0f ) ); }
+            // leave a tiny buffer to prevent sliding off the platform.
+            if ( Mathf.Abs( distance_to_edge ) == distance_to_edge ) { transform.Translate( new Vector3( ( distance_to_edge - ONE_PIXEL_BUFFER / 2.0f ) * sign, 0.0f, 0.0f ) ); }
         }
     }
 
@@ -906,7 +942,7 @@ public class SimpleCharacterCore : MonoBehaviour
 
         // Collision check.
         Vector2 size = new Vector2( collider.size.x, collider.size.y );
-        RaycastHit2D hit = Physics2D.BoxCast( this.gameObject.transform.position, size, 0.0f, change, change.magnitude, CollisionMasks.all_collision_mask );
+        RaycastHit2D hit = Physics2D.BoxCast( this.gameObject.transform.position, size, 0.0f, change, change.magnitude, CollisionMasks.standard_collision_mask );
 
         if ( hit.collider != null ) // Collided with something.
         {

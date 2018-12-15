@@ -49,29 +49,31 @@ public class Utils
     }
 
     /// <summary>
-    /// Gets the collision type data out of a tile or tile-like object.
+    /// Gets the collision type data out of a tile-bound object.
     /// </summary>
-    /// <param name="collider">The collider of the tile-like object, or the composite collider of the tilemap.</param>
-    /// <param name="hit_point">Only used when checking the collision type of tilemap tiles. 
-    ///     This should be a point in worldspace within the tile to retrieve the data from.
-    ///     Typically should be obtained by taking a raycast hit point (will be outside the "hit" tile), and going 1-16 pixels further in the direction of the ray.
-    /// </param>
+    /// <param name="collider">The collider of the object representing the tile</param>
     /// <returns></returns>
-    public static CollisionType GetCollisionType( Collider2D collider, Vector2 hit_point )
+    public static CustomTileData GetCustomTileData( Collider2D collider )
     {
-        // Performance: Luckily, we only need this method ~ once / frame.
         if ( collider == null ) { return null; }
 
         #region Non-TileMap
-        // Tile-like object
-        // NOTE: never put a CustomTileData script on a tilemap object (this is error logged).
+        // Tile-bound object
         CustomTileData custom_data = collider.gameObject.GetComponent<CustomTileData>();
         if ( custom_data != null )
         {
-            return custom_data.collision_type;
+            return custom_data;
         }
         #endregion
 
+        // We don't need this anymore, since we basically just use tilemap as a quick instantiator for gameobjects, b/c that is simpler and works with fewer edge cases.
+        // Preserved in case we need to re-use the approach.
+        /// <param name="hit_point">Only used when checking the collision type of tilemap tiles. 
+        ///     This should be a point in worldspace within the tile to retrieve the data from.
+        ///     Typically should be obtained by taking a raycast hit point (will be outside the "hit" tile), and going 1-16 pixels further in the direction of the ray.
+        /// </param>
+        /*
+        // Performance: Luckily, we only need this method ~ once / frame.
         #region TileMap
         // Tilemap tile
         Tilemap tile_map = collider.gameObject.GetComponent<Tilemap>();
@@ -82,7 +84,7 @@ public class Utils
             if ( layout_grid == null ) { return null; }
 
             Vector3Int grid_position = layout_grid.WorldToCell( new Vector3( hit_point.x, hit_point.y, 0.0f ) );
-            //Debug.Log( grid_position );
+            Debug.Log( grid_position );
             if ( ! tile_map.HasTile( grid_position ) ) { return null; }
 
             TileBase tile = tile_map.GetTile( grid_position );
@@ -96,9 +98,10 @@ public class Utils
             custom_data = obj.GetComponent<CustomTileData>();
             if ( custom_data == null ) { return null; }
 
-            return custom_data.collision_type;
+            return custom_data;
         }
         #endregion
+        */
 
         return null;
     }

@@ -404,7 +404,7 @@ public class MagGripUpgrade : MonoBehaviour
     {
         Vector2 box_size = new Vector2(char_stats.char_collider.bounds.size.x - 0.1f, 0.1f);
         Vector2 origin = new Vector2(char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.center.y - char_stats.char_collider.bounds.extents.y + 0.1f);
-        RaycastHit2D hit = Physics2D.BoxCast(origin, box_size, 0.0f, Vector2.down, 25.0f, CollisionMasks.all_collision_mask);
+        RaycastHit2D hit = Physics2D.BoxCast(origin, box_size, 0.0f, Vector2.down, 25.0f, CollisionMasks.standard_collision_mask);
         if ( hit.collider == null ) { return; }
         
         //check the ledge to see if it's tall enough to grab onto
@@ -423,13 +423,18 @@ public class MagGripUpgrade : MonoBehaviour
         }
         grabCheck = Physics2D.Raycast( point, direction, char_stats.char_collider.bounds.size.x );
 
-        if ( grabCheck.collider == null )         { AbortWallClimbFromLedge(); return; }  // didn't hit anything, too short.
-        if ( hit.collider == null )               { AbortWallClimbFromLedge(); return; }  // no floor.
-        CollisionType collision_type = Utils.GetCollisionType( hit.collider, hit.point + direction.normalized );
+        if ( grabCheck.collider == null )       { AbortWallClimbFromLedge(); return; }  // didn't hit anything, too short.
+        if ( hit.collider == null )             { AbortWallClimbFromLedge(); return; }  // no floor.
 
-        if ( collision_type == null )             { AbortWallClimbFromLedge(); return; }  // invalid configuration
-        if ( ! collision_type.IsWallClimbable )   { AbortWallClimbFromLedge(); return; }  // unclimbable object
-        if ( grabCheck.collider != hit.collider ) { AbortWallClimbFromLedge(); return; }  // hit a different object, too short
+        CustomTileData tile_data = Utils.GetCustomTileData( hit.collider );
+        CollisionType collision_type = null;
+        if ( tile_data != null ) { collision_type = tile_data.collision_type; }
+        Collider2D collider = hit.collider;
+        if ( tile_data != null ) { collider = tile_data.gameObject.GetComponent<Collider2D>(); }
+
+        if ( collision_type == null )           { AbortWallClimbFromLedge(); return; }  // invalid configuration
+        if ( ! collision_type.IsWallClimbable ) { AbortWallClimbFromLedge(); return; }  // unclimbable object
+        if ( grabCheck.collider != collider )   { AbortWallClimbFromLedge(); return; }  // hit a different object, too short
 
         char_stats.current_master_state = CharEnums.MasterState.ClimbState;
         GroundToWallStart();
@@ -452,7 +457,10 @@ public class MagGripUpgrade : MonoBehaviour
     {
         // Validation
         if ( ! player_stats.acquired_mag_grip )           { return; } // can't climb without this upgrade
-        CollisionType collision_type = Utils.GetCollisionType( collision, hit_point );
+
+        CustomTileData tile_data = Utils.GetCustomTileData( collision );
+        CollisionType collision_type = null;
+        if ( tile_data != null ) { collision_type = tile_data.collision_type; }
 
         if ( collision_type == null )                     { return; } // invalid config
         if ( ! collision_type.IsWallClimbable )           { return; } // unclimbable
@@ -503,7 +511,7 @@ public class MagGripUpgrade : MonoBehaviour
                 }
                 char_stats.velocity.x = 0.0f;
                 // assign the grab_collider now that the grab is actually happening
-                grab_collider = collision.GetComponent<Collider2D>();
+                grab_collider = collision;
                 //trigger the signal to start the wall climb animation
                 char_anims.WallGrabTrigger();
                 char_anims.ResetJumpDescend();
@@ -520,7 +528,10 @@ public class MagGripUpgrade : MonoBehaviour
     {
         // Validation
         if ( ! player_stats.acquired_mag_grip )           { return; } // need the upgrade to do this TODO: separate wall and ceiling upgrades into 2 bools
-        CollisionType collision_type = Utils.GetCollisionType( collision, hit_point );
+
+        CustomTileData tile_data = Utils.GetCustomTileData( collision );
+        CollisionType collision_type = null;
+        if ( tile_data != null ) { collision_type = tile_data.collision_type; }
 
         if ( collision_type == null )                     { return; } // invalid config
         if ( ! collision_type.IsCeilingClimbable )        { return; } // unclimbable
