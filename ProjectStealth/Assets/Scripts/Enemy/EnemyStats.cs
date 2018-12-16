@@ -7,6 +7,7 @@ using UnityEngine;
 public class EnemyStats : MonoBehaviour
 {
     #region vars
+    [SerializeField]
     private float health = 100.0f; // baseline
     #endregion
 

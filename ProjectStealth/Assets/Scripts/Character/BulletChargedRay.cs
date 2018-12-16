@@ -41,8 +41,11 @@ public class BulletChargedRay : MonoBehaviour
         line_renderer.widthMultiplier = width;
         central_line_renderer.widthMultiplier = Mathf.Max( 0.0f, width - 6.0f );
 
-        float g = Mathf.Lerp( 0.75f, 0.25f, t );
-        Color color = new Color( 0.0f, g, 1.0f, 1.0f );
+        float r = Mathf.Lerp( 0.90f, 0.80f, t );
+        float g = Mathf.Lerp( 0.60f, 0.19f, t );
+        float b = Mathf.Lerp( 0.75f, 0.50f, t );
+
+        Color color = new Color( r, g, b, 1.0f );
         line_renderer.startColor = color;
         line_renderer.endColor = color;
 
