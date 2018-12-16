@@ -43,6 +43,7 @@ public abstract class IInputManager : MonoBehaviour
 
     public bool ShootInput;
     public bool ShootInputInst;
+    public bool ShootInputReleaseInst;
 
     public bool CloakInput;
     public bool CloakInputInst;

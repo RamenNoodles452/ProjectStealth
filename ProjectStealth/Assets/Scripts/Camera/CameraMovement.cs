@@ -11,6 +11,10 @@ public class CameraMovement : MonoBehaviour
     private Camera cam;
     private BoxCollider2D boundingBox;
 
+    private Vector2 shake_vector;
+    private Vector2 shake_magnitude;
+    private float shake_timer;
+
     // Camera config
     private const float CAMERA_Z = -10.0f;
     private const float MAX_VELOCITY = 640.0f; // pixels / second
@@ -22,6 +26,7 @@ public class CameraMovement : MonoBehaviour
         focal_target = GameObject.Find( "PlayerCharacter/CameraFocalPoint" ).transform; // slow
         boundingBox = GameObject.Find( "BoundingBox" ).GetComponent<BoxCollider2D>();   // slow
         cam = GetComponent<Camera>();
+        shake_vector = Vector2.zero;
     }
 
     // Use this for initialization
@@ -77,6 +82,15 @@ public class CameraMovement : MonoBehaviour
                     clamped_focal_target.y = ( boundingBox.gameObject.transform.position.y + boundingBox.offset.y - boundingBox.size.y / 2.0f ) + half_height_in_world;
                 }
             }
+
+            #region Screen Shake
+            if ( shake_timer > 0.0f )
+            {
+                shake_vector = new Vector2( Random.Range( -shake_magnitude.x, shake_magnitude.x ), Random.Range( -shake_magnitude.y, shake_magnitude.y ) );
+                clamped_focal_target += new Vector3( shake_vector.x, shake_vector.y, 0.0f );
+            }
+            shake_timer = Mathf.Max( shake_timer - Time.deltaTime * Time.timeScale, 0.0f );
+            #endregion
             #endregion
 
             // smoothly move the camera to the focal point
@@ -106,5 +120,26 @@ public class CameraMovement : MonoBehaviour
     {
         accumulated_position = new Vector3( (int) focal_target.position.x, (int) focal_target.position.y, CAMERA_Z );
         transform.position = accumulated_position;
+    }
+
+    /// <summary>
+    /// Shakes the screen.
+    /// </summary>
+    /// <param name="magnitude">Half the number of pixels to shake the screen around by.</param>
+    /// <param name="duration"> The amount of time, in seconds, for the screen shake effect to continue.</param>
+    public void ShakeScreen( float magnitude, float duration )
+    {
+        ShakeScreen( new Vector2( magnitude, magnitude ), duration );
+    }
+
+    /// <summary>
+    /// Shakes the screen.
+    /// </summary>
+    /// <param name="magnitude">Half the number of pixels to shake the screen around by. Separate values control the x and y axes.</param>
+    /// <param name="duration">The amount of time, in seconds, for the screen shake effect to continue.</param>
+    public void ShakeScreen( Vector2 magnitude, float duration )
+    {
+        shake_magnitude = magnitude;
+        shake_timer = duration;
     }
 }

@@ -72,6 +72,10 @@ public class Player : SimpleCharacterCore
             // Shoot
             if ( input_manager.ShootInputInst )
             {
+                player_stats.StartShoot();
+            }
+            if ( input_manager.ShootInputReleaseInst )
+            {
                 player_stats.Shoot();
             }
 

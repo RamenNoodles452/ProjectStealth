@@ -69,7 +69,14 @@ public class PlayerStats : MonoBehaviour
     private float silencer_regen = 1.0f;
     #endregion
 
-    #region aim
+    #region Shoot
+    public GameObject charge_up_rays;
+    public GameObject charge_up_ball;
+
+    private bool is_shooting = false;
+    private float shoot_charge_timer = 0.0f;
+    private const float SHOOT_FULL_CHARGE_TIME = 2.0f; // seconds
+
     private GameObject aim_enemy_memory;
     private GameObject aim_auto_target; // closest enemy in facing that is targetable
     private Vector2 aim_auto_reticle_position;
@@ -316,16 +323,35 @@ public class PlayerStats : MonoBehaviour
     }
 
     /// <summary>
+    /// Begins charging weapon in preparation to shoot.
+    /// </summary>
+    public void StartShoot()
+    {
+        is_shooting = true;
+        shoot_charge_timer = 0.0f;
+
+        ParticleSystem ray_particles = charge_up_rays.GetComponent<ParticleSystem>();
+        ParticleSystem ball_particles = charge_up_ball.GetComponent<ParticleSystem>();
+        ray_particles.Stop();
+        ray_particles.Play();
+        ball_particles.Stop();
+        ball_particles.Play();
+    }
+
+    /// <summary>
     /// Fire weapon
     /// </summary>
     public void Shoot()
     {
+        if ( ! is_shooting ) { return; }
         if ( is_evading ) { return; } // no shooting mid-evade
         //animation lock checks?
 
+
+        bool is_fully_charged = shoot_charge_timer >= SHOOT_FULL_CHARGE_TIME;
         //make noise?
         //use silencer meter / shooting when cloaked makes no noise
-        if ( silencer >= 1.0f )
+        if ( silencer >= 1.0f && ! is_fully_charged )
         {
             // Suppressed shot
             silencer -= 1.0f;
@@ -337,6 +363,7 @@ public class PlayerStats : MonoBehaviour
             Noise noise = noise_obj.GetComponent<Noise>();
             noise.lifetime = 0.25f; // seconds
             noise.radius = 200.0f;
+            // TODO: if ( is_fully_charged ) { } // custom noise?
         }
 
         if ( is_cloaked ) { is_cloaked = false; } // attacking breaks stealth (even silenced?)
@@ -346,12 +373,33 @@ public class PlayerStats : MonoBehaviour
 
         // spawn bullet prefab, set appropriate charge level.
         Vector2 origin =  GetShotOrigin();
-        GameObject bullet_obj = Instantiate( bullet_prefab, new Vector3( origin.x, origin.y, transform.position.z ), Quaternion.identity );
-        BulletRay bullet = bullet_obj.GetComponent<BulletRay>();
-        bullet.is_player_owned = true;
-        bullet.damage = 50.0f;
+        GameObject bullet_obj = null;
 
-        bullet.angle = Mathf.Atan2( aim_auto_reticle_position.y - origin.y, aim_auto_reticle_position.x - origin.x );
+        if ( ! is_fully_charged )
+        {
+            // Normal bullet
+            bullet_obj = Instantiate( bullet_prefab, new Vector3( origin.x, origin.y, transform.position.z ), Quaternion.identity );
+            BulletRay bullet = bullet_obj.GetComponent<BulletRay>();
+            bullet.is_player_owned = true;
+            bullet.angle = Mathf.Atan2( aim_auto_reticle_position.y - origin.y, aim_auto_reticle_position.x - origin.x );
+            bullet.damage = 50.0f;
+        }
+        else
+        {
+            Camera.main.GetComponent<CameraMovement>().ShakeScreen( 10.0f, 0.5f );
+            // Charged bullet
+            bullet_obj = Instantiate( charged_bullet_prefab, new Vector3( origin.x, origin.y, transform.position.z ), Quaternion.identity );
+            BulletChargedRay bullet = bullet_obj.GetComponent<BulletChargedRay>();
+            // damage must be > fire rate * uncharged damage.
+            bullet.Setup( origin, aim_auto_reticle_position, 500.0f, true );
+        }
+
+        // Reset state.
+        is_shooting = false;
+        ParticleSystem ray_particles = charge_up_rays.GetComponent<ParticleSystem>();
+        ParticleSystem ball_particles = charge_up_ball.GetComponent<ParticleSystem>();
+        ray_particles.Stop();
+        ball_particles.Stop();
     }
 
     /// <summary>
@@ -870,6 +918,13 @@ public class PlayerStats : MonoBehaviour
             }
         }
         #endregion
+        #endregion
+
+        #region Shooting
+        if ( is_shooting )
+        {
+            shoot_charge_timer = Mathf.Min( shoot_charge_timer + Time.deltaTime * Time.timeScale, SHOOT_FULL_CHARGE_TIME );
+        }
         #endregion
 
         AutoTarget();

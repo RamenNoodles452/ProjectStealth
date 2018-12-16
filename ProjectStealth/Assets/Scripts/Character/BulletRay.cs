@@ -60,7 +60,9 @@ public class BulletRay : MonoBehaviour
             {
                 if ( ! is_player_owned ) 
                 {
-                    // TODO: damage
+                    PlayerStats char_stats = hit.collider.gameObject.GetComponent<PlayerStats>();
+                    if ( char_stats == null ) { return; }
+                    char_stats.Hit( damage );
                     is_dying = true;
                 }
                 else { return; } // player can't hit themselves with their own bullet. Ignore this hit.
@@ -70,7 +72,15 @@ public class BulletRay : MonoBehaviour
             {
                 if ( is_player_owned )
                 {
-                    // TODO: damage
+                    EnemyStats enemy_stats = hit.collider.gameObject.GetComponent<EnemyStats>();
+                    if ( enemy_stats == null )
+                    {
+                        #if UNITY_EDITOR
+                        Debug.LogError( "An enemy was hit, but was missing an EnemyStats component." );
+                        #endif
+                        return;
+                    }
+                    enemy_stats.Hit( damage );
                     is_dying = true;
                 }
                 else { return; } // enemies can't hit themselves. Ignore this hit.

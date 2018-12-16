@@ -96,5 +96,5 @@ MonoBehaviour:
     can_fall_through: 0
     can_vault_over: 0
     can_hookshot_to: 0
-    can_walk_off_left_edge: 0
-    can_walk_off_right_edge: 0
+    can_walk_off_left_edge: 1
+    can_walk_off_right_edge: 1
