@@ -37,7 +37,7 @@ public class VaultAction : MonoBehaviour
             }
             char_stats.current_master_state = CharEnums.MasterState.VaultState;
             input_manager.InteractInputInst = false;
-            input_manager.InputOverride = true;
+            input_manager.IgnoreInput = true;
 
             // translate body to on the ledge
             char_stats.bezier_distance = 0.0f;
@@ -71,7 +71,7 @@ public class VaultAction : MonoBehaviour
             {
                 is_vaulting = false;
                 char_stats.touched_vault_obstacle = null;
-                input_manager.InputOverride = false;
+                input_manager.IgnoreInput = false;
                 char_stats.current_master_state = CharEnums.MasterState.DefaultState;
             }
         }

@@ -6,7 +6,7 @@ using UnityEngine;
 public class HiddenArea : MonoBehaviour
 {
     #region vars
-    private bool hidden = true;
+    //private bool hidden = true;
     private SpriteRenderer sprite_renderer;
     #endregion
 
@@ -36,7 +36,7 @@ public class HiddenArea : MonoBehaviour
     {
         if ( Utils.IsPlayersCollider( collision ) )
         {
-            hidden = false;
+            //hidden = false;
             Color color = sprite_renderer.color;
             color.a = 0.0f;
             sprite_renderer.color = color;
@@ -51,7 +51,7 @@ public class HiddenArea : MonoBehaviour
     {
         if ( Utils.IsPlayersCollider( collision ) )
         {
-            hidden = true;
+            //hidden = true;
             Color color = sprite_renderer.color;
             color.a = 1.0f;
             sprite_renderer.color = color;

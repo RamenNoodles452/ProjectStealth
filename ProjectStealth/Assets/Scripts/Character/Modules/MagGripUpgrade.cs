@@ -315,7 +315,7 @@ public class MagGripUpgrade : MonoBehaviour
     {
         input_manager.JumpInputInst = false;
         input_manager.JumpInput = false;
-        input_manager.InputOverride = true;
+        input_manager.IgnoreInput = true;
         // variable sterilization
         char_stats.is_jumping = false;
         char_stats.is_on_ground = true;
@@ -334,7 +334,7 @@ public class MagGripUpgrade : MonoBehaviour
     public void WallToGroundStop()
     {
         current_climb_state = ClimbState.NotClimb;
-        input_manager.InputOverride = false;
+        input_manager.IgnoreInput = false;
         is_overlooking_ledge = false;
         is_against_ledge = false;
 
@@ -368,7 +368,7 @@ public class MagGripUpgrade : MonoBehaviour
         }
         input_manager.JumpInputInst = false;
         input_manager.JumpInput = false;
-        input_manager.InputOverride = true;
+        input_manager.IgnoreInput = true;
         // variable sterilization
         char_stats.is_jumping = false;
         char_anims.GroundToWallTrigger();
@@ -384,7 +384,7 @@ public class MagGripUpgrade : MonoBehaviour
     public void GroundToWallStop()
     {
         current_climb_state = ClimbState.WallClimb;
-        input_manager.InputOverride = false;
+        input_manager.IgnoreInput = false;
         is_overlooking_ledge = false;
         is_against_ledge = false;
 

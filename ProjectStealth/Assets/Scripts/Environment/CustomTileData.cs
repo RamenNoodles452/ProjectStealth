@@ -16,11 +16,11 @@ public class CustomTileData : MonoBehaviour
     private void Awake()
     {
         #if UNITY_EDITOR
-        if ( collision_type.CanFallthrough && gameObject.layer != CollisionMasks.jump_through_mask )
+        if ( collision_type.CanFallthrough && LayerMask.GetMask( LayerMask.LayerToName( gameObject.layer ) ) != CollisionMasks.jump_through_mask )
         {
             Debug.LogError( gameObject.name + " Invalid configuration: Object's collision type is set to fallthrough, but is not on the jumpthrough objects layer." );
         }
-        if ( ! collision_type.IsBlocking && gameObject.layer != CollisionMasks.non_blocking_mask )
+        if ( ! collision_type.IsBlocking && LayerMask.GetMask( LayerMask.LayerToName( gameObject.layer ) ) != CollisionMasks.non_blocking_mask )
         {
             Debug.LogError( gameObject.name + " Invalid configuration: Object's collision type is set to non-blocking, but is not on the nonblocking layer." );
         }

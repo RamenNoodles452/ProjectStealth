@@ -76,6 +76,7 @@ public class PlayerStats : MonoBehaviour
     private bool is_shooting = false;
     private float shoot_charge_timer = 0.0f;
     private const float SHOOT_FULL_CHARGE_TIME = 2.0f; // seconds
+    // TODO: able to bank charged shot.
 
     private GameObject aim_enemy_memory;
     private GameObject aim_auto_target; // closest enemy in facing that is targetable
@@ -86,6 +87,9 @@ public class PlayerStats : MonoBehaviour
 
     private bool is_in_shadow = false;
 
+    private float freeze_timer = 0.0f;
+
+    #region adrenaline
     [SerializeField]
     private bool is_adrenal_rushing = false;
     private bool is_adrenaline_fading_in = false;
@@ -96,6 +100,7 @@ public class PlayerStats : MonoBehaviour
     private const float ADRENALINE_DESATURATION  = 0.75f; // percent desaturation
     private float adrenal_rush_timer = ADRENAL_RUSH_COOLDOWN;
     private float adrenal_fade_timer = 0.0f;
+    #endregion
 
     // progress values
     public  bool acquired_mag_grip;
@@ -281,6 +286,7 @@ public class PlayerStats : MonoBehaviour
         }
 
         input_manager = GetComponent<IInputManager>();
+        UnfreezePlayer();
         char_anims = this.gameObject.GetComponent<CharacterAnimationLogic>();
         char_anims.Reset();
         // reset movement
@@ -392,6 +398,9 @@ public class PlayerStats : MonoBehaviour
             BulletChargedRay bullet = bullet_obj.GetComponent<BulletChargedRay>();
             // damage must be > fire rate * uncharged damage.
             bullet.Setup( origin, aim_auto_reticle_position, 500.0f, true );
+
+            // freeze player for 0.5 seconds
+            FreezePlayer( 0.5f );
         }
 
         // Reset state.
@@ -716,6 +725,26 @@ public class PlayerStats : MonoBehaviour
     }
 
     /// <summary>
+    /// Locks the player in a state where they cannot respond to input.
+    /// </summary>
+    /// <param name="duration">The duration the frozen state should last, in seconds.</param>
+    public void FreezePlayer( float duration )
+    {
+        if ( duration <= 0.0f ) { return; }
+        input_manager.IgnoreInput = true;
+        freeze_timer = Mathf.Max( duration, freeze_timer );
+    }
+
+    /// <summary>
+    /// Unlocks the player from the frozen "no-input" state.
+    /// </summary>
+    public void UnfreezePlayer()
+    {
+        input_manager.IgnoreInput = false;
+        freeze_timer = 0.0f;
+    }
+
+    /// <summary>
     /// Early initialization
     /// </summary>
     private void Awake()
@@ -742,7 +771,7 @@ public class PlayerStats : MonoBehaviour
             Respawn(); //TODO: if this takes >1 frame, need state tracking.
         }
 
-        #region timers
+        #region Timers
         #region shield
         // Shield regeneration
         if ( was_hit_this_frame )
@@ -915,6 +944,17 @@ public class PlayerStats : MonoBehaviour
                 {
                     noise.radius = 50.0f;
                 }
+            }
+        }
+        #endregion
+
+        #region Freeze
+        if ( freeze_timer > 0.0f )
+        {
+            freeze_timer = Mathf.Max( freeze_timer - Time.deltaTime * Time.timeScale, 0.0f );
+            if ( freeze_timer <= 0.0f )
+            {
+                UnfreezePlayer();
             }
         }
         #endregion

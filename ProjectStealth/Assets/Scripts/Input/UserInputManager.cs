@@ -1,94 +1,84 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-//TODO: wrap everything, rename the private vars.
+/// <summary>
+/// Represents the state of the input controls.
+/// </summary>
 public class UserInputManager : IInputManager
 {
-
+    // Use this for initialization
     void Start()
     {
-        InputOverride = false;
+        IgnoreInput = false;
     }
 
     // Update is called once per frame
     void Update()
     {
+        if ( IgnoreInput ) // Ignore all actual input state, use defaults.
+        {
+            Reset();
+            return;
+        }
+        GetInputState();
+    }
 
+    /// <summary>
+    /// Sets properties to represent the input state.
+    /// </summary>
+    private void GetInputState()
+    {
         HorizontalAxis = Input.GetAxisRaw( "Horizontal" );
         VerticalAxis = Input.GetAxisRaw( "Vertical" );
-
-        if ( InputOverride ) { return; }
-
         RunAxis = Input.GetAxisRaw( "Run" );
+        JumpInput = Input.GetButton( "Jump" );
+        JumpInputInst = Input.GetButtonDown( "Jump" );
+        RunInput = ( RunAxis > 0 );
+        RunInputDownInst = Input.GetButtonDown( "Run" );
+        RunInputUpInst = Input.GetButtonUp( "Run" );
+        AttackInput = Input.GetButton( "Attack" );
+        AttackInputInst = Input.GetButtonDown( "Attack" );
+        AssassinateInput = Input.GetButton( "Assassinate" );
+        AssassinateInputInst = Input.GetButtonDown( "Assassinate" );
+        ShootInput = Input.GetButton( "Shoot" );
+        ShootInputInst = Input.GetButtonDown( "Shoot" );
+        ShootInputReleaseInst = Input.GetButtonUp( "Shoot" );
+        CloakInput = Input.GetButton( "Cloak" );
+        CloakInputInst = Input.GetButtonDown( "Cloak" );
+        EvadeInput = Input.GetButton( "Evade" );
+        EvadeInputInst = Input.GetButtonDown( "Evade" );
+        AdrenalineInputInst = Input.GetKeyDown( KeyCode.Semicolon );
+        InteractInput = Input.GetButton( "Interact" );
+        InteractInputInst = Input.GetButtonDown( "Interact" );
+    }
 
-
-        if ( HorizontalAxis != 0.0f )
-        {
-            if ( HorizontalAxisInstance )
-            {
-                HorizontalAxisInstance = false;
-            }
-            if ( horizontalInstanceCheck )
-            {
-                HorizontalAxisInstance = true;
-                horizontalInstanceCheck = false;
-            }
-        }
-        else if ( HorizontalAxis == 0.0f ) //|| instantAxisInversion
-        {
-            HorizontalAxisInstance = false;
-            horizontalInstanceCheck = true;
-        }
-
-        if ( Input.GetButton( "Jump" ) ) { JumpInput = true; }
-        else { JumpInput = false; }
-
-        if ( Input.GetButtonDown( "Jump" ) ) { JumpInputInst = true; }
-        else { JumpInputInst = false; }
-
-        if ( RunAxis > 0 ) { RunInput = true; }
-        else { RunInput = false; }
-        if ( Input.GetButtonDown( "Run" ) ) { RunInputDownInst = true; }
-        else { RunInputDownInst = false; }
-        if ( Input.GetButtonUp( "Run" ) ) { RunInputUpInst = true; }
-        else { RunInputUpInst = false; }
-
-        if ( Input.GetButton( "Attack" ) ) { AttackInput = true; }
-        else { AttackInput = false; }
-        if ( Input.GetButtonDown( "Attack" ) ) { AttackInputInst = true; }
-        else { AttackInputInst = false; }
-
-        if ( Input.GetButton( "Assassinate" ) ) { AssassinateInput = true; }
-        else { AssassinateInput = false; }
-        if ( Input.GetButtonDown( "Assassinate" ) ) { AssassinateInputInst = true; }
-        else { AssassinateInputInst = false; }
-
-        if ( Input.GetButton( "Shoot" ) ) { ShootInput = true; }
-        else { ShootInput = false; }
-        if ( Input.GetButtonDown( "Shoot" ) ) { ShootInputInst = true; }
-        else { ShootInputInst = false; }
-        if ( Input.GetButtonUp( "Shoot" ) ) { ShootInputReleaseInst = true; }
-        else { ShootInputReleaseInst = false; }
-
-        if ( Input.GetButton( "Cloak" ) ) { CloakInput = true; }
-        else { CloakInput = false; }
-        if ( Input.GetButtonDown( "Cloak" ) ) { CloakInputInst = true; }
-        else { CloakInputInst = false; }
-
-        if ( Input.GetButton( "Evade" ) ) { EvadeInput = true; }
-        else { EvadeInput = false; }
-
-        if ( Input.GetButtonDown( "Evade" ) ) { EvadeInputInst = true; }
-        else { EvadeInputInst = false; }
-
-        if ( Input.GetKeyDown( KeyCode.Semicolon ) ) { AdrenalineInputInst = true; }
-        else { AdrenalineInputInst = false; }
-
-        if ( Input.GetButton( "Interact" ) ) { InteractInput = true; }
-        else { InteractInput = false; }
-
-        if ( Input.GetButtonDown( "Interact" ) ) { InteractInputInst = true; }
-        else { InteractInputInst = false; }
-
+    /// <summary>
+    /// Resets all the input variables.
+    /// Used when locking out player input.
+    /// </summary>
+    private void Reset()
+    {
+        HorizontalAxis = 0.0f;
+        VerticalAxis = 0.0f;
+        RunAxis = 0.0f;
+        JumpInput = false;
+        JumpInputInst = false;
+        RunInput = false;
+        RunInputDownInst = false;
+        RunInputUpInst = false;
+        AttackInput = false;
+        AttackInputInst = false;
+        AssassinateInput = false;
+        AssassinateInputInst = false;
+        ShootInput = false;
+        ShootInputInst = false;
+        ShootInputReleaseInst = false;
+        CloakInput = false;
+        CloakInputInst = false;
+        EvadeInput = false;
+        EvadeInputInst = false;
+        AdrenalineInputInst = false;
+        InteractInput = false;
+        InteractInputInst = false;
     }
 }
