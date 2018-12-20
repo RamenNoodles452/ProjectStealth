@@ -27,9 +27,39 @@ public abstract class IInputManager : MonoBehaviour
     /// </summary>
     public float HorizontalAxis { get; set; }
     /// <summary>
-    /// Amount that the analog movement stick is helf up/down [-1,1]
+    /// Amount that the analog movement stick is held up/down [-1,1]
     /// </summary>
     public float VerticalAxis { get; set; }
+
+    #region aim
+    /// <summary>
+    /// Amount that the aim analog stick is held left/right [-1,1]
+    /// </summary>
+    public float HorizontalAimAxis { get; set; }
+    /// <summary>
+    /// Amount that the aim analog stick is held up/down [-1,1]
+    /// </summary>
+    public float VerticalAimAxis { get; set; }
+    /// <summary>
+    /// The position, in screen-space, of the position that is being aimed at.
+    /// </summary>
+    public Vector2 AimPosition { get; set; }
+    /// <summary>
+    /// If the aim mode toggle button went from unpressed to pressed this frame.
+    /// </summary>
+    public bool AimToggleInputInst { get; set; }
+    /// <summary>
+    /// If manual aim is currently on.
+    /// </summary>
+    public bool IsManualAimOn { get; set; }
+
+    public enum ManualAimMode { angle, position };
+    /// <summary>
+    /// Controls how aim input should be treated.
+    /// </summary>
+    public ManualAimMode AimMode { get; set; }
+    #endregion
+
     /// <summary>
     /// If the jump button is being held down (holding increases jump's height, to a point).
     /// </summary>

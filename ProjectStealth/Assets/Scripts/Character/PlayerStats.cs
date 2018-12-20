@@ -70,13 +70,18 @@ public class PlayerStats : MonoBehaviour
     #endregion
 
     #region Shoot
-    public GameObject charge_up_rays;
-    public GameObject charge_up_ball;
+    [SerializeField]
+    private GameObject charge_up_rays;
+    [SerializeField]
+    private GameObject charge_up_ball;
+    [SerializeField]
+    private GameObject bullet_prefab;
+    [SerializeField]
+    private GameObject charged_bullet_prefab;
 
     private bool is_shooting = false;
     private float shoot_charge_timer = 0.0f;
     private const float SHOOT_FULL_CHARGE_TIME = 2.0f; // seconds
-    // TODO: able to bank charged shot.
 
     private GameObject aim_enemy_memory;
     private GameObject aim_auto_target; // closest enemy in facing that is targetable
@@ -87,7 +92,7 @@ public class PlayerStats : MonoBehaviour
 
     private bool is_in_shadow = false;
 
-    private float freeze_timer = 0.0f;
+    private float freeze_timer = 0.0f; // seconds
 
     #region adrenaline
     [SerializeField]
@@ -102,25 +107,26 @@ public class PlayerStats : MonoBehaviour
     private float adrenal_fade_timer = 0.0f;
     #endregion
 
+    #region progression
     // progress values
-    public  bool acquired_mag_grip;
-    public  bool acquired_adrenal_rush;
-    private bool acquired_hookshot;
-    private bool acquired_hack;
-    private bool acquired_explosive;
-    private bool acquired_charge_shot;
+    public bool acquired_mag_grip;
+    public bool acquired_ceiling_grip;
+    public bool acquired_adrenal_rush;
+    public bool acquired_hookshot;
+    public bool acquired_hack;
+    public bool acquired_explosive;
+    public bool acquired_charge_shot;
+    #endregion
 
     // checkpointing
     public Vector2 checkpoint;
 
     // Noise Prefab: Set in Editor
     public GameObject noise_prefab;
-    public GameObject bullet_prefab;
-    public GameObject charged_bullet_prefab;
 
     private CharacterStats char_stats;
     private CharacterAnimationLogic char_anims;
-    IInputManager input_manager;
+    private IInputManager input_manager;
     private float walk_animation_timer;
 
     private bool is_idle  = true;
@@ -336,12 +342,15 @@ public class PlayerStats : MonoBehaviour
         is_shooting = true;
         shoot_charge_timer = 0.0f;
 
-        ParticleSystem ray_particles = charge_up_rays.GetComponent<ParticleSystem>();
-        ParticleSystem ball_particles = charge_up_ball.GetComponent<ParticleSystem>();
-        ray_particles.Stop();
-        ray_particles.Play();
-        ball_particles.Stop();
-        ball_particles.Play();
+        if ( acquired_charge_shot )
+        {
+            ParticleSystem ray_particles = charge_up_rays.GetComponent<ParticleSystem>();
+            //ParticleSystem ball_particles = charge_up_ball.GetComponent<ParticleSystem>();
+            ray_particles.Stop();
+            ray_particles.Play();
+            //ball_particles.Stop();
+            //ball_particles.Play();
+        }
     }
 
     /// <summary>
@@ -354,7 +363,7 @@ public class PlayerStats : MonoBehaviour
         //animation lock checks?
 
 
-        bool is_fully_charged = shoot_charge_timer >= SHOOT_FULL_CHARGE_TIME;
+        bool is_fully_charged = ( shoot_charge_timer >= SHOOT_FULL_CHARGE_TIME ) && acquired_charge_shot;
         //make noise?
         //use silencer meter / shooting when cloaked makes no noise
         if ( silencer >= 1.0f && ! is_fully_charged )
@@ -406,9 +415,9 @@ public class PlayerStats : MonoBehaviour
         // Reset state.
         is_shooting = false;
         ParticleSystem ray_particles = charge_up_rays.GetComponent<ParticleSystem>();
-        ParticleSystem ball_particles = charge_up_ball.GetComponent<ParticleSystem>();
+        //ParticleSystem ball_particles = charge_up_ball.GetComponent<ParticleSystem>();
         ray_particles.Stop();
-        ball_particles.Stop();
+        //ball_particles.Stop();
     }
 
     /// <summary>
@@ -630,6 +639,12 @@ public class PlayerStats : MonoBehaviour
     /// </summary>
     private void AutoTarget()
     {
+        if ( input_manager.IsManualAimOn )
+        {
+            EngageFreeAim();
+            return;
+        }
+
         const float MAX_RANGE = 640.0f; //640 px, 20 tiles
         Vector2 origin = GetShotOrigin();
 
@@ -682,7 +697,7 @@ public class PlayerStats : MonoBehaviour
         if ( minimum_distance == MAX_RANGE )
         {
             RaycastHit2D hit = Physics2D.Raycast( origin, GetFacingVector(), MAX_RANGE, CollisionMasks.player_shooting_mask );
-            if ( hit.collider == null ) { aim_auto_reticle_position = new Vector2( transform.position.x, transform.position.y ) + MAX_RANGE * GetFacingVector(); }
+            if ( hit.collider == null ) { aim_auto_reticle_position = origin + MAX_RANGE * GetFacingVector(); }
             else
             {
                 aim_auto_reticle_position = hit.point;
@@ -692,11 +707,32 @@ public class PlayerStats : MonoBehaviour
         aim_reticle.transform.position = new Vector3( aim_auto_reticle_position.x, aim_auto_reticle_position.y, aim_reticle.transform.position.z );
     }
 
-
-
     private void EngageFreeAim()
     {
+        const float MAX_RANGE = 640.0f; //640 px, 20 tiles //TODO: refactor
+        Vector2 origin = GetShotOrigin();
+        Vector2 direction;
+        float distance;
 
+        if ( input_manager.AimMode == IInputManager.ManualAimMode.angle )
+        {
+            direction = new Vector2( input_manager.HorizontalAimAxis, input_manager.VerticalAimAxis );
+            distance = MAX_RANGE;
+        }
+        else //if ( input_manager.AimMode == IInputManager.ManualAimMode.position )
+        {
+            Vector3 aim_position = Camera.main.ViewportToWorldPoint( new Vector3( input_manager.AimPosition.x / (float) Screen.width, input_manager.AimPosition.y / (float) Screen.height, 0.0f ) );
+            direction = new Vector2( aim_position.x - origin.x, aim_position.y - origin.y );
+            distance = Mathf.Min( direction.magnitude + 1.0f, MAX_RANGE );
+        }
+
+        RaycastHit2D hit = Physics2D.Raycast( origin, direction, distance, CollisionMasks.player_shooting_mask );
+        if ( hit.collider == null ) { aim_auto_reticle_position = origin + distance * direction.normalized; }
+        else
+        {
+            aim_auto_reticle_position = hit.point;
+        }
+        aim_reticle.transform.position = new Vector3( aim_auto_reticle_position.x, aim_auto_reticle_position.y, aim_reticle.transform.position.z );
     }
 
     /// <summary>
