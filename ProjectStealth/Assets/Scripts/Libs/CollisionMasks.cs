@@ -30,6 +30,8 @@ public static class CollisionMasks
     public static int standard_collision_mask = geo_mask | object_mask | jump_through_mask | character_mask | enemy_mask;
     public static int upwards_collision_mask = geo_mask | object_mask | character_mask | enemy_mask;
     public static int wall_grab_mask = geo_mask;
+    public static int ledge_grab_mask = geo_mask | jump_through_mask;
+    public static int static_mask = geo_mask | jump_through_mask | object_mask;
 
     // light
     // ASSUMES: all light-blocking geometry is on these layers. Should log an error if you try another layer.
