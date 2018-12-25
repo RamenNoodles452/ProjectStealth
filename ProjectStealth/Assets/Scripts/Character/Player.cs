@@ -144,22 +144,18 @@ public class Player : SimpleCharacterCore
     /// <summary>
     /// Called when the player touches the wall.
     /// </summary>
-    /// <param name="collision_object">The GameObject of the wall the player touched.</param>
-    /// <param name="hit_point">A point within the tile the player touched, if they touched a tile.</param>
-    public override void OnTouchWall( GameObject collision_object, Vector2 hit_point )
+    public override void OnTouchWall()
     {
-        mag_grip.InitiateWallGrab( collision_object.GetComponent<Collider2D>(), hit_point );
+        mag_grip.InitiateWallGrab();
     }
 
     /// <summary>
     /// Called when the player touches the ceiling.
     /// </summary>
-    /// <param name="collision_object">The GameObject of the ceiling the player touched.</param>
-    /// <param name="hit_point">A point within the tile the player touched, if they touched a tile.</param>
-    public override void OnTouchCeiling( GameObject collision_object, Vector2 hit_point )
+    public override void OnTouchCeiling()
     {
         char_anims.FallTrigger();
-        mag_grip.InitiateCeilingGrab( collision_object.GetComponent<Collider2D>(), hit_point );
+        mag_grip.InitiateCeilingGrab();
     }
 
     /// <returns>The coordinates of the center point of the player (in pixels)</returns>

@@ -492,9 +492,7 @@ public class SimpleCharacterCore : MonoBehaviour
             this.gameObject.transform.Translate( gap );
             char_stats.velocity.x = 0.0f;
 
-            GameObject obj = hit.collider.gameObject;
-            if ( tile_data != null ) { obj = tile_data.gameObject; }
-            OnTouchWall( obj, hit.point + direction.normalized );
+            OnTouchWall();
         }
     }
 
@@ -586,9 +584,7 @@ public class SimpleCharacterCore : MonoBehaviour
         char_stats.velocity.y = 0.0f;
         char_stats.is_jumping = false;
 
-        GameObject obj = hit.collider.gameObject;
-        if ( tile_data != null ) { obj = tile_data.gameObject; }
-        OnTouchCeiling( obj, hit.point + direction.normalized );
+        OnTouchCeiling();
     }
 
     /// <summary>
@@ -801,9 +797,7 @@ public class SimpleCharacterCore : MonoBehaviour
     /// <summary>
     /// Called when a character bumps into a wall.
     /// </summary>
-    /// <param name="collisionObject">The collider of the object the player collided with.</param>
-    /// <param name="hit_point">A point within the tile the player collided with, if it was a tile.</param>
-    public virtual void OnTouchWall( GameObject collisionObject, Vector2 hit_point )
+    public virtual void OnTouchWall()
     {
         //base class does nothing with this function. gets overridden at the subclass level to handle such occasions
     }
@@ -811,9 +805,7 @@ public class SimpleCharacterCore : MonoBehaviour
     /// <summary>
     /// Called when a character bumps into the ceiling.
     /// </summary>
-    /// <param name="collisionObject">The collider of the object the player collided with.</param>
-    /// <param name="hit_point">A point within the tile the player collided with, if it was a tile.</param>
-    public virtual void OnTouchCeiling( GameObject collisionObject, Vector2 hit_point )
+    public virtual void OnTouchCeiling()
     {
         //base class does nothing with this function. gets overridden at the subclass level to handle such occasions
         //char_anims.FallTrigger() needs to be incluseded in the override somewhere
