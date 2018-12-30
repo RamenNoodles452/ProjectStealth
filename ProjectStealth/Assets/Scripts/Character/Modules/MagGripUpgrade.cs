@@ -191,8 +191,8 @@ public class MagGripUpgrade : MonoBehaviour
         if ( current_climb_state == ClimbState.WallClimb || 
              current_climb_state == ClimbState.Hanging )
         {
-            if ( ( char_stats.IsFacingRight() && input_manager.HorizontalAxis > 0.5f ) ||
-                 ( char_stats.IsFacingLeft() && input_manager.HorizontalAxis < -0.5f) )
+            if ( ( char_stats.IsFacingRight() && input_manager.HorizontalAxis < -0.5f ) ||
+                 ( char_stats.IsFacingLeft() && input_manager.HorizontalAxis > 0.5f) )
             {
                 char_anims.WallLookAway( true );
                 is_looking_away = true;
@@ -277,13 +277,6 @@ public class MagGripUpgrade : MonoBehaviour
         else if ( current_climb_state == ClimbState.WallClimb )
         {
             ClimbWall();
-
-            //if you climb down and touch the ground, stop climbing
-            if ( char_stats.IsGrounded )
-            {
-                char_anims.WallSlideTouchGround();
-                StopClimbing();
-            }
         }
         else if ( current_climb_state == ClimbState.CeilingClimb )
         {
@@ -309,13 +302,16 @@ public class MagGripUpgrade : MonoBehaviour
     }
 
     /// <summary>
-    /// 
+    /// Gets the player off of the wall.
     /// </summary>
     void WallToGroundStart()
     {
         input_manager.JumpInputInst = false;
         input_manager.JumpInput = false;
-        input_manager.IgnoreInput = true;
+        //input_manager.IgnoreInput = true; // ! CAUTION ! WARNING ! DANGER !
+        // I'm forcing a state transition promise here rather than trusting animation logic to unset it because of the risk involved. - GabeV
+        player_stats.FreezePlayer( 0.5f );
+
         // variable sterilization
         char_stats.is_jumping = false;
         char_stats.is_on_ground = true;
@@ -615,23 +611,25 @@ public class MagGripUpgrade : MonoBehaviour
         // Only grab the wall if the player's top won't be higher than the wall's top, and the player's bottom won't be lower than the wall's bottom.
         if ( wall_rect.y < char_stats.char_collider.bounds.max.y ) { return; } // wall top is below player top.
         if ( wall_rect.y - wall_rect.size.y > char_stats.char_collider.bounds.min.y ) { return; } // wall bottom is above player bottom.
-        GrabWall();
+        GrabWall( wall_rect );
     }
 
     /// <summary>
     /// Attaches to a wall.
     /// </summary>
     /// <param name="collision">The collider of the wall. (there can be multiple (3), which one?)</param>
-    private void GrabWall()
+    private void GrabWall( Rect rectangle )
     {
         char_stats.ResetJump();
         current_climb_state = ClimbState.WallClimb;
         char_stats.current_master_state = CharEnums.MasterState.ClimbState;
 
-        /*
-        // variable sets to prevent weird turning when grabbing onto a wall
+        char_stats.velocity.x = 0.0f;
+        char_stats.velocity.y = 0.0f;
+
+        // prevent weird turning when grabbing onto a wall
         // if the wall is to our left
-        if ( collision.bounds.center.x < char_stats.char_collider.bounds.center.x )
+        if ( rectangle.center.x < char_stats.char_collider.bounds.center.x )
         {
             char_stats.facing_direction = CharEnums.FacingDirection.Left;
             sprite_renderer.flipX = true;
@@ -641,9 +639,8 @@ public class MagGripUpgrade : MonoBehaviour
         {
             char_stats.facing_direction = CharEnums.FacingDirection.Right;
             sprite_renderer.flipX = false;
-        }*/
-        char_stats.velocity.x = 0.0f;
-        char_stats.velocity.y = 0.0f;
+        }
+
         //trigger the signal to start the wall climb animation
         char_anims.WallGrabTrigger();
         char_anims.ResetJumpDescend();
@@ -679,8 +676,7 @@ public class MagGripUpgrade : MonoBehaviour
 
     private void ClimbWall()
     {
-        // get all colliders overlapped by player hitbox +1 buffer in all directions? or dir of motion?
-        // ceiling: care about left / right.
+        // get all colliders overlapped by player hitbox +1 buffer in direction of motion?
         // wall:    care about up / down.
 
         // if there is a wall climb collider above/below, and nothing interfering (solid), can move. + presently attached.
@@ -696,7 +692,6 @@ public class MagGripUpgrade : MonoBehaviour
         float below = WALL_SLIDE_SPEED * Time.deltaTime * Time.timeScale;
         // shift origin up/down based on above / below weighting, so it will be centered.
         Vector2 origin = new Vector2( char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.center.y + ( above - below ) / 2.0f ); 
-        // TODO: left/right for ceiling climb
         Vector2 box_size = new Vector2( char_stats.char_collider.bounds.size.x + 2.0f, char_stats.char_collider.bounds.size.y + 2.0f + above + below );
 
         Collider2D[] colliders = Physics2D.OverlapAreaAll( origin - box_size / 2.0f, origin + box_size / 2.0f, CollisionMasks.static_mask );
@@ -743,6 +738,8 @@ public class MagGripUpgrade : MonoBehaviour
                 else // Not enough room, arrive at the top of the climbable area.
                 {
                     transform.Translate( new Vector3( 0.0f, climbable_rect.y - player_top, 0.0f ) );
+
+                    // TODO: Check if you can climb up the edge?
                 }
             }
         }
@@ -757,6 +754,16 @@ public class MagGripUpgrade : MonoBehaviour
             else // Not enough room, arrive at the bottom of the climbable area.
             {
                 transform.Translate( new Vector3( 0.0f, ( climbable_rect.y - climbable_rect.size.y ) - player_bottom, 0.0f ) );
+
+                // Check if there is a platform below the player's feet. If so, get off the wall.
+                RaycastHit2D hit = Physics2D.BoxCast( new Vector2( char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.center.y - char_stats.char_collider.size.y / 2.0f + 1.0f ), new Vector2( char_stats.char_collider.size.x, 1.0f ), 0.0f, new Vector2( 0.0f, -1.0f ), 1.0f, CollisionMasks.static_mask );
+                if ( hit.collider != null )
+                {
+                    // If you climb down and touch the ground, stop climbing.
+                    WallToGroundStart();
+                    char_anims.WallSlideTouchGround();
+                    StopClimbing();
+                }
             }
         }
     }
@@ -766,6 +773,7 @@ public class MagGripUpgrade : MonoBehaviour
         // TODO:
     }
 
+    #region geometry testing
     private Rect GetClimbableWallRect( Collider2D[] colliders )
     {
         // need to figure out what's up with the colliders.
@@ -773,11 +781,11 @@ public class MagGripUpgrade : MonoBehaviour
         // if on wrong side / coords, respect as new min/max (blocking), unless going up and fallthrough / non-blocking.
         List<Rect> climbable_zone = new List<Rect>();
 
-        Debug.Log("---0");
-        foreach ( Collider2D collider in colliders )
-        {
-            Debug.Log( collider );
-        }
+        //Debug.Log("---0");
+        //foreach ( Collider2D collider in colliders )
+        //{
+        //    Debug.Log( collider );
+        //}
 
 
         // Build the climbable bounds.
@@ -801,11 +809,11 @@ public class MagGripUpgrade : MonoBehaviour
             AddAndConsolidateEdge( ref climbable_zone, new Rect( collider.bounds.min.x, collider.bounds.max.y, collider.bounds.size.x, collider.bounds.size.y ), false );
         }
 
-        Debug.Log( "A" );
-        foreach ( Rect rect in climbable_zone )
-        {
-            Debug.Log( rect );
-        }
+        //Debug.Log( "A" );
+        //foreach ( Rect rect in climbable_zone )
+        //{
+        //    Debug.Log( rect );
+        //}
 
         // Reduce the climbable bounds.
         foreach ( Collider2D collider in colliders )
@@ -829,22 +837,26 @@ public class MagGripUpgrade : MonoBehaviour
             else if ( collision_type.CanFallthrough )
             {
                 // not blocking, ignore.
-                // TODO: if below player bottom, then treat it as blocking?
+                // If platform's top is below player's bottom, then treat it as blocking.
+                if ( collider.bounds.max.y <= char_stats.char_collider.bounds.min.y )
+                {
+                    RemoveEdge( ref climbable_zone, new Rect( collider.bounds.min.x, collider.bounds.max.y, collider.bounds.size.x, collider.bounds.size.y ), false );
+                }
                 continue;
             }
             else
             {
                 // TODO: differentiate enemies, etc?
-                // blocking
+                // Blocking
                 RemoveEdge( ref climbable_zone, new Rect( collider.bounds.min.x, collider.bounds.max.y, collider.bounds.size.x, collider.bounds.size.y ), false );
             }
         }
 
-        Debug.Log( "B" );
-        foreach ( Rect rect in climbable_zone )
-        {
-            Debug.Log( rect );
-        }
+        //Debug.Log( "B" );
+        //foreach ( Rect rect in climbable_zone )
+        //{
+        //    Debug.Log( rect );
+        //}
 
         if ( climbable_zone.Count == 0 ) { return new Rect( 0.0f, 0.0f, 0.0f, 0.0f ); } // no climbable surface
 
@@ -864,7 +876,7 @@ public class MagGripUpgrade : MonoBehaviour
         }
         if ( climbable_rect.size.y == 0 ) { return new Rect( 0.0f, 0.0f, 0.0f, 0.0f ); } // no climbable surface
 
-        Debug.Log( climbable_rect );
+        //Debug.Log( climbable_rect );
         return climbable_rect;
     }
 
@@ -1077,6 +1089,7 @@ public class MagGripUpgrade : MonoBehaviour
             }
         }
     }
+    #endregion
 
     // TODO:
     private void CanTransitionFromCeilingToWallAbove()
