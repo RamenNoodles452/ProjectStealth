@@ -23,7 +23,7 @@ public class CrouchAction : MonoBehaviour
     {
         if ( char_stats.current_master_state != CharEnums.MasterState.DefaultState ) { return; }
 
-        if ( char_stats.IsGrounded && char_stats.current_move_state == CharEnums.MoveState.IsSneaking && input_manager.VerticalAxis < 0.0f )
+        if ( char_stats.IsGrounded && char_stats.current_move_state == CharEnums.MoveState.IsSneaking && input_manager.CrouchInputInst )
         {
             if ( char_stats.is_crouching == false )
             {
@@ -31,7 +31,8 @@ public class CrouchAction : MonoBehaviour
                 char_stats.CrouchingHitBox();
             }
         }
-        else
+
+        if ( char_stats.is_crouching && input_manager.UnCrouchInputInst )
         {
             if ( char_stats.is_crouching )
             {

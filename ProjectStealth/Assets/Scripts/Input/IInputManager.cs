@@ -30,7 +30,14 @@ public abstract class IInputManager : MonoBehaviour
     /// Amount that the analog movement stick is held up/down [-1,1]
     /// </summary>
     public float VerticalAxis { get; set; }
-
+    /// <summary>
+    /// Value of HorizontalAxis from last frame.
+    /// </summary>
+    public float PreviousHorizontalAxis { get; set; }
+    /// <summary>
+    /// Value of VerticalAxis from last frame.
+    /// </summary>
+    public float PreviousVerticalAxis { get; set; }
     #region aim
     /// <summary>
     /// Amount that the aim analog stick is held left/right [-1,1]
@@ -143,5 +150,13 @@ public abstract class IInputManager : MonoBehaviour
     /// If the cloak button went from unpressed to pressed this frame. (TODO: remove?)
     /// </summary>
     public bool CloakInputInst { get; set; }
+    /// <summary>
+    /// If the "down button" went from unpressed to pressed this frame.
+    /// </summary>
+    public bool CrouchInputInst { get; set; }
+    /// <summary>
+    /// If the "up button" went from unpressed to pressed this frame. I know uncrouch isn't a word, but it's brief and clear.
+    /// </summary>
+    public bool UnCrouchInputInst { get; set; }
     #endregion
 }

@@ -30,9 +30,16 @@ public class UserInputManager : IInputManager
     {
         AimingInput();
 
+        PreviousHorizontalAxis = HorizontalAxis;
+        PreviousVerticalAxis = VerticalAxis;
+
         HorizontalAxis = Input.GetAxisRaw( "Horizontal" );
         VerticalAxis = Input.GetAxisRaw( "Vertical" );
         RunAxis = Input.GetAxisRaw( "Run" );
+
+        UnCrouchInputInst = ( VerticalAxis > 0.1f && PreviousVerticalAxis < 0.1f );
+        CrouchInputInst = ( VerticalAxis < -0.1f && PreviousVerticalAxis > -0.1f );
+
         JumpInput = Input.GetButton( "Jump" );
         JumpInputInst = Input.GetButtonDown( "Jump" );
         RunInput = ( RunAxis > 0 );
@@ -68,6 +75,8 @@ public class UserInputManager : IInputManager
         VerticalAimAxis = 0.0f;
         HorizontalAxis = 0.0f;
         VerticalAxis = 0.0f;
+        PreviousHorizontalAxis = 0.0f;
+        PreviousVerticalAxis = 0.0f;
         RunAxis = 0.0f;
         JumpInput = false;
         JumpInputInst = false;
@@ -85,6 +94,8 @@ public class UserInputManager : IInputManager
         CloakInputInst = false;
         EvadeInput = false;
         EvadeInputInst = false;
+        CrouchInputInst = false;
+        UnCrouchInputInst = false;
         AdrenalineInputInst = false;
         InteractInput = false;
         InteractInputInst = false;
