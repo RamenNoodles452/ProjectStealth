@@ -22,9 +22,11 @@
 			// Masks
 			Stencil
 			{
-				Ref 1
-				Comp Always
-				Pass Replace
+				// Only use 5th stencil buffer bit to avoid clashing: unity built-in masks increment so they use bits 1-?. bits 6-8 (32,64,128) can be used by rendering.
+				WriteMask 16 // ONLY write to bit 5 (16) ????1???
+				Ref 16       // Write the value that will set bit 5 to 1.
+				Comp Always  // 100% of the time, for every pixel in the shaded mesh's area.
+				Pass Replace // Put the value from Ref into the stencil buffer (respecting the mask) for every pixel within this mesh's area.
 			}
 
 			CGPROGRAM
