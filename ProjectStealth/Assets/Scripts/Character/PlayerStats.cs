@@ -83,6 +83,8 @@ public class PlayerStats : MonoBehaviour
     private float shoot_charge_timer = 0.0f;
     private const float SHOOT_FULL_CHARGE_TIME = 2.0f; // seconds
 
+    private CharacterOverlay overlay;
+
     private GameObject aim_enemy_memory;
     private GameObject aim_auto_target; // closest enemy in facing that is targetable
     private Vector2 aim_auto_reticle_position;
@@ -239,6 +241,10 @@ public class PlayerStats : MonoBehaviour
                 Respawn(); //TODO: put an ani and delay on this
             }
         }
+
+        // Overlay
+        if ( overlay == null ) { return; }
+        overlay.StartHurtBlink();
     }
 
     /// <summary>
@@ -298,6 +304,12 @@ public class PlayerStats : MonoBehaviour
         // reset movement
         char_stats = this.gameObject.GetComponent<CharacterStats>();
         char_stats.velocity = new Vector2( 0.0f, 0.0f );
+
+        // reset overlay
+        if ( overlay != null )
+        {
+            overlay.HideOverlay();
+        }
     }
 
     /// <summary>
@@ -410,6 +422,12 @@ public class PlayerStats : MonoBehaviour
 
             // freeze player for 0.5 seconds
             FreezePlayer( 0.5f );
+            
+            // stop showing the fully charged overlay
+            if ( overlay != null )
+            {
+                overlay.HideOverlay();
+            }
         }
 
         // Reset state.
@@ -707,6 +725,9 @@ public class PlayerStats : MonoBehaviour
         aim_reticle.transform.position = new Vector3( aim_auto_reticle_position.x, aim_auto_reticle_position.y, aim_reticle.transform.position.z );
     }
 
+    /// <summary>
+    /// Manually targets a location to shoot.
+    /// </summary>
     private void EngageFreeAim()
     {
         const float MAX_RANGE = 640.0f; //640 px, 20 tiles //TODO: refactor
@@ -786,6 +807,24 @@ public class PlayerStats : MonoBehaviour
     private void Awake()
     {
         aim_reticle = transform.Find( "Reticle" ).gameObject;
+
+        #region overlay
+        GameObject sprite_obj = transform.Find( "Sprites" ).gameObject;
+        if ( sprite_obj != null )
+        {
+            GameObject overlay_obj = sprite_obj.transform.Find( "Overlay" ).gameObject;
+            if ( overlay_obj != null )
+            {
+                overlay = overlay_obj.GetComponent<CharacterOverlay>();
+            }
+        }
+        #if UNITY_EDITOR
+        if ( overlay == null )
+        {
+            Debug.LogError( "Could not find the player overlay in the hierarchy." );
+        }
+        #endif
+        #endregion
     }
 
     /// <summary>
@@ -999,7 +1038,18 @@ public class PlayerStats : MonoBehaviour
         #region Shooting
         if ( is_shooting )
         {
+            float prev_shoot_charge_timer = shoot_charge_timer;
             shoot_charge_timer = Mathf.Min( shoot_charge_timer + Time.deltaTime * Time.timeScale, SHOOT_FULL_CHARGE_TIME );
+            if ( acquired_charge_shot && ( shoot_charge_timer >= SHOOT_FULL_CHARGE_TIME ) && prev_shoot_charge_timer < shoot_charge_timer )
+            {
+                if ( overlay != null )
+                {
+                    Color overlay_color;
+                    //overlay_color = new Color( 0.0f, 0.70f, 0.35f ); // energy
+                    overlay_color = new Color( 0.98f, 0.75f, 1.0f ); // bullet
+                    overlay.ShowOverlay( overlay_color );
+                }
+            }
         }
         #endregion
 
