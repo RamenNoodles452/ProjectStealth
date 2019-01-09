@@ -3594,64 +3594,24 @@ Prefab:
       propertyPath: m_RootOrder
       value: 6
       objectReference: {fileID: 0}
-    - target: {fileID: 198566924668282958, guid: 2058a5c2cfe3c8142a6215ac2206418a,
-        type: 2}
-      propertyPath: ColorModule.gradient.maxGradient.key0.r
-      value: 0.80784315
-      objectReference: {fileID: 0}
-    - target: {fileID: 198566924668282958, guid: 2058a5c2cfe3c8142a6215ac2206418a,
-        type: 2}
-      propertyPath: ColorModule.gradient.maxGradient.key0.g
-      value: 0.19607843
-      objectReference: {fileID: 0}
-    - target: {fileID: 198566924668282958, guid: 2058a5c2cfe3c8142a6215ac2206418a,
-        type: 2}
-      propertyPath: ColorModule.gradient.maxGradient.key0.b
-      value: 0.5137255
-      objectReference: {fileID: 0}
-    - target: {fileID: 198566924668282958, guid: 2058a5c2cfe3c8142a6215ac2206418a,
-        type: 2}
-      propertyPath: ColorModule.gradient.maxGradient.key1.r
-      value: 0.90588236
-      objectReference: {fileID: 0}
-    - target: {fileID: 198566924668282958, guid: 2058a5c2cfe3c8142a6215ac2206418a,
-        type: 2}
-      propertyPath: ColorModule.gradient.maxGradient.key1.g
-      value: 0.59607846
-      objectReference: {fileID: 0}
-    - target: {fileID: 198566924668282958, guid: 2058a5c2cfe3c8142a6215ac2206418a,
-        type: 2}
-      propertyPath: ColorModule.gradient.maxGradient.key1.b
-      value: 0.75686276
-      objectReference: {fileID: 0}
-    - target: {fileID: 198036431910490354, guid: 2058a5c2cfe3c8142a6215ac2206418a,
-        type: 2}
-      propertyPath: TrailModule.colorOverTrail.maxColor.r
-      value: 0.90588236
-      objectReference: {fileID: 0}
-    - target: {fileID: 198036431910490354, guid: 2058a5c2cfe3c8142a6215ac2206418a,
-        type: 2}
-      propertyPath: TrailModule.colorOverTrail.maxColor.g
-      value: 0.59607846
-      objectReference: {fileID: 0}
-    - target: {fileID: 198036431910490354, guid: 2058a5c2cfe3c8142a6215ac2206418a,
-        type: 2}
-      propertyPath: TrailModule.colorOverTrail.maxColor.b
-      value: 0.75686276
-      objectReference: {fileID: 0}
-    - target: {fileID: 198036431910490354, guid: 2058a5c2cfe3c8142a6215ac2206418a,
-        type: 2}
-      propertyPath: ShapeModule.radius.value
-      value: 32
-      objectReference: {fileID: 0}
-    - target: {fileID: 198036431910490354, guid: 2058a5c2cfe3c8142a6215ac2206418a,
-        type: 2}
-      propertyPath: InitialModule.startSpeed.scalar
-      value: -96
-      objectReference: {fileID: 0}
     - target: {fileID: 114886462624007988, guid: 2058a5c2cfe3c8142a6215ac2206418a,
         type: 2}
       propertyPath: acquired_charge_shot
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114886462624007988, guid: 2058a5c2cfe3c8142a6215ac2206418a,
+        type: 2}
+      propertyPath: acquired_ceiling_grip
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114886462624007988, guid: 2058a5c2cfe3c8142a6215ac2206418a,
+        type: 2}
+      propertyPath: acquired_mag_grip
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114886462624007988, guid: 2058a5c2cfe3c8142a6215ac2206418a,
+        type: 2}
+      propertyPath: acquired_adrenal_rush
       value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
