@@ -12,9 +12,11 @@ public class PlayerFocalPoint : MonoBehaviour
     private const float FLIP_DURATION = 0.4f; // seconds
     private const int depth = -10; // camera z depth
 
+    private Vector3 center_position;
     private Vector3 right_position;
     private Vector3 left_position;
-    private float focal_point_slider;
+    private Vector3 below_position;
+    private Vector2 focal_point_slider;
     private bool is_following_player;
     #endregion
 
@@ -28,9 +30,11 @@ public class PlayerFocalPoint : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        right_position = new Vector3(  DEFAULT_X, DEFAULT_Y, depth );
-        left_position  = new Vector3( -DEFAULT_X, DEFAULT_Y, depth );
-        focal_point_slider = 1.0f;
+        right_position  = new Vector3(  DEFAULT_X, DEFAULT_Y, depth );
+        left_position   = new Vector3( -DEFAULT_X, DEFAULT_Y, depth );
+        center_position = new Vector3( 0.0f, DEFAULT_Y, depth );
+        below_position  = new Vector3( 0.0f, DEFAULT_Y - 40.0f, depth);
+        focal_point_slider = new Vector3( 1.0f, 1.0f );
         is_following_player = true;
     }
 
@@ -39,29 +43,55 @@ public class PlayerFocalPoint : MonoBehaviour
     {
         if ( is_following_player == true )
         {
+            // X
             float increment = 0.0f;
             if ( ( char_stats.current_master_state == CharEnums.MasterState.DefaultState && char_stats.IsFacingRight() ) ||
-                 ( char_stats.current_master_state == CharEnums.MasterState.ClimbState && char_stats.IsFacingLeft() && mag_grip.is_looking_away ) )
+                 ( char_stats.current_master_state == CharEnums.MasterState.ClimbState 
+                   && mag_grip.current_climb_state == MagGripUpgrade.ClimbState.WallClimb
+                   && char_stats.IsFacingLeft() && mag_grip.is_looking_away ) )
             {
                 increment = Time.deltaTime * Time.timeScale / FLIP_DURATION;
             }
             else if ( ( char_stats.current_master_state == CharEnums.MasterState.DefaultState && char_stats.IsFacingLeft() ) ||
-                      ( char_stats.current_master_state == CharEnums.MasterState.ClimbState && char_stats.IsFacingRight() && mag_grip.is_looking_away ) )
+                      ( char_stats.current_master_state == CharEnums.MasterState.ClimbState 
+                        && mag_grip.current_climb_state == MagGripUpgrade.ClimbState.WallClimb 
+                        && char_stats.IsFacingRight() && mag_grip.is_looking_away ) )
             {
                 increment = -1.0f * Time.deltaTime * Time.timeScale / FLIP_DURATION;
             }
-            else if ( ( char_stats.current_master_state == CharEnums.MasterState.ClimbState && char_stats.IsFacingLeft() && ! mag_grip.is_looking_away ) ||
-                 ( char_stats.current_master_state == CharEnums.MasterState.ClimbState && char_stats.IsFacingRight() && ! mag_grip.is_looking_away ) )
+            else if ( ( char_stats.current_master_state == CharEnums.MasterState.ClimbState
+                        && mag_grip.current_climb_state == MagGripUpgrade.ClimbState.WallClimb
+                        && char_stats.IsFacingLeft() && ! mag_grip.is_looking_away ) ||
+                      ( char_stats.current_master_state == CharEnums.MasterState.ClimbState 
+                        && mag_grip.current_climb_state == MagGripUpgrade.ClimbState.WallClimb 
+                        && char_stats.IsFacingRight() && ! mag_grip.is_looking_away ) ||
+                      ( char_stats.current_master_state == CharEnums.MasterState.ClimbState
+                        && mag_grip.current_climb_state == MagGripUpgrade.ClimbState.CeilingClimb ) )
             {
                 // aim for center ( 0.5 value )
-                float dist_to_center = 0.5f - focal_point_slider;
+                float dist_to_center = 0.5f - focal_point_slider.x;
                 increment = Time.deltaTime * Time.timeScale / FLIP_DURATION;
                 if ( dist_to_center < 0.0f ) { increment = -1.0f * increment; }
                 if ( Mathf.Abs( dist_to_center ) < Mathf.Abs( increment ) ) { increment = dist_to_center; }
             }
+            focal_point_slider.x = Mathf.Clamp( focal_point_slider.x + increment, 0.0f, 1.0f );
 
-            focal_point_slider = Mathf.Clamp( focal_point_slider + increment, 0.0f, 1.0f );
-            transform.localPosition = Vector3.Lerp( left_position, right_position, focal_point_slider );
+            // Y
+            if ( char_stats.current_master_state == CharEnums.MasterState.ClimbState
+                 && mag_grip.current_climb_state == MagGripUpgrade.ClimbState.CeilingClimb
+                 && mag_grip.is_looking_away )
+            {
+                increment = -1.0f * Time.deltaTime * Time.timeScale / FLIP_DURATION;
+            }
+            else
+            {
+                increment = Time.deltaTime * Time.timeScale / FLIP_DURATION;
+            }
+            focal_point_slider.y = Mathf.Clamp( focal_point_slider.y + increment, 0.0f, 1.0f );
+            
+            float x = Mathf.Lerp( left_position.x,  right_position.x,  focal_point_slider.x );
+            float y = Mathf.Lerp( below_position.y, center_position.y, focal_point_slider.y );
+            transform.localPosition = new Vector3( x, y, depth );
         }
     }
 
