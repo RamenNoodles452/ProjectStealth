@@ -30,7 +30,7 @@ public class CharacterOverlay : MonoBehaviour
     // Update is called once per frame
     void Update ()
     {
-        const float PULSE_DURATION = 1.0f;
+        const float PULSE_DURATION = 0.25f;
 
         // hurt flash
         if ( hurt_timer > 0.0f )
@@ -48,7 +48,7 @@ public class CharacterOverlay : MonoBehaviour
         {
             pulse_timer += Time.deltaTime * Time.timeScale;
             while ( pulse_timer > PULSE_DURATION ) { pulse_timer -= PULSE_DURATION; }
-            float alpha = 0.25f + 0.25f * 0.5f * Mathf.Cos( pulse_timer * Mathf.PI * 2.0f / PULSE_DURATION ); // 0.25f : 0.5f
+            float alpha = 0.375f + 0.125f * 0.5f * Mathf.Cos( pulse_timer * Mathf.PI * 2.0f / PULSE_DURATION ); // 0.25f : 0.5f
             sprite_renderer.color = new Color( pulse_color.r, pulse_color.g, pulse_color.b, alpha );
         }
         else

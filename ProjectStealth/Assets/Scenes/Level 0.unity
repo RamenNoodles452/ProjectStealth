@@ -3614,6 +3614,17 @@ Prefab:
       propertyPath: acquired_adrenal_rush
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 198036431910490354, guid: 2058a5c2cfe3c8142a6215ac2206418a,
+        type: 2}
+      propertyPath: startDelay.scalar
+      value: 0.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 114886462624007988, guid: 2058a5c2cfe3c8142a6215ac2206418a,
+        type: 2}
+      propertyPath: charged_bullet_impact_prefab
+      value: 
+      objectReference: {fileID: 1440630909480310, guid: 280813d58e08ec74dada8251dbf3fd54,
+        type: 2}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2058a5c2cfe3c8142a6215ac2206418a, type: 2}
   m_IsPrefabAsset: 0

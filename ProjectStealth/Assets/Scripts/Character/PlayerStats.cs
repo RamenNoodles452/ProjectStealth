@@ -78,6 +78,8 @@ public class PlayerStats : MonoBehaviour
     private GameObject bullet_prefab;
     [SerializeField]
     private GameObject charged_bullet_prefab;
+    [SerializeField]
+    private GameObject charged_bullet_impact_prefab;
 
     private bool is_shooting = false;
     private float shoot_charge_timer = 0.0f;
@@ -419,6 +421,9 @@ public class PlayerStats : MonoBehaviour
             BulletChargedRay bullet = bullet_obj.GetComponent<BulletChargedRay>();
             // damage must be > fire rate * uncharged damage.
             bullet.Setup( origin, aim_auto_reticle_position, 500.0f, true );
+
+            // Impact graphic
+            GameObject impact_obj = Instantiate( charged_bullet_impact_prefab, new Vector3( aim_auto_reticle_position.x, aim_auto_reticle_position.y, charged_bullet_impact_prefab.transform.position.z ), Quaternion.identity );
 
             // freeze player for 0.5 seconds
             FreezePlayer( 0.5f );
