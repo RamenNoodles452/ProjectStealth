@@ -303,6 +303,12 @@ public class PlayerStats : MonoBehaviour
         UnfreezePlayer();
         char_anims = this.gameObject.GetComponent<CharacterAnimationLogic>();
         char_anims.Reset();
+        // hide charged shot
+        Animator charge_animator = charge_up_ball.GetComponent<Animator>();
+        charge_animator.SetBool( "Charging", false );
+        charge_animator.SetBool( "Charged", false );
+        charge_up_ball.SetActive( false );
+
         // reset movement
         char_stats = this.gameObject.GetComponent<CharacterStats>();
         char_stats.velocity = new Vector2( 0.0f, 0.0f );
@@ -359,9 +365,15 @@ public class PlayerStats : MonoBehaviour
         if ( acquired_charge_shot )
         {
             ParticleSystem ray_particles = charge_up_rays.GetComponent<ParticleSystem>();
-            //ParticleSystem ball_particles = charge_up_ball.GetComponent<ParticleSystem>();
             ray_particles.Stop();
             ray_particles.Play();
+
+            charge_up_ball.SetActive( true );
+            Animator charge_animator = charge_up_ball.GetComponent<Animator>();
+            charge_animator.SetBool( "Charging", true );
+            charge_animator.SetBool( "Charged", false );
+
+            //ParticleSystem ball_particles = charge_up_ball.GetComponent<ParticleSystem>();
             //ball_particles.Stop();
             //ball_particles.Play();
         }
@@ -438,9 +450,14 @@ public class PlayerStats : MonoBehaviour
         // Reset state.
         is_shooting = false;
         ParticleSystem ray_particles = charge_up_rays.GetComponent<ParticleSystem>();
-        //ParticleSystem ball_particles = charge_up_ball.GetComponent<ParticleSystem>();
         ray_particles.Stop();
+        //ParticleSystem ball_particles = charge_up_ball.GetComponent<ParticleSystem>();
         //ball_particles.Stop();
+
+        Animator charge_animator = charge_up_ball.GetComponent<Animator>();
+        charge_animator.SetBool( "Charging", false );
+        charge_animator.SetBool( "Charged", false );
+        charge_up_ball.SetActive( false ); // hide.
     }
 
     /// <summary>
@@ -1043,16 +1060,34 @@ public class PlayerStats : MonoBehaviour
         #region Shooting
         if ( is_shooting )
         {
-            float prev_shoot_charge_timer = shoot_charge_timer;
-            shoot_charge_timer = Mathf.Min( shoot_charge_timer + Time.deltaTime * Time.timeScale, SHOOT_FULL_CHARGE_TIME );
-            if ( acquired_charge_shot && ( shoot_charge_timer >= SHOOT_FULL_CHARGE_TIME ) && prev_shoot_charge_timer < shoot_charge_timer )
+            if ( acquired_charge_shot )
             {
-                if ( overlay != null )
+                // Display charge up ball over player around shot origin point.
+                if ( charge_up_ball != null )
                 {
-                    Color overlay_color;
-                    //overlay_color = new Color( 0.0f, 0.70f, 0.35f ); // energy
-                    overlay_color = new Color( 0.98f, 0.75f, 1.0f ); // bullet
-                    overlay.ShowOverlay( overlay_color );
+                    charge_up_ball.transform.parent.localPosition = new Vector3( GetFacingVector().x * ( char_stats.STANDING_COLLIDER_SIZE.x / 2.0f + 4.0f ), -2.0f, -1.0f );
+                }
+
+                // Track whether fully charged or not.
+                float prev_shoot_charge_timer = shoot_charge_timer;
+                shoot_charge_timer = Mathf.Min( shoot_charge_timer + Time.deltaTime * Time.timeScale, SHOOT_FULL_CHARGE_TIME );
+                if ( ( shoot_charge_timer >= SHOOT_FULL_CHARGE_TIME ) && prev_shoot_charge_timer < shoot_charge_timer )
+                {
+                    if ( overlay != null )
+                    {
+                        Color overlay_color;
+                        //overlay_color = new Color( 0.0f, 0.70f, 0.35f ); // energy
+                        overlay_color = new Color( 0.98f, 0.75f, 1.0f ); // bullet
+                        overlay.ShowOverlay( overlay_color );
+                    }
+                    if ( charge_up_ball != null )
+                    {
+                        Animator charge_animator = charge_up_ball.GetComponent<Animator>();
+                        if ( charge_animator != null )
+                        {
+                            charge_animator.SetBool( "Charged", true );
+                        }
+                    }
                 }
             }
         }
