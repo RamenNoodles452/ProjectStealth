@@ -16,10 +16,16 @@
 
 		Tags
 		{
-			"Queue" = "Transparent" // must be higher than blackoutmask's value
+			"Queue" = "Geometry" // must be higher than blackoutmask's value
 			"IgnoreProjector" = "True"
 			"RenderType" = "Transparent"
 		}
+
+		//Pass
+		//{
+		//	ZWrite On
+		//	ColorMask 0
+		//}
 
 		Pass
 		{

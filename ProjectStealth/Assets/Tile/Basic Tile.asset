@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Name: Basic Tile
   m_EditorClassIdentifier: 
   prefab: {fileID: 1673668217709178, guid: 7002103b9b510d84a891e0137f8828b5, type: 2}
-  sprite: {fileID: 21300000, guid: 923e3ffca80015d4c8e98b20e628d741, type: 3}
-  color: {r: 0, g: 0, b: 0, a: 0}
+  sprite: {fileID: 21300000, guid: d0b0df264835f7e4b91c962414e617ee, type: 3}
+  color: {r: 1, g: 1, b: 1, a: 0.003921569}
   transform:
     e00: 0
     e01: 0

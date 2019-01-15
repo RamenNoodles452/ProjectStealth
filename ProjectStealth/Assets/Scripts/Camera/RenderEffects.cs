@@ -308,9 +308,12 @@ public class RenderEffects : MonoBehaviour
         Mesh blocker_mesh = GetBlockerMesh();
         ShadowCastingLight[] lights = top_level_object.GetComponentsInChildren<ShadowCastingLight>(); // inefficient.
 
-        ShadowMap( blocker_mesh, lights );
-        ConsolidateShadowMap();
-        RenderShadows( lights );
+        if ( shadow_object != null )
+        {
+            ShadowMap( blocker_mesh, lights );
+            ConsolidateShadowMap();
+            RenderShadows( lights );
+        }
 
         CheckIfPlayerIsInShadow( lights );
     }

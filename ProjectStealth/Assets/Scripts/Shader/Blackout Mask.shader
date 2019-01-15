@@ -12,7 +12,7 @@
 
 		Tags
 		{
-			"Queue" = "Transparent-1"      //must be lower than blackout's value
+			"Queue" = "Geometry-1"      //must be lower than blackout's value
 			"IgnoreProjector" = "True"
 			"RenderType" = "Transparent"
 		}
