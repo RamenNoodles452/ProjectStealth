@@ -79,6 +79,9 @@ public class CharacterStats : MonoBehaviour
         jump_input_time = 0.0f;
     }
 
+    /// <summary>
+    /// Clans up jump state variables.
+    /// </summary>
     public void ResetJump()
     {
         is_jumping = false;

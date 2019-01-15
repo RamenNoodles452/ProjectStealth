@@ -359,6 +359,11 @@ public class PlayerStats : MonoBehaviour
     /// </summary>
     public void StartShoot()
     {
+        // Releasing fire button in a non-firable state can lock you in to the charged shooting state. 
+        // So, you can start firing, go into a non-firing state WHILE fully charging, then release to "multitask" charge.
+        // This is a stopgap to keep things from getting wonky then.
+        if ( is_shooting ) { return; }
+
         is_shooting = true;
         shoot_charge_timer = 0.0f;
 
@@ -372,10 +377,6 @@ public class PlayerStats : MonoBehaviour
             Animator charge_animator = charge_up_ball.GetComponent<Animator>();
             charge_animator.SetBool( "Charging", true );
             charge_animator.SetBool( "Charged", false );
-
-            //ParticleSystem ball_particles = charge_up_ball.GetComponent<ParticleSystem>();
-            //ball_particles.Stop();
-            //ball_particles.Play();
         }
     }
 
@@ -451,8 +452,6 @@ public class PlayerStats : MonoBehaviour
         is_shooting = false;
         ParticleSystem ray_particles = charge_up_rays.GetComponent<ParticleSystem>();
         ray_particles.Stop();
-        //ParticleSystem ball_particles = charge_up_ball.GetComponent<ParticleSystem>();
-        //ball_particles.Stop();
 
         Animator charge_animator = charge_up_ball.GetComponent<Animator>();
         charge_animator.SetBool( "Charging", false );
@@ -869,7 +868,7 @@ public class PlayerStats : MonoBehaviour
         }
 
         #region Timers
-        #region shield
+        #region Shield
         // Shield regeneration
         if ( was_hit_this_frame )
         {
