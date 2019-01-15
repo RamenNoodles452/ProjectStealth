@@ -33,8 +33,11 @@ public class MagGripUpgrade : MonoBehaviour
     private bool is_overlooking_ledge; //TODO: consider renaming more descriptively
     private bool is_against_ledge;     //TODO: consider renaming more descriptively
 
-    private bool is_touching_top;
-    private bool is_touching_bottom;
+    private bool is_at_top;
+    private bool is_at_bottom;
+    private bool is_at_left;
+    private bool is_at_right;
+
     private bool can_crouch_up_from_hang;
     private bool can_stand_up_from_hang;
 
@@ -57,7 +60,6 @@ public class MagGripUpgrade : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-
     }
 
     // Update is called once per frame
@@ -112,7 +114,16 @@ public class MagGripUpgrade : MonoBehaviour
             if ( is_looking_away )
             {
                 StopClimbing();
-                JumpAway();
+                if ( input_manager.VerticalAxis >= 0.0f )
+                {
+                    JumpAway();
+                }
+            }
+
+            if ( input_manager.VerticalAxis < 0.0f )
+            {
+                StopClimbing();
+                JumpDown();
             }
             //ledge climb logic
             /*
@@ -131,6 +142,11 @@ public class MagGripUpgrade : MonoBehaviour
                 }
             }*/
         }
+        // If @ top and holding up, pull yourself up and stand on platform.
+        else if ( input_manager.VerticalAxis > 0.0f )
+        {
+            // TODO: check if you can stand up from hanging and are at the top.
+        }
     }
 
     /// <summary>
@@ -147,7 +163,7 @@ public class MagGripUpgrade : MonoBehaviour
         // TODO: jump logic
         if ( input_manager.JumpInputInst )
         {
-            StopClimbing();
+            StopClimbingCeiling();
         }
     }
 
@@ -157,6 +173,8 @@ public class MagGripUpgrade : MonoBehaviour
     private void HangMovementInput()
     {
         LookAway();
+
+        is_at_top = true;
 
         // When hanging, player is ALWAYS locked at the edge, don't need to move or do confirmation checks.
         if ( input_manager.VerticalAxis > 0.0f && can_stand_up_from_hang )
@@ -172,11 +190,10 @@ public class MagGripUpgrade : MonoBehaviour
         else if ( input_manager.VerticalAxis < 0.0f )
         {
             // Drop.
-            current_climb_state = ClimbState.NotClimb;
-            char_stats.current_master_state = CharEnums.MasterState.DefaultState;
-            char_anims.FallTrigger();
+            StopClimbing();
+            JumpDown();
         }
-        else if ( input_manager.JumpInputInst )
+        else if ( input_manager.JumpInputInst ) // TODO: consistency: take direction into account?
         {
             // Jump away from the wall.
             StopClimbing();
@@ -217,7 +234,9 @@ public class MagGripUpgrade : MonoBehaviour
         }
     }
 
-    // Jumps away from the wall the player is climbing / hanging from.
+    /// <summary>
+    /// Jumps away from the wall the player is climbing / hanging from.
+    /// </summary>
     private void JumpAway()
     {
         char_stats.is_jumping = true;
@@ -234,9 +253,28 @@ public class MagGripUpgrade : MonoBehaviour
             char_stats.acceleration.x = -JUMP_ACCELERATION;
         }
 
-        player_script.SetHorizontalJumpVelocity( ( player_script.GetJumpHorizontalSpeedMin() + player_script.GetJumpHorizontalSpeedMax() ) / 2.0f );
+        float horizontal_scale = Mathf.Abs( input_manager.HorizontalAxis );
+        // horizontal_scale = 1.0f; // restore this line to always use default horizontal acceleration.
+
+        player_script.SetHorizontalJumpVelocity( ( player_script.GetJumpHorizontalSpeedMin() + player_script.GetJumpHorizontalSpeedMax() ) / 2.0f * horizontal_scale );
         player_script.SetFacing();
     }
+
+    /// <summary>
+    /// Falls down from the wall the player is climbing / hanging from.
+    /// </summary>
+    private void JumpDown()
+    {
+        // TODO: move 1px away if wall climbing (or abort)
+
+        // Fall
+        char_stats.is_jumping = false;
+        char_stats.jump_input_time = 0.0f;
+        char_anims.FallTrigger();
+        player_script.SetHorizontalJumpVelocity( 0.0f );
+    }
+
+    // TODO: Jump down and away?
 
     /// <summary>
     /// 
@@ -449,7 +487,13 @@ public class MagGripUpgrade : MonoBehaviour
     /// </summary>
     public void InitiateLedgeGrab()
     {
-        // TODO: make can stand up member var
+        // left/right edge has no meaning here. Block behaviour that depends on it.
+        is_at_left = false;
+        is_at_right = false;
+        // always considered at top
+        is_at_top = true;
+        // defaults, overridable
+        is_at_bottom = false;
         can_stand_up_from_hang = false;
         can_crouch_up_from_hang = false;
 
@@ -463,8 +507,8 @@ public class MagGripUpgrade : MonoBehaviour
         // Platform's top MUST be equal to (or higher than) val's top when she grabs hold. So, we cast from her top in the direction she is facing.
         //   (prevents: grabbing thin air above a chest-high wall)
 
-        float character_top = char_stats.char_collider.bounds.max.y;
-        float character_left = char_stats.char_collider.bounds.min.x;
+        float character_top   = char_stats.char_collider.bounds.max.y;
+        float character_left  = char_stats.char_collider.bounds.min.x;
         float character_right = char_stats.char_collider.bounds.max.x;
         // Don't care about bottom for this.
         // There is no minimum combined height requirement for the climbable surface.
@@ -513,9 +557,7 @@ public class MagGripUpgrade : MonoBehaviour
             x2 = hit.collider.bounds.min.x + 1.0f;
         }
         const float MINIMUM_CLEARANCE = 32.0f - 1.0f; // pixels
-
-        Collider2D ledge_test = Physics2D.OverlapArea( new Vector2( x1, platform_top + 1.0f ), new Vector2(x2, platform_top + MINIMUM_CLEARANCE ), CollisionMasks.static_mask );
-        if ( ledge_test != null ) { return; } // Not a ledge.
+        if ( AreaContainsBlockingGeometry( x1, platform_top + MINIMUM_CLEARANCE, x2 - x1, MINIMUM_CLEARANCE - 1.0f ) ) { return; }
         if ( char_stats.CROUCHING_COLLIDER_SIZE.y <= MINIMUM_CLEARANCE ) { can_crouch_up_from_hang = true; }
         #endregion
 
@@ -538,8 +580,8 @@ public class MagGripUpgrade : MonoBehaviour
             x2 = Mathf.Min( hit.collider.bounds.min.x, x1 - player_size.x * 2.0f );
         }
         const float MINIMUM_STANDING_CLEARANCE = 64.0f - 1.0f; // pixels
-        Collider2D stand_test = Physics2D.OverlapArea( new Vector2( x1, platform_top ), new Vector2( x2, platform_top + MINIMUM_STANDING_CLEARANCE ), CollisionMasks.static_mask );
-        if ( stand_test != null && MINIMUM_STANDING_CLEARANCE >= char_stats.STANDING_COLLIDER_SIZE.y ) { can_stand_up_from_hang = true; } // Can stand up.
+        if ( AreaContainsBlockingGeometry( x1, platform_top + MINIMUM_STANDING_CLEARANCE, x2 - x1, MINIMUM_STANDING_CLEARANCE - 1.0f ) ) { return; }
+        if ( MINIMUM_STANDING_CLEARANCE >= char_stats.STANDING_COLLIDER_SIZE.y ) { can_stand_up_from_hang = true; } // Can stand up.
         #endregion
 
         // Grab the ledge
@@ -594,6 +636,13 @@ public class MagGripUpgrade : MonoBehaviour
     /// </summary>
     public void InitiateWallGrab()
     {
+        // left/right edge has no meaning here. Block behaviour that depends on it.
+        is_at_left = false;
+        is_at_right = false;
+        // defaults, overridable.
+        is_at_top = false;
+        is_at_bottom = false;
+
         // Validation
         if ( ! player_stats.acquired_mag_grip )           { InitiateLedgeGrab(); return; } // can't climb without this upgrade
 
@@ -619,7 +668,11 @@ public class MagGripUpgrade : MonoBehaviour
     /// <summary>
     /// Attaches to a wall.
     /// </summary>
-    /// <param name="collision">The collider of the wall. (there can be multiple (3), which one?)</param>
+    /// <param name="rectangle">
+    /// A rect representing the aggregate of the collider(s) (there can be multiple) of the wall.
+    /// x = left, y = top, width and height behave as expected.
+    /// The value of x and width will not be well defined if using GetClimbableWallRect to generate the rect.
+    /// </param>
     private void GrabWall( Rect rectangle )
     {
         char_stats.ResetJump();
@@ -646,7 +699,7 @@ public class MagGripUpgrade : MonoBehaviour
 
         //trigger the signal to start the wall climb animation
         char_anims.WallGrabTrigger();
-        char_anims.ResetJumpDescend();
+        char_anims.ResetJumpDescend(); // not particularly clean as a 2 parter
     }
 
     /// <summary>
@@ -654,6 +707,13 @@ public class MagGripUpgrade : MonoBehaviour
     /// </summary>
     public void InitiateCeilingGrab()
     {
+        // top/bottom edge has no meaning here. Block behaviour that depends on it.
+        is_at_top = false;
+        is_at_bottom = false;
+        // defaults, overridable
+        is_at_left = false;
+        is_at_right = false;
+
         // Validation
         if ( ! player_stats.acquired_ceiling_grip )         { return; } // need the upgrade to do this
 
@@ -661,12 +721,14 @@ public class MagGripUpgrade : MonoBehaviour
         if ( ! char_stats.IsInMidair )                      { return; } // need to be in midair
         if ( wall_grab_delay_timer < WALL_GRAB_DELAY )      { return; } // wait for it
 
-        // TODO: use ceiling collider.
         // TODO: enforce change of collider on exit / interrupt. (interrupt: only possible if enough space)
-        float left   = char_stats.char_collider.bounds.min.x;
-        float top    = char_stats.char_collider.bounds.max.y;
-        float right  = char_stats.char_collider.bounds.max.x;
-        float bottom = char_stats.char_collider.bounds.min.y;
+        // Use the ceiling climb collider for this check (without actually changing to it). Box centered on player position.
+        float left   = transform.position.x + char_stats.CEILING_CLIMB_COLLIDER_OFFSET.x - char_stats.CEILING_CLIMB_COLLIDER_SIZE.x / 2.0f;
+        float right  = transform.position.x + char_stats.CEILING_CLIMB_COLLIDER_OFFSET.x + char_stats.CEILING_CLIMB_COLLIDER_SIZE.x / 2.0f;
+        float top    = transform.position.y + char_stats.CEILING_CLIMB_COLLIDER_OFFSET.y + char_stats.CEILING_CLIMB_COLLIDER_SIZE.y / 2.0f;
+        float bottom = transform.position.y + char_stats.CEILING_CLIMB_COLLIDER_OFFSET.y + char_stats.CEILING_CLIMB_COLLIDER_SIZE.y / 2.0f;
+
+        if ( AreaContainsBlockingGeometry( left, top, right - left, top - bottom ) ) { return; } // If changing the player's hitbox will put a wall inside of them: ABORT!
 
         Collider2D[] colliders = Physics2D.OverlapAreaAll( new Vector2( left - 1.0f, top + 1.0f ), new Vector2( right + 1.0f, bottom - 1.0f ), CollisionMasks.static_mask );
         Rect ceiling_rect = GetClimbableCeilingRect( colliders );
@@ -682,14 +744,24 @@ public class MagGripUpgrade : MonoBehaviour
     /// <summary>
     /// Attaches to the ceiling
     /// </summary>
-    /// <param name="collision">The collider of the ceiling. (there can be multiple (2), which one?)</param>
     private void GrabCeiling()
     {
-        //char_stats.velocity.x = 0.0f;
-        //char_stats.velocity.y = 0.0f;
-        //char_anims.CeilingGrabTrigger();
+        char_stats.CeilingClimbHitBox();
+        current_climb_state = ClimbState.CeilingClimb;
+        char_stats.current_master_state = CharEnums.MasterState.ClimbState;
+
+        char_stats.ResetJump();
+        char_stats.velocity.x = 0.0f;
+        char_stats.velocity.y = 0.0f;
+
+        // Animation
+        char_anims.CeilingGrabTrigger();
+        char_anims.ResetJumpDescend(); // not particularly clean as a 2 parter
     }
 
+    /// <summary>
+    /// Handles the logic for climbing a wall.
+    /// </summary>
     private void ClimbWall()
     {
         // get all colliders overlapped by player hitbox +1 buffer in direction of motion?
@@ -717,6 +789,7 @@ public class MagGripUpgrade : MonoBehaviour
         if ( colliders.Length == 0 )
         {
             // No wall, fall?
+            Debug.Log( "stop: no colliders" );
             StopClimbing();
             return;
         }
@@ -727,18 +800,28 @@ public class MagGripUpgrade : MonoBehaviour
         bool can_move_up = false;
         bool can_move_down = false;
 
-        if ( climbable_rect.size.y == 0 ) { StopClimbing(); return; } // no climbable surface
+        if ( climbable_rect.size.y == 0 ) { Debug.Log("stop: 0 height"); StopClimbing(); return; } // no climbable surface
 
         // use the relevant climbable subzone's restrictions to determine player mobility.
         if ( climbable_rect.y > char_stats.char_collider.bounds.max.y )
         {
             // can move up.
             can_move_up = true;
+            is_at_top = false;
+        }
+        else
+        {
+            is_at_top = true;
         }
         if ( climbable_rect.y - climbable_rect.size.y < char_stats.char_collider.bounds.min.y )
         {
             // can move down.
             can_move_down = true;
+            is_at_bottom = false;
+        }
+        else
+        {
+            is_at_bottom = true;
         }
 
         // is_against_ledge basically = ! (can move up or down).
@@ -785,8 +868,22 @@ public class MagGripUpgrade : MonoBehaviour
                 }
             }
         }
+
+        // Corner
+        if ( is_at_top && input_manager.VerticalAxis > 0.0f )
+        {
+            // TODO: ledge climb check
+            GoFromWallToCeilingAbove();
+        }
+        else if ( is_at_bottom && input_manager.VerticalAxis < 0.0f )
+        {
+            GoFromWallToCeilingBelow();
+        }
     }
 
+    /// <summary>
+    /// Handles the logic of climbing the ceiling.
+    /// </summary>
     private void ClimbCeiling()
     {
         // get all colliders overlapped by player hitbox +1 buffer in direction of motion?
@@ -811,7 +908,7 @@ public class MagGripUpgrade : MonoBehaviour
         if ( colliders.Length == 0 )
         {
             // No ceiling, fall?
-            StopClimbing();
+            StopClimbingCeiling();
             return;
         }
 
@@ -821,18 +918,32 @@ public class MagGripUpgrade : MonoBehaviour
         bool can_move_left = false;
         bool can_move_right = false;
 
-        if ( climbable_rect.size.x == 0.0f ) { StopClimbing(); return; } // no climbable surface
+        if ( climbable_rect.size.x == 0.0f ) // no climbable surface
+        {
+            StopClimbingCeiling();
+            return;
+        }
 
         // use the relevant climbable subzone's restrictions to determine player mobility
         if ( climbable_rect.x < char_stats.char_collider.bounds.min.x )
         {
             // can move left
             can_move_left = true;
+            is_at_left = false;
         }
-        if ( climbable_rect.x + climbable_rect.size.x >char_stats.char_collider.bounds.max.x )
+        else
+        {
+            is_at_left = true;
+        }
+        if ( climbable_rect.x + climbable_rect.size.x > char_stats.char_collider.bounds.max.x )
         {
             // can move right
             can_move_right = true;
+            is_at_right = false;
+        }
+        else
+        {
+            is_at_right = true;
         }
 
         // move?
@@ -853,7 +964,7 @@ public class MagGripUpgrade : MonoBehaviour
         {
             //ESSENTIALLY: char_stats.velocity.x = -CEILING_CLIMB_SPEED * -input_manager.HorizontalAxis;, respecting collisions
             float player_left = char_stats.char_collider.bounds.min.x;
-            if ( climbable_rect.x < player_left ) // if there is room to move full distance, move.
+            if ( climbable_rect.x < player_left - max_distance ) // if there is room to move full distance, move.
             {
                 transform.Translate( -max_distance, 0.0f, 0.0f );
             }
@@ -862,10 +973,90 @@ public class MagGripUpgrade : MonoBehaviour
                 transform.Translate( climbable_rect.x - player_left, 0.0f, 0.0f );
             }
         }
+
+        // Corner
+        if ( is_at_left || is_at_right )
+        {
+            if ( input_manager.VerticalAxis > 0.0f )
+            {
+                GoFromCeilingToWallAbove();
+            }
+            else if ( input_manager.VerticalAxis < 0.0f )
+            {
+                GoFromCeilingToWallBelow();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Stops climbing the ceiling and moves to standing or crouching, if possible.
+    /// </summary>
+    private void StopClimbingCeiling()
+    {
+        // Check if changing the player's hitbox to standing would put them inside a wall.
+        float left, right, top, bottom;
+        left   = transform.position.x + char_stats.STANDING_COLLIDER_OFFSET.x - char_stats.STANDING_COLLIDER_SIZE.x / 2.0f;
+        right  = transform.position.x + char_stats.STANDING_COLLIDER_OFFSET.x + char_stats.STANDING_COLLIDER_SIZE.x / 2.0f; // left + size.x
+        top    = transform.position.y + char_stats.STANDING_COLLIDER_OFFSET.y + char_stats.STANDING_COLLIDER_SIZE.y / 2.0f;
+        bottom = transform.position.y + char_stats.STANDING_COLLIDER_OFFSET.y - char_stats.STANDING_COLLIDER_SIZE.y / 2.0f; // top - size.y
+        if ( AreaContainsBlockingGeometry( left, top, right - left, top - bottom ) ) // Can't stand. Check if can crouch.
+        {
+            // Check if changing the player's hitbox to crouching (+ moving them up) would put them inside a wall.
+            //   The ceiling climbing collider is short, and offset so the top of it lines up with the top of the "standard" collider for the player. 
+            //   It is also extra wide, but centered, so that's not important.
+            //   The crouching collider is short, and offset so the bottom of it lines up with the bottom of the "standard" collider for the player.
+            //   This makes transitioning from the standard collider to these simple, 
+            //   but here I want to transition between the ceiling and crouching colliders due to not having enough space to stand up, so I need to move the player up.
+            //   Since crouching collider height <= ceiling climb height, align the bottom of the crouch collider with the bottom of the ceiling climbing collider.
+            #if UNITY_EDITOR
+            Debug.Assert( char_stats.CROUCHING_COLLIDER_SIZE.y < char_stats.CEILING_CLIMB_COLLIDER_SIZE.y,
+                "Assumptions about the relative sizes of the crouching and ceiling climbing colliders were violated. This will probably cause unexpected behaviour (phasing through walls). FIX THIS." );
+            #endif
+            // bottom = bottom
+            float offset = char_stats.CEILING_CLIMB_COLLIDER_OFFSET.y - char_stats.CROUCHING_COLLIDER_OFFSET.y - (char_stats.CEILING_CLIMB_COLLIDER_SIZE.y - char_stats.CROUCHING_COLLIDER_SIZE.y ) / 2.0f;
+
+            left   = transform.position.x + char_stats.CROUCHING_COLLIDER_OFFSET.x - char_stats.CROUCHING_COLLIDER_SIZE.x / 2.0f;
+            right  = transform.position.x + char_stats.CROUCHING_COLLIDER_OFFSET.x + char_stats.CROUCHING_COLLIDER_SIZE.x / 2.0f; // left + size.x
+            top    = transform.position.y + char_stats.CROUCHING_COLLIDER_OFFSET.y + char_stats.CROUCHING_COLLIDER_SIZE.y / 2.0f + offset;
+            bottom = transform.position.y + char_stats.CROUCHING_COLLIDER_OFFSET.y - char_stats.CROUCHING_COLLIDER_SIZE.y / 2.0f + offset; // top - size.y
+            if ( AreaContainsBlockingGeometry( left, top, right - left, top - bottom ) ) // Can't crouch. Cancel the stop.
+            {
+                return;
+            }
+            // TODO: crouch state
+            transform.Translate( 0.0f, offset, 0.0f );
+            char_stats.CrouchingHitBox();
+            StopClimbing();
+            return;
+        }
+
+        // Stand.
+        char_stats.StandingHitBox();
+        StopClimbing();
     }
 
     #region geometry testing
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="colliders"></param>
+    /// <returns></returns>
     private Rect GetClimbableWallRect( Collider2D[] colliders )
+    {
+        float left   = char_stats.char_collider.bounds.min.x;
+        float right  = char_stats.char_collider.bounds.max.x;
+        float top    = char_stats.char_collider.bounds.max.y;
+        float bottom = char_stats.char_collider.bounds.min.y;
+        CharEnums.FacingDirection facing = char_stats.facing_direction;
+        return GetClimbableWallRect( colliders, left, right, top, bottom, facing );
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="colliders"></param>
+    /// <returns></returns>
+    private Rect GetClimbableWallRect( Collider2D[] colliders, float player_left, float player_right, float player_top, float player_bottom, CharEnums.FacingDirection facing )
     {
         // need to figure out what's up with the colliders.
         // if on correct side / coords & player collider y within bounds of all ys, ok.
@@ -883,8 +1074,8 @@ public class MagGripUpgrade : MonoBehaviour
             if ( ! collision_type.IsWallClimbable ) { continue; }
 
             // Is it ACTUALLY climbable?
-            if ( ! ( char_stats.facing_direction == CharEnums.FacingDirection.Left && collider.bounds.max.x < char_stats.char_collider.bounds.min.x ||
-                     char_stats.facing_direction == CharEnums.FacingDirection.Right && collider.bounds.min.x > char_stats.char_collider.bounds.max.x ) )
+            if ( ! ( facing == CharEnums.FacingDirection.Left  && collider.bounds.max.x < player_left ||
+                     facing == CharEnums.FacingDirection.Right && collider.bounds.min.x > player_right ) )
             { continue; }
             // TODO: refine checks to check if within allowable range as well?
 
@@ -901,8 +1092,8 @@ public class MagGripUpgrade : MonoBehaviour
             CollisionType collision_type = tile_data.collision_type;
 
             if ( collision_type.IsWallClimbable &&
-                ( char_stats.facing_direction == CharEnums.FacingDirection.Left && collider.bounds.max.x < char_stats.char_collider.bounds.min.x ||
-                  char_stats.facing_direction == CharEnums.FacingDirection.Right && collider.bounds.min.x > char_stats.char_collider.bounds.max.x ) )
+                ( facing == CharEnums.FacingDirection.Left  && collider.bounds.max.x < player_left ||
+                  facing == CharEnums.FacingDirection.Right && collider.bounds.min.x > player_right ) )
             {
                 //TODO: refine checks to check if within allowable range as well?
                 // This collider is a climbable wall you (which you are probably climbing). Do not remove it from the climbable zone, ignore it.
@@ -916,7 +1107,7 @@ public class MagGripUpgrade : MonoBehaviour
             {
                 // Moving down a wall onto a fallthrough platform should make you get off the wall and stand on the platform.
                 // If platform's top is below player's bottom, then treat this collider as blocking, subtract it from the climbable zone.
-                if ( collider.bounds.max.y <= char_stats.char_collider.bounds.min.y )
+                if ( collider.bounds.max.y <= player_bottom )
                 {
                     RemoveEdge( ref climbable_zone, new Rect( collider.bounds.min.x, collider.bounds.max.y, collider.bounds.size.x, collider.bounds.size.y ), false );
                 }
@@ -939,11 +1130,13 @@ public class MagGripUpgrade : MonoBehaviour
         Rect climbable_rect = new Rect( 0.0f, 0.0f, 0.0f, 0.0f );
         foreach ( Rect rect in climbable_zone )
         {
-            if ( rect.y >= char_stats.char_collider.bounds.max.y && rect.y - rect.size.y <= char_stats.char_collider.bounds.max.y ) // overlaps head
+            Debug.Log("sum:" + rect + "vs." + new Rect( player_left, player_top, player_right - player_left, player_top - player_bottom ) );
+            if ( rect.y >= player_top && rect.y - rect.size.y <= player_top ) // overlaps head
             {
-                if ( /*rect.y >= char_stats.char_collider.bounds.min.y &&*/ rect.y - rect.size.y <= char_stats.char_collider.bounds.min.y ) // extends to or beyond feet.
+                if ( /*rect.y >= player_bottom &&*/ rect.y - rect.size.y <= player_bottom ) // extends to or beyond feet.
                 {
                     climbable_rect = rect;
+                    Debug.Log( "confirm" );
                 }
             }
         }
@@ -952,8 +1145,26 @@ public class MagGripUpgrade : MonoBehaviour
         return climbable_rect;
     }
 
-    // TODO:
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="colliders"></param>
+    /// <returns></returns>
     private Rect GetClimbableCeilingRect( Collider2D[] colliders )
+    {
+        float left   = char_stats.char_collider.bounds.min.x;
+        float right  = char_stats.char_collider.bounds.max.x;
+        float top    = char_stats.char_collider.bounds.max.y;
+        float bottom = char_stats.char_collider.bounds.min.y;
+        return GetClimbableCeilingRect( colliders, left, right, top, bottom );
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="colliders"></param>
+    /// <returns></returns>
+    private Rect GetClimbableCeilingRect( Collider2D[] colliders, float player_left, float player_right, float player_top, float player_bottom )
     {
         // need to figure out what's up with the colliders.
         // if on correct side / coords & player collider x within bounds of all xs, ok.
@@ -971,8 +1182,8 @@ public class MagGripUpgrade : MonoBehaviour
             if ( ! collision_type.IsCeilingClimbable ) { continue; }
 
             // Is it ACTUALLY climbable? ( ceiling bottom must be above player's top, and no further than 1 px away. )
-            //if ( ! ( collider.bounds.min.y > char_stats.char_collider.bounds.max.y ) ) { continue; }
-            float bottom_to_top = collider.bounds.min.y - char_stats.char_collider.bounds.max.y;
+            //if ( ! ( collider.bounds.min.y > player_top ) ) { continue; }
+            float bottom_to_top = collider.bounds.min.y - player_top;
             if ( bottom_to_top < 0.0f || bottom_to_top > 1.0f ) { continue; }
 
             // If it is really climbable, we set up the "climbable zone" to include it.
@@ -987,7 +1198,7 @@ public class MagGripUpgrade : MonoBehaviour
             if ( tile_data == null ) { continue; }
             CollisionType collision_type = tile_data.collision_type;
 
-            float bottom_to_top = collider.bounds.min.y - char_stats.char_collider.bounds.max.y;
+            float bottom_to_top = collider.bounds.min.y - player_top;
             if ( collision_type.IsCeilingClimbable && bottom_to_top >= 0.0f && bottom_to_top <= 1.0f )
             {
                 // This collider is a climbable ceiling (which you are almost certainly climbing). Do not remove it from the climbable zone, ignore it.
@@ -1009,9 +1220,9 @@ public class MagGripUpgrade : MonoBehaviour
         Rect climbable_rect = new Rect( 0.0f, 0.0f, 0.0f, 0.0f );
         foreach ( Rect rect in climbable_zone )
         {
-            if ( rect.x <= char_stats.char_collider.bounds.min.x && rect.x + rect.size.x >= char_stats.char_collider.bounds.min.x ) // contains left
+            if ( rect.x <= player_left && rect.x + rect.size.x >= player_left ) // contains left
             {
-                if ( /*rect.x <= char_stats.char_collider.bounds.max.x &&*/ rect.x + rect.size.x >= char_stats.char_collider.bounds.max.x ) // contains right
+                if ( /*rect.x <= player_right &&*/ rect.x + rect.size.x >= player_right ) // contains right
                 {
                     climbable_rect = rect;
                 }
@@ -1225,52 +1436,511 @@ public class MagGripUpgrade : MonoBehaviour
             }
         }
     }
+
+    /// <summary>
+    /// Determines if a specified rectangular area contains any blocking stuff.
+    /// </summary>
+    /// <param name="x">The x coordiate of the left edge of the rectangular area to check.</param>
+    /// <param name="y">The y coordinate of the top edge of the rectangular area to check.</param>
+    /// <param name="width">The width of the rectangular area to check.</param>
+    /// <param name="height">The height of the rectangular area to check.</param>
+    /// <returns>True if the specified area contains any level geometry or objects (excluding enemies) that are considered blocking.</returns>
+    /// TODO: consider migrating to Utils.
+    private bool AreaContainsBlockingGeometry( float x, float y, float width, float height )
+    {
+        Collider2D[] colliders_within_area = Physics2D.OverlapAreaAll( new Vector2( x, y ), new Vector2( x + width, y - height ), CollisionMasks.static_mask );
+        foreach ( Collider2D collider in colliders_within_area )
+        {
+            // Check if the collider inside the region is blocking.
+            CustomTileData tile_data = Utils.GetCustomTileData( collider );
+            if ( tile_data == null ) { return true; } // not an excepted tile, guess this is an ordinary blocking object.
+            // TODO: may want additional checks here ^
+
+            CollisionType collision_type = tile_data.collision_type;
+            if ( ! ( collision_type.CanFallthrough || ! collision_type.IsBlocking ) ) { return true; } // not an excepted tile type, this is a blocking tile.
+        }
+        return false;
+    }
     #endregion
 
-    // TODO:
-    private void CanTransitionFromCeilingToWallAbove()
+    #region climbing corners
+    #region checks
+    /// <summary>
+    /// Checks if the player can move from climbing under the corner of the ceiling to climbing the wall above the ceiling which makes up another face of the corner.
+    /// </summary>
+    /// <returns>True if the player can move onto the wall.</returns>
+    private bool CanGoFromCeilingToWallAbove()
     {
+        if ( ! player_stats.acquired_mag_grip ) { return false; }
+
         // check if you are at the corner of a wall and a ceiling.
-        // [X][X][X][ ]
-        // [X][X][X][ ]
-        // [X][P][P][ ]
+        // [?][X][ ]   [ ][X][?]
+        // [X][X][ ]   [ ][X][X]
+        // [P][P][ ]   [ ][P][P]
         // check that the wall is tall enough and contiguous climbable geometry.
-        // check that there is enough empty space to transition.
+        // check that there is enough empty space to transition. (need extended check so you don't go through diagonally touching walls)
+
+        // Are you at the edge of the ceiling?
+        if ( ! is_at_left && ! is_at_right ) { return false; }
+
+        Debug.Log( "ceiling -> wall above" );
+        float x, y, width, height;
+        float new_left, new_right, new_top, new_bottom;
+        CharEnums.FacingDirection facing;
+        Collider2D[] colliders;
+
+        // TODO: refactor commonalities more? (split x/y/width/heights?)
+        if ( is_at_left )
+        {
+            // Check that wall (and enough of it) exists above you.
+            float left = transform.position.x - char_stats.CEILING_CLIMB_COLLIDER_SIZE.x / 2.0f + char_stats.CEILING_CLIMB_COLLIDER_OFFSET.x;
+            float top  = transform.position.y + char_stats.CEILING_CLIMB_COLLIDER_SIZE.y / 2.0f + char_stats.CEILING_CLIMB_COLLIDER_OFFSET.y;
+            width = 1.0f;
+            height = char_stats.STANDING_COLLIDER_SIZE.y;
+            x = left;
+            y = top + height;
+            colliders = Physics2D.OverlapAreaAll( new Vector2( x, y ), new Vector2( x + width, y - height ), CollisionMasks.static_mask );
+            DrawDebugRect( x, y, width, height );
+
+            // Check that there is enough empty space left of the wall to transition.
+            width = char_stats.STANDING_COLLIDER_SIZE.x;
+            x = left - width - 0.5f;
+            height = char_stats.STANDING_COLLIDER_SIZE.y + char_stats.CEILING_CLIMB_COLLIDER_SIZE.y;
+            DrawDebugRect( x, y, width, height );
+
+            // Calculate the future hitbox location + facing, for climbable zone calcs.
+            new_left = x;
+            new_right = x + width;
+            new_top = y + 1.0f;
+            new_bottom = new_top - char_stats.STANDING_COLLIDER_SIZE.y;
+            facing = CharEnums.FacingDirection.Right;
+        }
+        else //if ( is_at_right )
+        {
+            // Check that wall (and enough of it) exists above you.
+            float right = transform.position.x + char_stats.CEILING_CLIMB_COLLIDER_SIZE.x / 2.0f + char_stats.CEILING_CLIMB_COLLIDER_OFFSET.x;
+            float top   = transform.position.y + char_stats.CEILING_CLIMB_COLLIDER_SIZE.y / 2.0f + char_stats.CEILING_CLIMB_COLLIDER_OFFSET.y;
+            width = 1.0f;
+            height = char_stats.STANDING_COLLIDER_SIZE.y;
+            x = right - width;
+            y = top + height;
+            colliders = Physics2D.OverlapAreaAll( new Vector2( x, y ), new Vector2( x + width, y - height ), CollisionMasks.static_mask );
+            DrawDebugRect( x, y, width, height );
+
+            // Check that there is enough empty space right of the wall to transition.
+            width = char_stats.STANDING_COLLIDER_SIZE.x;
+            x = right + 0.5f;
+            height = char_stats.STANDING_COLLIDER_SIZE.y + char_stats.CEILING_CLIMB_COLLIDER_SIZE.y;
+            DrawDebugRect( x, y, width, height );
+
+            // Calculate the future hitbox location + facing, for climbable zone calcs.
+            new_left = x;
+            new_right = x + width;
+            new_top = y + 1.0f;
+            new_bottom = new_top - char_stats.STANDING_COLLIDER_SIZE.y;
+            facing = CharEnums.FacingDirection.Left;
+        }
+
+        // Enough wall?
+        Rect climbable_area = GetClimbableWallRect( colliders, new_left, new_right, new_top, new_bottom, facing );
+        //Debug.Log( "walltest" + climbable_area );
+        if ( climbable_area.height < char_stats.STANDING_COLLIDER_SIZE.y ) { return false; }
+        //Debug.Log( "passed walltest" );
+        // Enough empty space?
+        if ( AreaContainsBlockingGeometry( x, y, width, height ) ) { return false; }
+        //Debug.Log("passed emptytest");
+
+        return true;
     }
 
-    private void CanTransitionFromCeilingToWallBelow()
+    /// <summary>
+    /// Checks if the player can go from climbing under the corner of the ceiling to climbing the wall below which makes up another face of the corner.
+    /// </summary>
+    /// <returns>True if the player can move onto the wall.</returns>
+    private bool CanGoFromCeilingToWallBelow()
+    {
+        if ( ! player_stats.acquired_mag_grip ) { return false; }
+
+        // check if you are at the corner of a wall and a ceiling.
+        // [X][X][X]   [X][X][X]
+        // [X][P][P]   [P][P][X]
+        // [X][ ][?]   [?][ ][X]
+        // check that the wall is tall enough and contiguous climbable geometry.
+        // check that there is enough empty space to transition. (simple check here)
+
+        // Are you at the edge of the ceiling?
+        if ( ! is_at_left && ! is_at_right ) { return false; }
+
+        Debug.Log( "ceiling -> wall below" );
+
+        float x, y, width, height;
+        Collider2D[] colliders;
+
+        if ( is_at_left )
+        {
+            // Check that wall (and enough of it) exists below you.
+            float left = transform.position.x - char_stats.CEILING_CLIMB_COLLIDER_SIZE.x / 2.0f + char_stats.CEILING_CLIMB_COLLIDER_OFFSET.x;
+            x = left - 1.0f;
+            y = transform.position.y + char_stats.CEILING_CLIMB_COLLIDER_SIZE.y / 2.0f + char_stats.CEILING_CLIMB_COLLIDER_OFFSET.y;
+            width = 1.0f;
+            height = char_stats.STANDING_COLLIDER_SIZE.y;
+            // left-1 to left, top to top-standing height
+            colliders = Physics2D.OverlapAreaAll( new Vector2( x, y ), new Vector2( x + width, y - height ), CollisionMasks.static_mask );
+            DrawDebugRect( x, y, width, height );
+
+            // Check that there is enough empty space right of the wall to transition.
+            x = left;
+            width = char_stats.STANDING_COLLIDER_SIZE.x;
+            DrawDebugRect( x, y, width, height );
+        }
+        else //if (is_at_right)
+        {
+            // Check that wall (and enough of it) exists below you.
+            float right = transform.position.x + char_stats.CEILING_CLIMB_COLLIDER_SIZE.x / 2.0f + char_stats.CEILING_CLIMB_COLLIDER_OFFSET.x;
+            x = right;
+            y = transform.position.y + char_stats.CEILING_CLIMB_COLLIDER_SIZE.y / 2.0f + char_stats.CEILING_CLIMB_COLLIDER_OFFSET.y;
+            width = 1.0f;
+            height = char_stats.STANDING_COLLIDER_SIZE.y;
+            // right to right+1, top to top-standing height
+            colliders = Physics2D.OverlapAreaAll( new Vector2( x, y ), new Vector2( x + width, y - height ), CollisionMasks.static_mask );
+            DrawDebugRect( x, y, width, height );
+
+            // Check that there is enough empty space left of the wall to transition.
+            x = right - char_stats.STANDING_COLLIDER_SIZE.x;
+            width = char_stats.STANDING_COLLIDER_SIZE.x;
+            DrawDebugRect( x, y, width, height );
+        }
+
+        // Enough wall?
+        Rect climbable_area = GetClimbableWallRect( colliders );
+        //Debug.Log( colliders.Length );
+        Debug.Log("walltest" + climbable_area);
+        if ( climbable_area.height < char_stats.STANDING_COLLIDER_SIZE.y ) { return false; }
+        Debug.Log( "wallpassed" );
+        // Enough empty space?
+        if ( AreaContainsBlockingGeometry( x, y, width, height ) ) { return false; }
+        Debug.Log( "emptiness passed" );
+
+        return true;
+    }
+
+    /// <summary>
+    /// Checks if the player can move from climbing on the left side of a wall to the ceiling directly above them, and expand a little to the left.
+    /// </summary>
+    /// <returns>True if the player can move onto the ceiling.</returns>
+    private bool CanGoFromWallToCeilingAboveLeft()
     {
         // check if you are at the corner of a wall and a ceiling.
         // [X][X][X]
-        // [X][P][P]
-        // [X][ ][?]
-        // check that the wall is tall enough and contiguous climbable geometry.
-        // check that there is enough empty space to transition.
+        // [ ][P][X]
+        // [?][P][X]
+        // check that the ceiling is wide enough, and contiguous climbable geometry.
+        // check that there is enough empty space to transition. (simple check here)
+
+        if ( ! player_stats.acquired_ceiling_grip ) { return false; }
+        // Are you at the top edge of the wall?
+        if ( ! is_at_top ) { return false; }
+
+        Debug.Log( "wall -> ceiling above left" );
+
+        // Check that ceiling (and enough of it) exists above you.
+        float x, y, width, height;
+        float top = transform.position.y + char_stats.STANDING_COLLIDER_SIZE.y / 2.0f + char_stats.STANDING_COLLIDER_OFFSET.y;
+        x = transform.position.x - char_stats.STANDING_COLLIDER_SIZE.x / 2.0f + char_stats.STANDING_COLLIDER_OFFSET.x - ( char_stats.CEILING_CLIMB_COLLIDER_SIZE.x - char_stats.STANDING_COLLIDER_OFFSET.x ) / 2.0f;
+        y = top + 1.0f; // 1 pixel above top
+        width = char_stats.CEILING_CLIMB_COLLIDER_SIZE.x;
+        height = 1.0f;
+        Collider2D[] colliders = Physics2D.OverlapAreaAll( new Vector2( x, y ), new Vector2( x + width, y - height ), CollisionMasks.static_mask );
+        Rect climbable_area = GetClimbableCeilingRect( colliders );
+        DrawDebugRect( x, y, width, height );
+        if ( climbable_area.width < char_stats.CEILING_CLIMB_COLLIDER_SIZE.x ) { return false; }
+
+
+        // Check that there is enough space below the ceiling.
+        y = top;
+        height = char_stats.CEILING_CLIMB_COLLIDER_SIZE.y;
+        DrawDebugRect( x, y, width, height );
+        if ( AreaContainsBlockingGeometry( x, y, width, height ) ) { return false; }
+
+        return true;
     }
 
-    private void CanTransitionFromWallToCeilingAbove()
+    /// <summary>
+    /// Checks if the player can move from climbing on the right side of a wall to the ceiling directly above them, and expand a little to the right.
+    /// </summary>
+    /// <returns>True if the player can move onto the ceiling.</returns>
+    private bool CanGoFromWallToCeilingAboveRight()
     {
         // check if you are at the corner of a wall and a ceiling.
         // [X][X][X]
         // [X][P][ ]
         // [X][P][?]
         // check that the ceiling is wide enough, and contiguous climbable geometry.
-        // check that there is enough empty space to transition.
+        // check that there is enough empty space to transition. (simple check here)
+
+        if ( ! player_stats.acquired_ceiling_grip ) { return false; }
+        // Are you at the top edge of the wall?
+        if ( ! is_at_top ) { return false; }
+
+        Debug.Log( "wall -> ceiling above right" );
+
+        // Check that ceiling (and enough of it) exists above you.
+        float x, y, width, height;
+        float top = transform.position.y + char_stats.STANDING_COLLIDER_SIZE.y / 2.0f + char_stats.STANDING_COLLIDER_OFFSET.y;
+        x = transform.position.x - char_stats.STANDING_COLLIDER_SIZE.x / 2.0f + char_stats.STANDING_COLLIDER_OFFSET.x; // left
+        y = top + 1.0f; // 1 pixel above top.
+        width = char_stats.CEILING_CLIMB_COLLIDER_SIZE.x;
+        height = 1.0f;
+        Collider2D[] colliders = Physics2D.OverlapAreaAll( new Vector2( x, y ), new Vector2( x + width, y - height ), CollisionMasks.static_mask );
+        Rect climbable_area = GetClimbableCeilingRect( colliders );
+        DrawDebugRect( x, y, width, height );
+        if ( climbable_area.width < char_stats.CEILING_CLIMB_COLLIDER_SIZE.x ) { return false; }
+
+        // Check that there is enough space below the ceiling.
+        y = top;
+        height = char_stats.CEILING_CLIMB_COLLIDER_SIZE.y;
+        DrawDebugRect( x, y, width, height );
+        if ( AreaContainsBlockingGeometry( x, y, width, height ) ) { return false; }
+
+        return true;
     }
 
-    /*
-    private void SlopeTest()
+    /// <summary>
+    /// Checks if the player can move from climbing on the right side of a wall to the underside of the wall.
+    /// </summary>
+    /// <returns>True if the player can move onto the ceiling.</returns>
+    private bool CanGoFromWallToCeilingBelowLeft()
     {
-        // raycast from bottom left or right, left or right. Support non-box colliders.
+        if ( ! player_stats.acquired_ceiling_grip ) { return false; }
 
-        RaycastHit2D hit;
-        float angle = Vector2.Angle( hit.normal, Vector2.up );
-        if ( angle <= 45.0f )
+        // check if you are at the corner of a wall and a ceiling.
+        // [?][X][P]
+        // [X][X][P]
+        // [ ][ ][ ]
+        // check that the wall is tall enough and contiguous climbable geometry.
+        // check that there is enough empty space to transition. (need extended check so you don't go through diagonally touching walls)
+
+        if ( ! is_at_bottom ) { return false; }
+
+        Debug.Log( "wall -> ceiling below left" );
+
+        // Check that ceiling (and enough of it) exists below you.
+        float x, y, width, height;
+        x = transform.position.x - char_stats.STANDING_COLLIDER_SIZE.x / 2.0f + char_stats.STANDING_COLLIDER_OFFSET.x - char_stats.CEILING_CLIMB_COLLIDER_SIZE.x; // left
+        float bottom = transform.position.y - char_stats.STANDING_COLLIDER_SIZE.y / 2.0f + char_stats.STANDING_COLLIDER_OFFSET.y;
+        y = bottom + 1.0f; // 1 pixel above bottom
+        width = char_stats.CEILING_CLIMB_COLLIDER_SIZE.x;
+        height = 1.0f;
+        Collider2D[] colliders = Physics2D.OverlapAreaAll( new Vector2( x, y ), new Vector2( x + width, y - height ), CollisionMasks.static_mask );
+        Rect climbable_area = GetClimbableCeilingRect( colliders );
+        DrawDebugRect( x, y, width, height );
+        if ( climbable_area.width < char_stats.CEILING_CLIMB_COLLIDER_SIZE.x ) { return false; }
+
+        // Check that there is enough empty space below the ceiling (+ below you)
+        y = bottom;
+        height = char_stats.CEILING_CLIMB_COLLIDER_SIZE.y;
+        width = char_stats.CEILING_CLIMB_COLLIDER_SIZE.x + char_stats.STANDING_COLLIDER_SIZE.x; // extra width so you can't phase through diagonally touching walls
+        DrawDebugRect( x, y, width, height );
+        if ( AreaContainsBlockingGeometry( x, y, width, height ) ) { return false; }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Checks if the player can move from climbing on the left side of a wall to the underside of the wall.
+    /// </summary>
+    /// <returns>True if the player can move onto the ceiling.</returns>
+    private bool CanGoFromWallToCeilingBelowRight()
+    {
+        if ( ! player_stats.acquired_ceiling_grip ) { return false; }
+
+        // check if you are at the corner of a wall and a ceiling.
+        // [P][X][?]
+        // [P][X][X]
+        // [ ][ ][ ]
+        // check that the wall is tall enough and contiguous climbable geometry.
+        // check that there is enough empty space to transition. (need extended check so you don't go through diagonally touching walls)
+
+        if ( ! is_at_bottom ) { return false; }
+
+        Debug.Log( "wall -> ceiling below right" );
+
+        // Check that ceiling (and enough of it) exists below you.
+        float x, y, width, height;
+        x = transform.position.x + char_stats.STANDING_COLLIDER_SIZE.x / 2.0f + char_stats.STANDING_COLLIDER_OFFSET.x; // right
+        float bottom = transform.position.y - char_stats.STANDING_COLLIDER_SIZE.y / 2.0f + char_stats.STANDING_COLLIDER_OFFSET.y;
+        y = bottom + 1.0f; // 1 pixel above bottom
+        width = char_stats.CEILING_CLIMB_COLLIDER_SIZE.x;
+        height = 1.0f;
+        Collider2D[] colliders = Physics2D.OverlapAreaAll( new Vector2( x, y ), new Vector2( x + width, y - height ), CollisionMasks.static_mask );
+
+        Rect climbable_area = GetClimbableCeilingRect( colliders );
+        DrawDebugRect( x, y, width, height );
+        if ( climbable_area.width < char_stats.CEILING_CLIMB_COLLIDER_SIZE.x ) { return false; }
+
+        // Check that there is enough empty space below the ceiling (+ below you)
+        x = transform.position.x - char_stats.STANDING_COLLIDER_SIZE.x / 2.0f + char_stats.STANDING_COLLIDER_OFFSET.x; // left
+        y = bottom;
+        height = char_stats.CEILING_CLIMB_COLLIDER_SIZE.y;
+        width = char_stats.CEILING_CLIMB_COLLIDER_SIZE.x + char_stats.STANDING_COLLIDER_SIZE.x; // extra width so you can't phase through diagonally touching walls
+        DrawDebugRect( x, y, width, height );
+        if ( AreaContainsBlockingGeometry( x, y, width, height ) ) { return false; }
+
+        return true;
+    }
+    #endregion
+
+    #region transitions
+    /// <summary>
+    /// If possible, move from climbing a wall to climbing the ceiling directly above you.
+    /// </summary>
+    private void GoFromWallToCeilingAbove()
+    {
+        if ( CanGoFromWallToCeilingAboveRight() )
         {
-            transform.position.x += velocity.x * Mathf.Cos( angle * Mathf.Deg2Rad ) * Time.deltaTime * Time.timeScale;
-            transform.position.y += velocity.x * Mathf.Sin( angle * Mathf.Deg2Rad ) * Time.deltaTime * Time.timeScale;
-            return;
+            // standing -> ceiling climb expands the hitbox.
+            // player top = platform bottom (standing) -> player top = platform bottom (climbing)
+            // player left = wall right (standing) -> player left = wall right (climbing)
+            // No real translation, just change position to maintain alignment after size changes.
+            float delta_x = ( char_stats.STANDING_COLLIDER_SIZE.x - char_stats.CEILING_CLIMB_COLLIDER_SIZE.x ) / -2.0f + ( char_stats.STANDING_COLLIDER_OFFSET.x - char_stats.CEILING_CLIMB_COLLIDER_OFFSET.x );
+            float delta_y = ( char_stats.STANDING_COLLIDER_SIZE.y - char_stats.CEILING_CLIMB_COLLIDER_SIZE.y ) / 2.0f + ( char_stats.STANDING_COLLIDER_OFFSET.y - char_stats.CEILING_CLIMB_COLLIDER_OFFSET.y );
+            transform.Translate( delta_x, delta_y, 0.0f );
+            char_stats.CeilingClimbHitBox();
+            current_climb_state = ClimbState.CeilingClimb;
+        }
+        else if ( CanGoFromWallToCeilingAboveLeft() )
+        {
+            // standing -> ceiling climb expands the hitbox.
+            // player top = platform bottom (standing) -> player top = platform bottom (climbing)
+            // player right = wall left (standing) -> player right = wall left (climbing)
+            // No real translation, just change position to maintain alignment after size changes.
+            float delta_x = ( char_stats.STANDING_COLLIDER_SIZE.x - char_stats.CEILING_CLIMB_COLLIDER_SIZE.x ) / 2.0f + ( char_stats.STANDING_COLLIDER_OFFSET.x - char_stats.CEILING_CLIMB_COLLIDER_OFFSET.x );
+            float delta_y = ( char_stats.STANDING_COLLIDER_SIZE.y - char_stats.CEILING_CLIMB_COLLIDER_SIZE.y ) / 2.0f + ( char_stats.STANDING_COLLIDER_OFFSET.y - char_stats.CEILING_CLIMB_COLLIDER_OFFSET.y );
+            transform.Translate( delta_x, delta_y, 0.0f );
+            char_stats.CeilingClimbHitBox();
+            current_climb_state = ClimbState.CeilingClimb;
         }
     }
-    */
+
+    /// <summary>
+    /// If possible, move from climbing a wall to climbing the underside of the wall.
+    /// </summary>
+    private void GoFromWallToCeilingBelow()
+    {
+        if ( CanGoFromWallToCeilingBelowLeft() )
+        {
+            // standing -> ceiling climb expands the hitbox width, shrinks hitbox height.
+            // player left = wall right (standing) -> player right = wall right (climbing)
+            // player bottom = wall bottom (standing) -> player top = wall bottom (climbing)
+            float offset_x = (char_stats.STANDING_COLLIDER_SIZE.x - char_stats.CEILING_CLIMB_COLLIDER_SIZE.x) / 2.0f + ( char_stats.STANDING_COLLIDER_OFFSET.x - char_stats.CEILING_CLIMB_COLLIDER_OFFSET.x );
+            float offset_y = (char_stats.STANDING_COLLIDER_SIZE.y - char_stats.CEILING_CLIMB_COLLIDER_SIZE.y) / 2.0f + ( char_stats.STANDING_COLLIDER_OFFSET.y - char_stats.CEILING_CLIMB_COLLIDER_OFFSET.y );
+            // Once aligned, push player's left left one standing width and top down one standing height.
+            float delta_x = -1.0f * char_stats.STANDING_COLLIDER_SIZE.x + offset_x;
+            float delta_y = -1.0f * char_stats.STANDING_COLLIDER_SIZE.y + offset_y;
+            transform.Translate( delta_x, delta_y, 0.0f );
+            char_stats.CeilingClimbHitBox();
+            current_climb_state = ClimbState.CeilingClimb;
+        }
+        else if ( CanGoFromWallToCeilingBelowRight() )
+        {
+            // standing -> ceiling climb expands the hitbox width, shrinks hitbox height.
+            // player right = wall left (standing) -> player left = wall left (climbing)
+            // player bottom = wall bottom (standing) -> player top = wall bottom (climbing)
+            float offset_x = (char_stats.STANDING_COLLIDER_SIZE.x - char_stats.CEILING_CLIMB_COLLIDER_SIZE.x) / -2.0f + ( char_stats.STANDING_COLLIDER_OFFSET.x - char_stats.CEILING_CLIMB_COLLIDER_OFFSET.x );
+            float offset_y = (char_stats.STANDING_COLLIDER_SIZE.y - char_stats.CEILING_CLIMB_COLLIDER_SIZE.y) / 2.0f + ( char_stats.STANDING_COLLIDER_OFFSET.y - char_stats.CEILING_CLIMB_COLLIDER_OFFSET.y );
+            // Once aligned, push player's right right one standing width and top down one standing height
+            float delta_x = char_stats.STANDING_COLLIDER_SIZE.x + offset_x;
+            float delta_y = -1.0f * char_stats.STANDING_COLLIDER_SIZE.y + offset_y;
+            transform.Translate( delta_x, delta_y, 0.0f );
+            char_stats.CeilingClimbHitBox();
+            current_climb_state = ClimbState.CeilingClimb;
+        }
+    }
+
+    /// <summary>
+    /// If possible, move from climbing under the corner of a ceiling to climbing on the wall around the corner.
+    /// </summary>
+    private void GoFromCeilingToWallAbove()
+    {
+        if ( CanGoFromCeilingToWallAbove() )
+        {
+            if ( is_at_left )
+            {
+                // player top = platform bottom (climbing) -> player top standing height over platform bottom (standing)
+                // player left = platform left (climbing) -> player right = platform left (standing)
+                // ceiling climb -> standing shrinks the hitbox. To get the player's left edge to the platform's left edge requires moving it by half the size difference.
+                float offset_x = ( char_stats.CEILING_CLIMB_COLLIDER_SIZE.x - char_stats.STANDING_COLLIDER_SIZE.x ) / -2.0f + ( char_stats.CEILING_CLIMB_COLLIDER_OFFSET.x - char_stats.STANDING_COLLIDER_OFFSET.x );
+                // To get the player's top edge to the platform's bottom edge requires moving it by half the size difference.
+                float offset_y = ( char_stats.CEILING_CLIMB_COLLIDER_SIZE.y - char_stats.STANDING_COLLIDER_SIZE.y ) / 2.0f + ( char_stats.CEILING_CLIMB_COLLIDER_OFFSET.y - char_stats.STANDING_COLLIDER_OFFSET.y );
+                // Once aligned, move the player out one player width, and up one player height.
+                float delta_x = -1.0f * char_stats.STANDING_COLLIDER_SIZE.x + offset_x - 0.5f;
+                float delta_y = char_stats.STANDING_COLLIDER_SIZE.y + offset_y + 1.0f;
+                transform.Translate( delta_x, delta_y, 0.0f );
+                char_stats.StandingHitBox();
+                current_climb_state = ClimbState.WallClimb;
+                char_stats.facing_direction = CharEnums.FacingDirection.Right;
+            }
+            else if ( is_at_right )
+            {
+                // player top = platform bottom (climbing) -> player top standing height over platform bottom (standing)
+                // player right = platform right (climbing) -> player left = platform right (standing)
+                // ceiling climb -> standing shrinks the hitbox x. To get the player's right edge to the platform's right edge requires moving it by half the size difference.
+                float offset_x = ( char_stats.CEILING_CLIMB_COLLIDER_SIZE.x - char_stats.STANDING_COLLIDER_SIZE.x ) / 2.0f + ( char_stats.CEILING_CLIMB_COLLIDER_OFFSET.x - char_stats.STANDING_COLLIDER_OFFSET.x );
+                // To get the player's top edge to the platform's bottom edge requires moving it by half the size difference.
+                float offset_y = ( char_stats.CEILING_CLIMB_COLLIDER_SIZE.y - char_stats.STANDING_COLLIDER_SIZE.y ) / 2.0f + ( char_stats.CEILING_CLIMB_COLLIDER_OFFSET.y - char_stats.STANDING_COLLIDER_OFFSET.y );
+                // Once aligned, move the player out one player width, and up one player height.
+                float delta_x = char_stats.STANDING_COLLIDER_SIZE.x + offset_x + 0.5f;
+                float delta_y = char_stats.STANDING_COLLIDER_SIZE.y + offset_y + 1.0f;
+                transform.Translate( delta_x, delta_y, 0.0f );
+                char_stats.StandingHitBox();
+                current_climb_state = ClimbState.WallClimb;
+                char_stats.facing_direction = CharEnums.FacingDirection.Left;
+            }
+        }
+    }
+
+    /// <summary>
+    /// If possible, move from climbing the ceiling to climbing a wall under that ceiling.
+    /// </summary>
+    private void GoFromCeilingToWallBelow()
+    {
+        if ( CanGoFromCeilingToWallBelow() )
+        {
+            if ( is_at_left )
+            {
+                // ceiling climb -> standing shrinks the hitbox width, expands hitbox height.
+                // want: left stay the same, top stay the same. Move by half size difference to keep alignment.
+                // No real translation, just change position to maintain alignment after size changes.
+                float delta_x = (char_stats.CEILING_CLIMB_COLLIDER_SIZE.x - char_stats.STANDING_COLLIDER_SIZE.x) / -2.0f + (char_stats.CEILING_CLIMB_COLLIDER_OFFSET.x - char_stats.STANDING_COLLIDER_OFFSET.x);
+                float delta_y = (char_stats.CEILING_CLIMB_COLLIDER_SIZE.y - char_stats.STANDING_COLLIDER_SIZE.y) / 2.0f + (char_stats.CEILING_CLIMB_COLLIDER_OFFSET.y - char_stats.STANDING_COLLIDER_OFFSET.y);
+                transform.Translate( delta_x, delta_y, 0.0f );
+                char_stats.StandingHitBox();
+                current_climb_state = ClimbState.WallClimb;
+            }
+            else if ( is_at_right )
+            {
+                // ceiling climb -> standing shrinks the hitbox width, expands hitbox height.
+                // want: right stay the same, top stay the same. Move by half size difference to keep alignment.
+                // No real translation, just change position to maintain alignment after size changes.
+                float delta_x = (char_stats.CEILING_CLIMB_COLLIDER_SIZE.x - char_stats.STANDING_COLLIDER_SIZE.x) / 2.0f + (char_stats.CEILING_CLIMB_COLLIDER_OFFSET.x - char_stats.STANDING_COLLIDER_OFFSET.x);
+                float delta_y = (char_stats.CEILING_CLIMB_COLLIDER_SIZE.y - char_stats.STANDING_COLLIDER_SIZE.y) / 2.0f + (char_stats.CEILING_CLIMB_COLLIDER_OFFSET.y - char_stats.STANDING_COLLIDER_OFFSET.y);
+                transform.Translate( delta_x, delta_y, 0.0f );
+                char_stats.StandingHitBox();
+                current_climb_state = ClimbState.WallClimb;
+            }
+        }
+    }
+    #endregion
+    #endregion
+
+    private void DrawDebugRect( float x, float y, float width, float height )
+    {
+        #if UNITY_EDITOR
+        Debug.Log( new Rect( x, y, width, height ) );
+        Debug.DrawLine( new Vector3( x, y, -6.0f ), new Vector3( x, y - height, -6.0f ) );
+        Debug.DrawLine( new Vector3( x, y - height, -6.0f ), new Vector3( x + width, y - height, -6.0f ) );
+        Debug.DrawLine( new Vector3( x, y, -6.0f ), new Vector3( x + width, y, -6.0f ) );
+        Debug.DrawLine( new Vector3( x + width, y, -6.0f ), new Vector3( x + width, y - height, -6.0f ) );
+        #endif
+    }
 }
