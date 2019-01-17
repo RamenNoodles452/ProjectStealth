@@ -95,9 +95,6 @@ public class MagGripUpgrade : MonoBehaviour
     /// </summary>
     void ClimbMovementInput()
     {
-        float character_top = char_stats.char_collider.bounds.max.y;
-        float character_bottom = char_stats.char_collider.bounds.min.y;
-
         if ( char_stats.current_master_state != CharEnums.MasterState.ClimbState ) { return; }
 
         LookAway();
@@ -127,9 +124,6 @@ public class MagGripUpgrade : MonoBehaviour
     /// </summary>
     private void CeilingClimbMovementInput()
     {
-        float character_top = char_stats.char_collider.bounds.max.y;
-        float character_bottom = char_stats.char_collider.bounds.min.y;
-
         LookAway();
 
         // TODO: jump logic
@@ -1545,7 +1539,7 @@ public class MagGripUpgrade : MonoBehaviour
         new_bottom = new_top  - char_stats.CEILING_CLIMB_COLLIDER_SIZE.y;
 
         Collider2D[] colliders = Physics2D.OverlapAreaAll( new Vector2( x, y ), new Vector2( x + width, y - height ), CollisionMasks.static_mask );
-        Rect climbable_area = GetClimbableCeilingRect( colliders );
+        Rect climbable_area = GetClimbableCeilingRect( colliders, new_left, new_right, new_top, new_bottom );
         if ( climbable_area.width < char_stats.CEILING_CLIMB_COLLIDER_SIZE.x ) { return false; }
 
         // Check that there is enough space below the ceiling to fit the new hitbox.
