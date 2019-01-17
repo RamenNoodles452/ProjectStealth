@@ -102,20 +102,6 @@ public class Player : SimpleCharacterCore
             {
                 player_stats.AdrenalRush();
             }
-
-            // base mag grip checks
-            if ( player_stats.acquired_mag_grip )
-            {
-                // if we want to grab down onto the wall from the ledge
-                if ( abuts_facing_sticky_ledge ) // && we're standing on a grabbable surface?
-                {
-                    if ( ! char_stats.IsInMidair && input_manager.JumpInputInst )
-                    {
-                        // do we want to climb down?
-                        mag_grip.WallClimbFromLedge();
-                    }
-                }
-            }
         }
     }
 
