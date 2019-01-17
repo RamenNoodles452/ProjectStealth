@@ -976,8 +976,10 @@ public class MagGripUpgrade : MonoBehaviour
         // Corner
         if ( is_at_left || is_at_right && Mathf.Abs( input_manager.HorizontalAxis ) > 0.0f )
         {
-            GoFromCeilingToWallAbove();
-            GoFromCeilingToWallBelow();
+            if ( ! GoFromCeilingToWallAbove() ) 
+            {
+                GoFromCeilingToWallBelow();
+            }
 
             // Old controls, changed to streamline from horizontal, then vertical input required to just horizontal.
             //if ( input_manager.VerticalAxis > 0.0f )
@@ -1808,9 +1810,10 @@ public class MagGripUpgrade : MonoBehaviour
      /// <summary>
     /// If possible, move from climbing under the corner of a ceiling to climbing on the wall around the corner.
     /// </summary>
-    private void GoFromCeilingToWallAbove()
+    /// <returns>True if the player was moved.</returns>
+    private bool GoFromCeilingToWallAbove()
     {
-        if ( ! CanGoFromCeilingToWallAbove() ) { return; }
+        if ( ! CanGoFromCeilingToWallAbove() ) { return false; }
         
         float delta_x = 0.0f;
         float delta_y = 0.0f;
@@ -1837,6 +1840,7 @@ public class MagGripUpgrade : MonoBehaviour
             facing = CharEnums.FacingDirection.Left;
         }
         ChangeClimbingState( new Vector2( delta_x, delta_y ), ClimbState.WallClimb, facing );
+        return true;
     }
 
     /// <summary>
@@ -1884,13 +1888,13 @@ public class MagGripUpgrade : MonoBehaviour
         if ( can_go_right )
         {
             // Align the new hitbox with the old hitbox's left and top.
-            delta_x = ( char_stats.STANDING_COLLIDER_SIZE.x - char_stats.CEILING_CLIMB_COLLIDER_SIZE.x ) / -2.0f + ( char_stats.STANDING_COLLIDER_OFFSET.x - char_stats.CEILING_CLIMB_COLLIDER_OFFSET.x ) - 0.5f;
+            delta_x = ( char_stats.STANDING_COLLIDER_SIZE.x - char_stats.CEILING_CLIMB_COLLIDER_SIZE.x ) / -2.0f + ( char_stats.STANDING_COLLIDER_OFFSET.x - char_stats.CEILING_CLIMB_COLLIDER_OFFSET.x );
             delta_y = ( char_stats.STANDING_COLLIDER_SIZE.y - char_stats.CEILING_CLIMB_COLLIDER_SIZE.y ) / 2.0f + ( char_stats.STANDING_COLLIDER_OFFSET.y - char_stats.CEILING_CLIMB_COLLIDER_OFFSET.y ) - 0.5f;
         }
         else if ( can_go_left )
         {
             // Align the new hitbox with the old hitbox's right and top.
-            delta_x = ( char_stats.STANDING_COLLIDER_SIZE.x - char_stats.CEILING_CLIMB_COLLIDER_SIZE.x ) / 2.0f + ( char_stats.STANDING_COLLIDER_OFFSET.x - char_stats.CEILING_CLIMB_COLLIDER_OFFSET.x ) + 0.5f;
+            delta_x = ( char_stats.STANDING_COLLIDER_SIZE.x - char_stats.CEILING_CLIMB_COLLIDER_SIZE.x ) / 2.0f + ( char_stats.STANDING_COLLIDER_OFFSET.x - char_stats.CEILING_CLIMB_COLLIDER_OFFSET.x );
             delta_y = ( char_stats.STANDING_COLLIDER_SIZE.y - char_stats.CEILING_CLIMB_COLLIDER_SIZE.y ) / 2.0f + ( char_stats.STANDING_COLLIDER_OFFSET.y - char_stats.CEILING_CLIMB_COLLIDER_OFFSET.y ) - 0.5f;
         }
         ChangeClimbingState( new Vector2( delta_x, delta_y ), ClimbState.CeilingClimb, facing );
