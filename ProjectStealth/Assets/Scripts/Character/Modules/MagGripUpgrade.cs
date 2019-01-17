@@ -3,7 +3,15 @@ using System.Collections;
 using UnityEditor;
 using System.Collections.Generic;
 
-// Handles wall and ceiling climbing
+// TODO: fallthrough platform top (stand/crouch) -> fallthrough platform bottom (ceiling climb)? :(
+// TODO: fallthrough platform bottom (ceiling climb) -> fallthrough platform top (stand/crouch)? :(
+// TODO: walk to sticky platform edge -> wall climb transition?
+// TODO: crouch up (ledge and wall)
+// TODO: wall climbing without jumping (from crouch?)
+// TODO: animation integration
+// TODO: refactor duplicative code (esp. ledge vs. wallclimb top, potentially lots of other similar stuff)
+
+///<summary> Handles wall and ceiling climbing</summary>
 public class MagGripUpgrade : MonoBehaviour
 {
     #region vars
