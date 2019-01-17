@@ -789,7 +789,6 @@ public class MagGripUpgrade : MonoBehaviour
         if ( colliders.Length == 0 )
         {
             // No wall, fall?
-            Debug.Log( "stop: no colliders" );
             StopClimbing();
             return;
         }
@@ -800,7 +799,7 @@ public class MagGripUpgrade : MonoBehaviour
         bool can_move_up = false;
         bool can_move_down = false;
 
-        if ( climbable_rect.size.y == 0 ) { Debug.Log("stop: 0 height"); StopClimbing(); return; } // no climbable surface
+        if ( climbable_rect.size.y == 0 ) { StopClimbing(); return; } // no climbable surface
 
         // use the relevant climbable subzone's restrictions to determine player mobility.
         if ( climbable_rect.y > char_stats.char_collider.bounds.max.y )
@@ -975,16 +974,20 @@ public class MagGripUpgrade : MonoBehaviour
         }
 
         // Corner
-        if ( is_at_left || is_at_right )
+        if ( is_at_left || is_at_right && Mathf.Abs( input_manager.HorizontalAxis ) > 0.0f )
         {
-            if ( input_manager.VerticalAxis > 0.0f )
-            {
-                GoFromCeilingToWallAbove();
-            }
-            else if ( input_manager.VerticalAxis < 0.0f )
-            {
-                GoFromCeilingToWallBelow();
-            }
+            GoFromCeilingToWallAbove();
+            GoFromCeilingToWallBelow();
+
+            // Old controls, changed to streamline from horizontal, then vertical input required to just horizontal.
+            //if ( input_manager.VerticalAxis > 0.0f )
+            //{
+            //    GoFromCeilingToWallAbove();
+            //}
+            //else if ( input_manager.VerticalAxis < 0.0f )
+            //{
+            //    GoFromCeilingToWallBelow();
+            //}
         }
     }
 

@@ -13,7 +13,7 @@ public class CollisionType
     private bool is_blocking = true; // Layer-restricted (nonblocking layer only).
 
     [SerializeField]
-    private bool can_climb_side = false;
+    private bool can_climb_side = false; // TODO: separate into left and right?
     [SerializeField]
     private bool can_climb_bottom = false;
     [SerializeField]
