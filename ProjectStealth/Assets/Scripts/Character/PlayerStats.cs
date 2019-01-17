@@ -803,6 +803,19 @@ public class PlayerStats : MonoBehaviour
     }
 
     /// <summary>
+    /// Determines if the player is in a state where they can fire their guns.
+    /// </summary>
+    /// <returns>True if the player can fire, false otherwise.</returns>
+    private bool IsInShootState()
+    {
+        if ( char_stats.current_master_state == CharEnums.MasterState.DefaultState )
+        {
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>
     /// Locks the player in a state where they cannot respond to input.
     /// </summary>
     /// <param name="duration">The duration the frozen state should last, in seconds.</param>
@@ -1065,6 +1078,15 @@ public class PlayerStats : MonoBehaviour
                 if ( charge_up_ball != null )
                 {
                     charge_up_ball.transform.parent.localPosition = new Vector3( GetFacingVector().x * ( char_stats.STANDING_COLLIDER_SIZE.x / 2.0f + 4.0f ), -2.0f, -1.0f );
+
+                    if ( ! IsInShootState() )
+                    {
+                        charge_up_ball.SetActive( false );
+                    }
+                    else
+                    {
+                        charge_up_ball.SetActive( true );
+                    }
                 }
 
                 // Track whether fully charged or not.
