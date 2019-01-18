@@ -305,9 +305,15 @@ public class PlayerStats : MonoBehaviour
         char_anims.Reset();
         // hide charged shot
         Animator charge_animator = charge_up_ball.GetComponent<Animator>();
-        charge_animator.SetBool( "Charging", false );
-        charge_animator.SetBool( "Charged", false );
-        charge_up_ball.SetActive( false );
+        if ( charge_animator != null )
+        {
+            if ( charge_animator.isActiveAndEnabled )
+            {
+                charge_animator.SetBool( "Charging", false );
+                charge_animator.SetBool( "Charged",  false );
+                charge_up_ball.SetActive( false );
+            }
+        }
 
         // reset movement
         char_stats = this.gameObject.GetComponent<CharacterStats>();
@@ -1078,14 +1084,17 @@ public class PlayerStats : MonoBehaviour
                 if ( charge_up_ball != null )
                 {
                     charge_up_ball.transform.parent.localPosition = new Vector3( GetFacingVector().x * ( char_stats.STANDING_COLLIDER_SIZE.x / 2.0f + 4.0f ), -2.0f, -1.0f );
-
-                    if ( ! IsInShootState() )
+                    SpriteRenderer sprite_renderer =  charge_up_ball.GetComponent<SpriteRenderer>();
+                    if ( sprite_renderer != null )
                     {
-                        charge_up_ball.SetActive( false );
-                    }
-                    else
-                    {
-                        charge_up_ball.SetActive( true );
+                        if ( ! IsInShootState() )
+                        {
+                            sprite_renderer.enabled = false; // only disable this so we keep correct animation
+                        }
+                        else
+                        {
+                            sprite_renderer.enabled = true;
+                        }
                     }
                 }
 
