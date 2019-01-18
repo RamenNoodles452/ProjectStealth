@@ -11,7 +11,7 @@ using UnityEngine.Rendering;
 //---------------------------
 // Note on render depths (Z):
 //  camera          = -10
-//  character       =  -5
+//  character       =   0, on higher sorting layer
 //  geometry        =   0
 //  shadow          =   0.5
 //  near background =   1,   range: ( 0.01, 1.99 )
