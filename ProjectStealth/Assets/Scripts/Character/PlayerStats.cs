@@ -69,8 +69,36 @@ public class PlayerStats : MonoBehaviour
     private float silencer_regen = 1.0f;
     #endregion
 
+    #region Shoot
+    [SerializeField]
+    private GameObject charge_up_rays;
+    [SerializeField]
+    private GameObject charge_up_ball;
+    [SerializeField]
+    private GameObject bullet_prefab;
+    [SerializeField]
+    private GameObject charged_bullet_prefab;
+    [SerializeField]
+    private GameObject charged_bullet_impact_prefab;
+
+    private bool is_shooting = false;
+    private float shoot_charge_timer = 0.0f;
+    private const float SHOOT_FULL_CHARGE_TIME = 2.0f; // seconds
+
+    private CharacterOverlay overlay;
+
+    private GameObject aim_enemy_memory;
+    private GameObject aim_auto_target; // closest enemy in facing that is targetable
+    private Vector2 aim_auto_reticle_position;
+    private Vector2 aim_manual_reticle_position;
+    private GameObject aim_reticle;
+    #endregion
+
     private bool is_in_shadow = false;
 
+    private float freeze_timer = 0.0f; // seconds
+
+    #region adrenaline
     [SerializeField]
     private bool is_adrenal_rushing = false;
     private bool is_adrenaline_fading_in = false;
@@ -81,14 +109,18 @@ public class PlayerStats : MonoBehaviour
     private const float ADRENALINE_DESATURATION  = 0.75f; // percent desaturation
     private float adrenal_rush_timer = ADRENAL_RUSH_COOLDOWN;
     private float adrenal_fade_timer = 0.0f;
+    #endregion
 
+    #region progression
     // progress values
-    public  bool acquired_mag_grip;
-    public  bool acquired_adrenal_rush;
-    private bool acquired_hookshot;
-    private bool acquired_hack;
-    private bool acquired_explosive;
-    private bool acquired_charge_shot;
+    public bool acquired_mag_grip;
+    public bool acquired_ceiling_grip;
+    public bool acquired_adrenal_rush;
+    public bool acquired_hookshot;
+    public bool acquired_hack;
+    public bool acquired_explosive;
+    public bool acquired_charge_shot;
+    #endregion
 
     // checkpointing
     public Vector2 checkpoint;
@@ -98,8 +130,11 @@ public class PlayerStats : MonoBehaviour
 
     private CharacterStats char_stats;
     private CharacterAnimationLogic char_anims;
-    IInputManager input_manager;
+    private IInputManager input_manager;
     private float walk_animation_timer;
+
+    private bool is_idle  = true;
+    private bool was_idle = true;
     #endregion
 
     #region stat accessors
@@ -149,6 +184,22 @@ public class PlayerStats : MonoBehaviour
     }
 
     /// <summary>
+    /// Returns true if the player is in the idle animation.
+    /// </summary>
+    public bool IsIdle
+    {
+        get { return is_idle; }
+    }
+
+    /// <summary>
+    /// Returns true if the player became idle this frame.
+    /// </summary>
+    public bool BecameIdleThisFrame
+    {
+        get { return is_idle && !was_idle; }
+    }
+
+    /// <summary>
     /// Sets location to respawn at
     /// </summary>
     /// <param name="coordinates">coordinates</param>
@@ -192,6 +243,10 @@ public class PlayerStats : MonoBehaviour
                 Respawn(); //TODO: put an ani and delay on this
             }
         }
+
+        // Overlay
+        if ( overlay == null ) { return; }
+        overlay.StartHurtBlink();
     }
 
     /// <summary>
@@ -211,6 +266,7 @@ public class PlayerStats : MonoBehaviour
         else*/
         //{
         this.gameObject.transform.position = new Vector3( checkpoint.x, checkpoint.y, this.gameObject.transform.position.z );
+        Camera.main.GetComponent<CameraMovement>().SnapToFocalPoint();
         //}
 
         // Reset stats
@@ -244,10 +300,30 @@ public class PlayerStats : MonoBehaviour
         }
 
         input_manager = GetComponent<IInputManager>();
+        UnfreezePlayer();
         char_anims = this.gameObject.GetComponent<CharacterAnimationLogic>();
+        char_anims.Reset();
+        // hide charged shot
+        Animator charge_animator = charge_up_ball.GetComponent<Animator>();
+        if ( charge_animator != null )
+        {
+            if ( charge_animator.isActiveAndEnabled )
+            {
+                charge_animator.SetBool( "Charging", false );
+                charge_animator.SetBool( "Charged",  false );
+                charge_up_ball.SetActive( false );
+            }
+        }
+
         // reset movement
         char_stats = this.gameObject.GetComponent<CharacterStats>();
         char_stats.velocity = new Vector2( 0.0f, 0.0f );
+
+        // reset overlay
+        if ( overlay != null )
+        {
+            overlay.HideOverlay();
+        }
     }
 
     /// <summary>
@@ -276,9 +352,38 @@ public class PlayerStats : MonoBehaviour
         get { return SHIELD_REGENERATION_DELAY; }
     }
 
+    /// <summary>
+    /// Accessor for whether the player is in adrenaline rush mode (slows time, "infinite stamina")
+    /// </summary>
     public bool IsAdrenalRushing
     {
         get { return is_adrenal_rushing; }
+    }
+
+    /// <summary>
+    /// Begins charging weapon in preparation to shoot.
+    /// </summary>
+    public void StartShoot()
+    {
+        // Releasing fire button in a non-firable state can lock you in to the charged shooting state. 
+        // So, you can start firing, go into a non-firing state WHILE fully charging, then release to "multitask" charge.
+        // This is a stopgap to keep things from getting wonky then.
+        if ( is_shooting ) { return; }
+
+        is_shooting = true;
+        shoot_charge_timer = 0.0f;
+
+        if ( acquired_charge_shot )
+        {
+            ParticleSystem ray_particles = charge_up_rays.GetComponent<ParticleSystem>();
+            ray_particles.Stop();
+            ray_particles.Play();
+
+            charge_up_ball.SetActive( true );
+            Animator charge_animator = charge_up_ball.GetComponent<Animator>();
+            charge_animator.SetBool( "Charging", true );
+            charge_animator.SetBool( "Charged", false );
+        }
     }
 
     /// <summary>
@@ -286,12 +391,15 @@ public class PlayerStats : MonoBehaviour
     /// </summary>
     public void Shoot()
     {
+        if ( ! is_shooting ) { return; }
         if ( is_evading ) { return; } // no shooting mid-evade
         //animation lock checks?
 
+
+        bool is_fully_charged = ( shoot_charge_timer >= SHOOT_FULL_CHARGE_TIME ) && acquired_charge_shot;
         //make noise?
         //use silencer meter / shooting when cloaked makes no noise
-        if ( silencer >= 1.0f )
+        if ( silencer >= 1.0f && ! is_fully_charged )
         {
             // Suppressed shot
             silencer -= 1.0f;
@@ -303,12 +411,58 @@ public class PlayerStats : MonoBehaviour
             Noise noise = noise_obj.GetComponent<Noise>();
             noise.lifetime = 0.25f; // seconds
             noise.radius = 200.0f;
+            // TODO: if ( is_fully_charged ) { } // custom noise?
         }
 
         if ( is_cloaked ) { is_cloaked = false; } // attacking breaks stealth (even silenced?)
 
         // Actually fire bullets
         // Start with closest tagged enemies (if any)?
+
+        // spawn bullet prefab, set appropriate charge level.
+        Vector2 origin =  GetShotOrigin();
+        GameObject bullet_obj = null;
+
+        if ( ! is_fully_charged )
+        {
+            // Normal bullet
+            bullet_obj = Instantiate( bullet_prefab, new Vector3( origin.x, origin.y, transform.position.z ), Quaternion.identity );
+            BulletRay bullet = bullet_obj.GetComponent<BulletRay>();
+            bullet.is_player_owned = true;
+            bullet.angle = Mathf.Atan2( aim_auto_reticle_position.y - origin.y, aim_auto_reticle_position.x - origin.x );
+            bullet.damage = 50.0f;
+        }
+        else
+        {
+            Camera.main.GetComponent<CameraMovement>().ShakeScreen( 10.0f, 0.5f );
+            // Charged bullet
+            bullet_obj = Instantiate( charged_bullet_prefab, new Vector3( origin.x, origin.y, transform.position.z ), Quaternion.identity );
+            BulletChargedRay bullet = bullet_obj.GetComponent<BulletChargedRay>();
+            // damage must be > fire rate * uncharged damage.
+            bullet.Setup( origin, aim_auto_reticle_position, 500.0f, true );
+
+            // Impact graphic
+            GameObject impact_obj = Instantiate( charged_bullet_impact_prefab, new Vector3( aim_auto_reticle_position.x, aim_auto_reticle_position.y, charged_bullet_impact_prefab.transform.position.z ), Quaternion.identity );
+
+            // freeze player for 0.5 seconds
+            FreezePlayer( 0.5f );
+            
+            // stop showing the fully charged overlay
+            if ( overlay != null )
+            {
+                overlay.HideOverlay();
+            }
+        }
+
+        // Reset state.
+        is_shooting = false;
+        ParticleSystem ray_particles = charge_up_rays.GetComponent<ParticleSystem>();
+        ray_particles.Stop();
+
+        Animator charge_animator = charge_up_ball.GetComponent<Animator>();
+        charge_animator.SetBool( "Charging", false );
+        charge_animator.SetBool( "Charged", false );
+        charge_up_ball.SetActive( false ); // hide.
     }
 
     /// <summary>
@@ -526,6 +680,194 @@ public class PlayerStats : MonoBehaviour
     }
 
     /// <summary>
+    /// Automatically targets an enemy.
+    /// </summary>
+    private void AutoTarget()
+    {
+        if ( input_manager.IsManualAimOn )
+        {
+            EngageFreeAim();
+            return;
+        }
+
+        const float MAX_RANGE = 640.0f; //640 px, 20 tiles
+        Vector2 origin = GetShotOrigin();
+
+        // If you fired at an enemy, stay locked on (if in range).
+        if ( aim_enemy_memory != null )
+        {
+            aim_auto_reticle_position = new Vector2( aim_enemy_memory.transform.position.x, aim_enemy_memory.transform.position.y );
+            // TODO: LOS check?
+            if ( Vector2.Distance( origin, aim_auto_reticle_position ) <= MAX_RANGE )
+            {
+                aim_reticle.transform.position = new Vector3( aim_auto_reticle_position.x, aim_auto_reticle_position.y, aim_reticle.transform.position.z );
+                return;
+            }
+        }
+
+        // Find the closest enemy in your facing, within range, with a clear shot to them.
+        float minimum_distance = MAX_RANGE;
+        foreach ( GameObject enemy in Referencer.instance.enemies )
+        {
+            // Is enemy in direction you are facing?
+            if ( char_stats.facing_direction == CharEnums.FacingDirection.Left )
+            {
+                if ( enemy.transform.position.x > transform.position.x ) { continue; }
+            }
+            else
+            {
+                if ( enemy.transform.position.x < transform.position.x ) { continue; }
+            }
+
+            // Is enemy in range?
+            Vector2 direction = new Vector2( enemy.transform.position.x - origin.x, enemy.transform.position.y - origin.y );
+            float distance_to_enemy = direction.magnitude;
+            if ( distance_to_enemy >= minimum_distance )
+            {
+                continue;
+            }
+
+            // Is there a clear shot?
+            RaycastHit2D hit = Physics2D.Raycast( origin, direction, distance_to_enemy + 1.0f, CollisionMasks.player_shooting_mask );
+            if ( hit.collider == null ) { continue; }
+
+            if ( Utils.IsEnemyCollider( hit.collider ) )
+            {
+                aim_auto_reticle_position = new Vector2( enemy.transform.position.x, enemy.transform.position.y );
+                minimum_distance = distance_to_enemy;
+            }
+        }
+
+        // Fire straight ahead! / manual mode
+        if ( minimum_distance == MAX_RANGE )
+        {
+            RaycastHit2D hit = Physics2D.Raycast( origin, GetFacingVector(), MAX_RANGE, CollisionMasks.player_shooting_mask );
+            if ( hit.collider == null ) { aim_auto_reticle_position = origin + MAX_RANGE * GetFacingVector(); }
+            else
+            {
+                aim_auto_reticle_position = hit.point;
+            }
+        }
+
+        aim_reticle.transform.position = new Vector3( aim_auto_reticle_position.x, aim_auto_reticle_position.y, aim_reticle.transform.position.z );
+    }
+
+    /// <summary>
+    /// Manually targets a location to shoot.
+    /// </summary>
+    private void EngageFreeAim()
+    {
+        const float MAX_RANGE = 640.0f; //640 px, 20 tiles //TODO: refactor
+        Vector2 origin = GetShotOrigin();
+        Vector2 direction;
+        float distance;
+
+        if ( input_manager.AimMode == IInputManager.ManualAimMode.angle )
+        {
+            direction = new Vector2( input_manager.HorizontalAimAxis, input_manager.VerticalAimAxis );
+            distance = MAX_RANGE;
+        }
+        else //if ( input_manager.AimMode == IInputManager.ManualAimMode.position )
+        {
+            Vector3 aim_position = Camera.main.ViewportToWorldPoint( new Vector3( input_manager.AimPosition.x / (float) Screen.width, input_manager.AimPosition.y / (float) Screen.height, 0.0f ) );
+            direction = new Vector2( aim_position.x - origin.x, aim_position.y - origin.y );
+            distance = Mathf.Min( direction.magnitude + 1.0f, MAX_RANGE );
+        }
+
+        RaycastHit2D hit = Physics2D.Raycast( origin, direction, distance, CollisionMasks.player_shooting_mask );
+        if ( hit.collider == null ) { aim_auto_reticle_position = origin + distance * direction.normalized; }
+        else
+        {
+            aim_auto_reticle_position = hit.point;
+        }
+        aim_reticle.transform.position = new Vector3( aim_auto_reticle_position.x, aim_auto_reticle_position.y, aim_reticle.transform.position.z );
+    }
+
+    /// <summary>
+    /// Gets the origin point for bullets fired from the player's weapon
+    /// </summary>
+    /// <returns>The origin point.</returns>
+    private Vector2 GetShotOrigin()
+    {
+        return new Vector2( transform.position.x, transform.position.y ) + char_stats.STANDING_COLLIDER_SIZE.x / 2.0f * GetFacingVector();
+    }
+
+    /// <summary>
+    /// Gets the vector for the player's facing.
+    /// </summary>
+    /// <returns>The vector pointing left or right.</returns>
+    private Vector2 GetFacingVector()
+    {
+        if ( char_stats.facing_direction == CharEnums.FacingDirection.Left )
+        {
+            return new Vector2( -1.0f, 0.0f );
+        }
+        else
+        {
+            return new Vector2( 1.0f, 0.0f );
+        }
+    }
+
+    /// <summary>
+    /// Determines if the player is in a state where they can fire their guns.
+    /// </summary>
+    /// <returns>True if the player can fire, false otherwise.</returns>
+    private bool IsInShootState()
+    {
+        if ( char_stats.current_master_state == CharEnums.MasterState.DefaultState )
+        {
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Locks the player in a state where they cannot respond to input.
+    /// </summary>
+    /// <param name="duration">The duration the frozen state should last, in seconds.</param>
+    public void FreezePlayer( float duration )
+    {
+        if ( duration <= 0.0f ) { return; }
+        input_manager.IgnoreInput = true;
+        freeze_timer = Mathf.Max( duration, freeze_timer );
+    }
+
+    /// <summary>
+    /// Unlocks the player from the frozen "no-input" state.
+    /// </summary>
+    public void UnfreezePlayer()
+    {
+        input_manager.IgnoreInput = false;
+        freeze_timer = 0.0f;
+    }
+
+    /// <summary>
+    /// Early initialization
+    /// </summary>
+    private void Awake()
+    {
+        aim_reticle = transform.Find( "Reticle" ).gameObject;
+
+        #region overlay
+        GameObject sprite_obj = transform.Find( "Sprites" ).gameObject;
+        if ( sprite_obj != null )
+        {
+            GameObject overlay_obj = sprite_obj.transform.Find( "Overlay" ).gameObject;
+            if ( overlay_obj != null )
+            {
+                overlay = overlay_obj.GetComponent<CharacterOverlay>();
+            }
+        }
+        #if UNITY_EDITOR
+        if ( overlay == null )
+        {
+            Debug.LogError( "Could not find the player overlay in the hierarchy." );
+        }
+        #endif
+        #endregion
+    }
+
+    /// <summary>
     /// Initialization upon level entry
     /// </summary>
     void Start()
@@ -544,8 +886,8 @@ public class PlayerStats : MonoBehaviour
             Respawn(); //TODO: if this takes >1 frame, need state tracking.
         }
 
-        #region timers
-        #region shield
+        #region Timers
+        #region Shield
         // Shield regeneration
         if ( was_hit_this_frame )
         {
@@ -720,7 +1062,72 @@ public class PlayerStats : MonoBehaviour
             }
         }
         #endregion
+
+        #region Freeze
+        if ( freeze_timer > 0.0f )
+        {
+            freeze_timer = Mathf.Max( freeze_timer - Time.deltaTime * Time.timeScale, 0.0f );
+            if ( freeze_timer <= 0.0f )
+            {
+                UnfreezePlayer();
+            }
+        }
         #endregion
+        #endregion
+
+        #region Shooting
+        if ( is_shooting )
+        {
+            if ( acquired_charge_shot )
+            {
+                // Display charge up ball over player around shot origin point.
+                if ( charge_up_ball != null )
+                {
+                    charge_up_ball.transform.parent.localPosition = new Vector3( GetFacingVector().x * ( char_stats.STANDING_COLLIDER_SIZE.x / 2.0f + 4.0f ), -2.0f, -1.0f );
+                    SpriteRenderer sprite_renderer =  charge_up_ball.GetComponent<SpriteRenderer>();
+                    if ( sprite_renderer != null )
+                    {
+                        if ( ! IsInShootState() )
+                        {
+                            sprite_renderer.enabled = false; // only disable this so we keep correct animation
+                        }
+                        else
+                        {
+                            sprite_renderer.enabled = true;
+                        }
+                    }
+                }
+
+                // Track whether fully charged or not.
+                float prev_shoot_charge_timer = shoot_charge_timer;
+                shoot_charge_timer = Mathf.Min( shoot_charge_timer + Time.deltaTime * Time.timeScale, SHOOT_FULL_CHARGE_TIME );
+                if ( ( shoot_charge_timer >= SHOOT_FULL_CHARGE_TIME ) && prev_shoot_charge_timer < shoot_charge_timer )
+                {
+                    if ( overlay != null )
+                    {
+                        Color overlay_color;
+                        //overlay_color = new Color( 0.0f, 0.70f, 0.35f ); // energy
+                        overlay_color = new Color( 0.98f, 0.75f, 1.0f ); // bullet
+                        overlay.ShowOverlay( overlay_color );
+                    }
+                    if ( charge_up_ball != null )
+                    {
+                        Animator charge_animator = charge_up_ball.GetComponent<Animator>();
+                        if ( charge_animator != null )
+                        {
+                            charge_animator.SetBool( "Charged", true );
+                        }
+                    }
+                }
+            }
+        }
+        #endregion
+
+        AutoTarget();
+
+        // Idle check
+        was_idle = is_idle;
+        is_idle = char_anims.animator.GetCurrentAnimatorStateInfo( 0 ).IsName( "valerie_idle" );
     }
 
 }

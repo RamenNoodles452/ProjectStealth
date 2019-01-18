@@ -72,6 +72,10 @@ public class Player : SimpleCharacterCore
             // Shoot
             if ( input_manager.ShootInputInst )
             {
+                player_stats.StartShoot();
+            }
+            if ( input_manager.ShootInputReleaseInst )
+            {
                 player_stats.Shoot();
             }
 
@@ -98,20 +102,6 @@ public class Player : SimpleCharacterCore
             {
                 player_stats.AdrenalRush();
             }
-
-            // base mag grip checks
-            if ( player_stats.acquired_mag_grip )
-            {
-                // if we want to grab down onto the wall from the ledge
-                if ( abuts_facing_sticky_ledge ) // && we're standing on a grabbable surface?
-                {
-                    if ( ! char_stats.IsInMidair && input_manager.JumpInputInst )
-                    {
-                        // do we want to climb down?
-                        mag_grip.WallClimbFromLedge();
-                    }
-                }
-            }
         }
     }
 
@@ -137,15 +127,21 @@ public class Player : SimpleCharacterCore
         return base.IsCrouchedAbuttingFacingStickyLedge();
     }
 
-    public override void OnTouchWall( GameObject collisionObject )
+    /// <summary>
+    /// Called when the player touches the wall.
+    /// </summary>
+    public override void OnTouchWall()
     {
-        mag_grip.InitiateWallGrab( collisionObject.GetComponent<Collider2D>() );
+        mag_grip.InitiateWallGrab();
     }
 
-    public override void OnTouchCeiling( GameObject collisionObject )
+    /// <summary>
+    /// Called when the player touches the ceiling.
+    /// </summary>
+    public override void OnTouchCeiling()
     {
         char_anims.FallTrigger();
-        mag_grip.InitiateCeilingGrab( collisionObject.GetComponent<Collider2D>() );
+        mag_grip.InitiateCeilingGrab();
     }
 
     /// <returns>The coordinates of the center point of the player (in pixels)</returns>
@@ -175,6 +171,12 @@ public class Player : SimpleCharacterCore
 
     /// <returns>The player's maximum amount of energy</returns>
     public float GetEnergyMax() { return player_stats.GetEnergyMax(); }
+
+    /// <returns>True if the player's animation changed to idle since the last frame.</returns>
+    public bool BecameIdleThisFrame
+    {
+        get { return player_stats.BecameIdleThisFrame; }
+    }
 
     /// <summary>
     /// Saves checkpoint location to respawn at.

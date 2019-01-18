@@ -15,16 +15,18 @@ public class VaultAction : MonoBehaviour
     private IInputManager input_manager;
     private GenericMovementLib mov_lib;
 
-    private bool vaulting = false;
+    private bool is_vaulting = false;
     #endregion
 
-    void Start()
+    // Early Initialization
+    void Awake()
     {
         char_stats    = GetComponent<CharacterStats>();
         input_manager = GetComponent<IInputManager>();
         mov_lib       = GetComponent<GenericMovementLib>();
     }
 
+    // Update is called every frame.
     void Update()
     {
         if ( char_stats.touched_vault_obstacle != null && (char_stats.is_taking_cover && input_manager.InteractInputInst || char_stats.IsRunning) )
@@ -35,7 +37,7 @@ public class VaultAction : MonoBehaviour
             }
             char_stats.current_master_state = CharEnums.MasterState.VaultState;
             input_manager.InteractInputInst = false;
-            input_manager.InputOverride = true;
+            input_manager.IgnoreInput = true;
 
             // translate body to on the ledge
             char_stats.bezier_distance = 0.0f;
@@ -53,21 +55,23 @@ public class VaultAction : MonoBehaviour
                     char_stats.char_collider.bounds.center.y - char_stats.char_collider.offset.y );
             }
             char_stats.bezier_curve_position = new Vector2( char_stats.touched_vault_obstacle.bounds.center.x, char_stats.touched_vault_obstacle.bounds.max.y + char_stats.CROUCHING_COLLIDER_SIZE.y * 3 );
-            vaulting = true;
+            is_vaulting = true;
         }
 
-        if ( vaulting )
+        if ( is_vaulting )
         {
-            transform.position = mov_lib.BezierCurveMovement( char_stats.bezier_distance, char_stats.bezier_start_position, char_stats.bezier_end_position, char_stats.bezier_curve_position );
+            Vector2 position = mov_lib.BezierCurveMovement( char_stats.bezier_distance, char_stats.bezier_start_position, char_stats.bezier_end_position, char_stats.bezier_curve_position );
+            transform.position = new Vector3( position.x, position.y, transform.position.z ); // preserve Z
+
             if ( char_stats.bezier_distance < 1.0f )
             {
                 char_stats.bezier_distance = char_stats.bezier_distance + Time.deltaTime * Time.timeScale * 3.5f; //...what? WHAT? WAT!?
             }
             else
             {
-                vaulting = false;
+                is_vaulting = false;
                 char_stats.touched_vault_obstacle = null;
-                input_manager.InputOverride = false;
+                input_manager.IgnoreInput = false;
                 char_stats.current_master_state = CharEnums.MasterState.DefaultState;
             }
         }

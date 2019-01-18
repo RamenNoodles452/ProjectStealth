@@ -21,7 +21,7 @@ GameObject:
   - component: {fileID: 4559494809494972}
   - component: {fileID: 212692009425054118}
   m_Layer: 0
-  m_Name: fuse light
+  m_Name: Fuse Light
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

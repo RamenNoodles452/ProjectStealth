@@ -16,13 +16,17 @@ public class CharacterStats : MonoBehaviour
     [HideInInspector]
     public BoxCollider2D char_collider; // defaults: offset[0,-2] size [24,40]
     //[HideInInspector]
-    public Vector2 STANDING_COLLIDER_SIZE = new Vector2(25.0f, 39.0f);
+    public Vector2 STANDING_COLLIDER_SIZE = new Vector2( 25.0f, 39.0f );
     [HideInInspector]
-    public Vector2 STANDING_COLLIDER_OFFSET = new Vector2(0.0f, -2.0f); // the collider box needs to be offset from center
+    public Vector2 STANDING_COLLIDER_OFFSET = new Vector2( 0.0f, -2.0f ); // the collider box needs to be offset from center
     //[HideInInspector]
-    public Vector2 CROUCHING_COLLIDER_SIZE = new Vector2(25.0f, 19.0f);
+    public Vector2 CROUCHING_COLLIDER_SIZE = new Vector2( 25.0f, 19.0f );
     [HideInInspector]
-    public Vector2 CROUCHING_COLLIDER_OFFSET = new Vector2(0.0f, -12.0f); // the collider box needs to be offset from center
+    public Vector2 CROUCHING_COLLIDER_OFFSET; // calculated.
+    //[HideInInspector]
+    public Vector2 CEILING_CLIMB_COLLIDER_SIZE = new Vector2( 39.0f, 25.0f );
+    [HideInInspector]
+    public Vector2 CEILING_CLIMB_COLLIDER_OFFSET; // calculated.
 
     public Vector2 velocity;
     [HideInInspector]
@@ -56,16 +60,28 @@ public class CharacterStats : MonoBehaviour
     public float bezier_distance;
     #endregion
 
+    // Early Initialization (references)
+    private void Awake()
+    {
+        // To be robust, the crouch collider box needs to be offset from center, such that the bottom is at the same y coordinate as when standing.
+        CROUCHING_COLLIDER_OFFSET = new Vector2( 0.0f, ( CROUCHING_COLLIDER_SIZE.y - STANDING_COLLIDER_SIZE.y ) / 2.0f + STANDING_COLLIDER_OFFSET.y );
+        // To be robust, the ceiling climb collider box needs to be offset from center, such that the top is at the same y coordinate as when standing.
+        CEILING_CLIMB_COLLIDER_OFFSET = new Vector2( 0.0f, ( CEILING_CLIMB_COLLIDER_SIZE.y - STANDING_COLLIDER_SIZE.y ) / -2.0f + STANDING_COLLIDER_OFFSET.y );
+        char_collider = GetComponent<BoxCollider2D>();
+    }
+
+    // Initialization
     void Start()
     {
-        char_collider = GetComponent<BoxCollider2D>();
-        char_collider.size = STANDING_COLLIDER_SIZE;
-        char_collider.offset = STANDING_COLLIDER_OFFSET;
+        StandingHitBox();
         velocity = new Vector2( 0.0f, 0.0f );
         acceleration = new Vector2( 0.0f, 0.0f );
         jump_input_time = 0.0f;
     }
 
+    /// <summary>
+    /// Clans up jump state variables.
+    /// </summary>
     public void ResetJump()
     {
         is_jumping = false;
@@ -77,6 +93,7 @@ public class CharacterStats : MonoBehaviour
     /// </summary>
     public void CrouchingHitBox()
     {
+        // Don't need to worry about repositioning, crouch collider is offset such that the bottom aligns with the standing collider's bottom.
         char_collider.size = CROUCHING_COLLIDER_SIZE;
         char_collider.offset = CROUCHING_COLLIDER_OFFSET;
     }
@@ -86,8 +103,18 @@ public class CharacterStats : MonoBehaviour
     /// </summary>
     public void StandingHitBox()
     {
+        // Don't need to worry about repositioning, standing collider is offset such that the bottom aligns with the crouch collider's bottom.
         char_collider.size = STANDING_COLLIDER_SIZE;
         char_collider.offset = STANDING_COLLIDER_OFFSET;
+    }
+
+    /// <summary>
+    /// Resized the character's hit box to be shorter and wider when climbing on the ceiling.
+    /// </summary>
+    public void CeilingClimbHitBox()
+    {
+        char_collider.size = CEILING_CLIMB_COLLIDER_SIZE;
+        char_collider.offset = CEILING_CLIMB_COLLIDER_OFFSET;
     }
 
     /// <summary>

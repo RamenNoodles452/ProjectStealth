@@ -77,12 +77,16 @@ public class GrapplingHook : MonoBehaviour
         Vector2 direction = target - character_position;
 
         // Use "upward" collision mask b/c hookshot is allowed to go through fallthrough platforms.
-        RaycastHit2D hit = Physics2D.Raycast( character_position, direction, MAX_RANGE, CollisionMasks.upwards_collision_mask );
+        RaycastHit2D hit = Physics2D.Raycast( character_position, direction, MAX_RANGE, CollisionMasks.hookshot_mask );
         if ( hit.collider == null )         { return; } // TODO: hit nothing: misfire / animate failure / do nothing?
 
         // TODO: hmm.... So if an enemy bullet gets in the way while aiming, hookshotting fails? Fishy. Might need to adjust masking?
         // TODO: check for enemies.
-        CollisionType collision_type = hit.collider.GetComponent<CollisionType>();
+        CustomTileData tile_data = Utils.GetCustomTileData( hit.collider );
+        CollisionType collision_type = null;
+        if ( tile_data != null ) { collision_type = tile_data.collision_type; }
+
+
         if ( collision_type == null )       { return; }
         if ( collision_type.CanHookshotTo ) { hit_good_surface = true; }
         else                                { hit_bad_surface  = true; }
@@ -96,7 +100,7 @@ public class GrapplingHook : MonoBehaviour
         // won't work vs. moving platforms well, so might need to do collision checks every frame (or ignore them?).
         if ( hit_good_surface )
         {
-            BoxCollider2D box = hit.collider.GetComponent<BoxCollider2D>();
+            BoxCollider2D box = tile_data.gameObject.GetComponent<BoxCollider2D>();
             if ( box != null )
             {
                 target = box.bounds.center;

@@ -31,7 +31,8 @@ public class Enemy : MonoBehaviour
     {
         if ( vision_subobject == null )
         {
-            vision_subobject = this.gameObject.transform.Find( "Vision Field" ).gameObject;
+            Transform vision_transform = this.gameObject.transform.Find( "Vision Field" );
+            if ( vision_transform != null ){ vision_subobject = vision_transform.gameObject; }
         }
     }
 
@@ -40,8 +41,8 @@ public class Enemy : MonoBehaviour
     {
         Referencer.instance.RegisterEnemy( this.gameObject );
 
-        vision_subobject.GetComponent<EnemyVisionField>().enemy = this; // circular reference
-        vision_triangle = vision_subobject.GetComponent<PolygonCollider2D>();
+        //vision_subobject.GetComponent<EnemyVisionField>().enemy = this; // circular reference
+        //vision_triangle = vision_subobject.GetComponent<PolygonCollider2D>();
         if ( vision_half_angle >= 90.0f || vision_half_angle < 0.0f )
         {
             Debug.Log( "Invalid vision cone angle!" );
@@ -66,6 +67,7 @@ public class Enemy : MonoBehaviour
 
         if ( GameState.instance.is_red_alert )
         {
+            if ( bullet_prefab == null ) { return; }
             Vector3 player_position = Referencer.instance.player.transform.position;
             if ( player_position.x > this.gameObject.transform.position.x ) { Face( CharEnums.FacingDirection.Right ); }
             if ( player_position.x < this.gameObject.transform.position.x ) { Face( CharEnums.FacingDirection.Left ); }
@@ -123,12 +125,13 @@ public class Enemy : MonoBehaviour
         // manipulate vision polygon, allow directional flipping
         // TODO: only call on initialization and direction change
 
+        /*
         Vector2[] path = new Vector2[3];
         path[ 0 ] = new Vector2( 0.0f, 0.0f ); // local space
         path[ 1 ] = new Vector2( vision_range * Mathf.Cos( vision_half_angle * Mathf.Deg2Rad ), vision_range * Mathf.Sin( vision_half_angle * Mathf.Deg2Rad ) );
         path[ 2 ] = new Vector2( vision_range * Mathf.Cos( -vision_half_angle * Mathf.Deg2Rad ), vision_range * Mathf.Sin( -vision_half_angle * Mathf.Deg2Rad ) );
 
-        vision_triangle.SetPath( 0, path );
+        vision_triangle.SetPath( 0, path );*/
     }
 
     public void PlayerSeen()
@@ -140,6 +143,8 @@ public class Enemy : MonoBehaviour
 
     public void Patrol()
     {
+        if ( patrol_path == null ) { return; }
+
         Vector3 aim = patrol_path.Current();
         float angle = Mathf.Atan2( aim.y - transform.position.y, aim.x - transform.position.x );
         float distance = Mathf.Sqrt( Mathf.Pow( aim.x - transform.position.x, 2.0f ) + Mathf.Pow( aim.y - transform.position.y, 2.0f ) );
@@ -168,6 +173,8 @@ public class Enemy : MonoBehaviour
 
     private void InitializePatrol()
     {
+        if ( patrol_path == null ) { return; }
+
         Vector3 aim = patrol_path.Current();
         if ( aim.x > transform.position.x ) { Face( CharEnums.FacingDirection.Right ); }
         else if ( aim.x < transform.position.x ) { Face( CharEnums.FacingDirection.Left ); }
@@ -178,12 +185,12 @@ public class Enemy : MonoBehaviour
         if ( direction == CharEnums.FacingDirection.Right )
         {
             this.gameObject.GetComponent<SpriteRenderer>().flipX = false;
-            vision_subobject.transform.localScale = new Vector3( 1.0f, 1.0f, 1.0f );
+            //vision_subobject.transform.localScale = new Vector3( 1.0f, 1.0f, 1.0f );
         }
         else
         {
             this.gameObject.GetComponent<SpriteRenderer>().flipX = true;
-            vision_subobject.transform.localScale = new Vector3( -1.0f, 1.0f, 1.0f );
+            //vision_subobject.transform.localScale = new Vector3( -1.0f, 1.0f, 1.0f );
         }
     }
 }

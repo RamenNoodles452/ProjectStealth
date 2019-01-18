@@ -10,12 +10,18 @@ public class CharacterAnimationLogic : MonoBehaviour
     protected UserInputManager input_manager;
     #endregion
 
+    // Use this for pre-initialization (reference setup)
+    private void Awake()
+    {
+        animator = transform.Find( "Sprites" ).GetComponent<Animator>();
+        char_stats = GetComponent<CharacterStats>();
+        input_manager = GetComponent<UserInputManager>();
+    }
+
     // Use this for initialization
     void Start ()
     {
-        animator   = GetComponent<Animator>();
-        char_stats = GetComponent<CharacterStats>();
-        input_manager = GetComponent<UserInputManager>();
+
     }
 
     // Update is called once per frame
@@ -208,6 +214,45 @@ public class CharacterAnimationLogic : MonoBehaviour
     public void WallLookAway( bool is_looking_away )
     {
         animator.SetBool( "wall_look_away", is_looking_away );
+    }
+
+    /// <summary>
+    /// Resets wall-climb related animations state parameters.
+    /// </summary>
+    public void ResetWallClimb()
+    {
+        //animator.ResetTrigger( "wall_grab_trigger" );
+        //animator.SetBool( "wall_climb", false );
+        //animator.SetBool( "wall_slide", false );
+        //animator.ResetTrigger( "drop_from_wall" );
+        //animator.ResetTrigger( "wall_to_ground" );
+        //animator.ResetTrigger( "ground_to_wall" );
+        //animator.ResetTrigger( "wall_slide_touch_ground" );
+    }
+
+    /// <summary>
+    /// Resets all animation state parameters.
+    /// </summary>
+    public void Reset()
+    {
+        animator.SetBool( "sneaking", false );
+        animator.SetBool( "taking_cover", false );
+        animator.SetFloat( "jumping_vel", 0.0f );
+        animator.ResetTrigger( "jump_ascend" );
+        animator.ResetTrigger( "jump_descend" );
+        animator.SetBool( "midair", false );
+        animator.SetBool( "crouching", false );
+        animator.ResetTrigger( "wall_grab_trigger" );
+        animator.SetBool( "wall_climb", false );
+        animator.SetBool( "wall_slide", false );
+        animator.ResetTrigger( "drop_from_wall" );
+        animator.ResetTrigger( "wall_to_ground" );
+        animator.ResetTrigger( "ground_to_wall" );
+        animator.ResetTrigger( "wall_slide_touch_ground" );
+        animator.ResetTrigger( "ceiling_grab_trigger" );
+        animator.ResetTrigger( "fallthrough" );
+        animator.SetBool( "horizontal_axis_input", false );
+        animator.SetBool( "wall_look_away", false );
     }
 }
 

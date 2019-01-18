@@ -1,19 +1,23 @@
-﻿using UnityEngine;
-using System.Collections;
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 
-// Determines collision behaviour of an object.
-public class CollisionType : MonoBehaviour 
+/// <summary>
+/// Controls the collision behaviour of a tile.
+/// </summary>
+[System.Serializable]
+public class CollisionType
 {
     #region vars
     [SerializeField]
-    private bool is_blocking = true;
+    private bool is_blocking = true; // Layer-restricted (nonblocking layer only).
 
     [SerializeField]
-    private bool can_climb_side = false;
+    private bool can_climb_side = false; // TODO: separate into left and right?
     [SerializeField]
     private bool can_climb_bottom = false;
     [SerializeField]
-    private bool can_fall_through = false;
+    private bool can_fall_through = false; // Layer-restricted (jumpthrough objects layer only).
     [SerializeField]
     private bool can_vault_over = false;
 
@@ -33,6 +37,7 @@ public class CollisionType : MonoBehaviour
     {
         /// To jump up through passable floors use CollisionMasks.UpwardsCollisionMask
         get { return can_fall_through; }
+        set { can_fall_through = value; }
     }
 
     /// <summary>
@@ -41,6 +46,7 @@ public class CollisionType : MonoBehaviour
     public bool CanVaultOver
     {
         get { return can_vault_over; }
+        set { can_vault_over = value; }
     }
 
     /// <summary>
@@ -49,6 +55,7 @@ public class CollisionType : MonoBehaviour
     public bool IsWallClimbable
     {
         get { return can_climb_side; }
+        set { can_climb_side = value; }
     }
 
     /// <summary>
@@ -57,6 +64,7 @@ public class CollisionType : MonoBehaviour
     public bool IsCeilingClimbable
     {
         get { return can_climb_bottom; }
+        set { can_climb_bottom = value; }
     }
 
     /// <summary>
@@ -66,6 +74,7 @@ public class CollisionType : MonoBehaviour
     public bool CanWalkOffLeftEdge
     {
         get { return can_walk_off_left_edge; }
+        set { can_walk_off_left_edge = value; }
     }
 
     /// <summary>
@@ -75,6 +84,7 @@ public class CollisionType : MonoBehaviour
     public bool CanWalkOffRightEdge
     {
         get { return can_walk_off_right_edge; }
+        set { can_walk_off_right_edge = value; }
     }
 
     /// <summary>
@@ -83,10 +93,13 @@ public class CollisionType : MonoBehaviour
     public bool CanHookshotTo
     {
         get { return can_hookshot_to; }
+        set { can_hookshot_to = value; }
     }
 
     /// <summary>
-    ///  Is this blocking? (use no for "background" objects and unset for destructible objects)
+    ///  Is this blocking? 
+    ///  (use no for "background" objects and unset for destructible objects)
+    ///  (Remember to move non-blocking objects to the nonblocking layer)
     /// </summary>
     public bool IsBlocking
     {

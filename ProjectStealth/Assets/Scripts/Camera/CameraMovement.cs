@@ -3,37 +3,51 @@ using System.Collections;
 
 public class CameraMovement : MonoBehaviour
 {
-    public float damp_time = 0.15f;
-    private Vector3 velocity = Vector3.zero;
-    public Transform focal_target;
-    private Camera cam;
+    #region vars
+    [SerializeField]
+    private Transform focal_target;
 
+    private Vector3 accumulated_position;   // accumulate fractional x, y coordinates. camera position must always be whole number.
+    private Camera cam;
     private BoxCollider2D boundingBox;
 
+    private Vector2 shake_vector;
+    private Vector2 shake_magnitude;
+    private float shake_timer;
+
+    // Camera config
+    private const float CAMERA_Z = -10.0f;
+    private const float MAX_VELOCITY = 640.0f; // pixels / second
+    #endregion
+
+    // Early initialization (references)
     private void Awake()
     {
-        focal_target = GameObject.Find( "PlayerCharacter/CameraFocalPoint" ).transform;
+        focal_target = GameObject.Find( "PlayerCharacter/CameraFocalPoint" ).transform; // slow
+        boundingBox = GameObject.Find( "BoundingBox" ).GetComponent<BoxCollider2D>();   // slow
+        cam = GetComponent<Camera>();
+        shake_vector = Vector2.zero;
     }
 
     // Use this for initialization
     void Start()
     {
-        Screen.SetResolution( 640, 480, false, 60 );
-        cam = GetComponent<Camera>();
-
-        boundingBox = GameObject.Find( "BoundingBox" ).GetComponent<BoxCollider2D>(); //bad
+        transform.position = new Vector3( transform.position.x, transform.position.y, CAMERA_Z ); // lock z
+        accumulated_position = transform.position;
     }
 
     // Update is called once per frame
-    void Update()
+    void LateUpdate()
     {
-        //transform.position = focal_target.position;
+        // Moved to lateupdate so camera hits the target after motion is applied to the player.
+        //BASICALLY: transform.position = focal_target.position;
+
         if ( focal_target )
         {
             #region clamp
             Vector3 clamped_focal_target = focal_target.position;
 
-            if ( !boundingBox )
+            if ( ! boundingBox )
             {
                 Debug.LogError( "Someone forgot to put a bounding box around the level / messed it up." );
             }
@@ -68,13 +82,33 @@ public class CameraMovement : MonoBehaviour
                     clamped_focal_target.y = ( boundingBox.gameObject.transform.position.y + boundingBox.offset.y - boundingBox.size.y / 2.0f ) + half_height_in_world;
                 }
             }
+
+            #region Screen Shake
+            if ( shake_timer > 0.0f )
+            {
+                shake_vector = new Vector2( Random.Range( -shake_magnitude.x, shake_magnitude.x ), Random.Range( -shake_magnitude.y, shake_magnitude.y ) );
+                clamped_focal_target += new Vector3( shake_vector.x, shake_vector.y, 0.0f );
+            }
+            shake_timer = Mathf.Max( shake_timer - Time.deltaTime * Time.timeScale, 0.0f );
+            #endregion
             #endregion
 
-            //smoothly move the camera to the focal point
+            // smoothly move the camera to the focal point
             Vector3 point = cam.WorldToViewportPoint( clamped_focal_target );
-            Vector3 delta = clamped_focal_target - cam.ViewportToWorldPoint( new Vector3( 0.5f, 0.5f, point.z ) );
+            Vector3 screen_center = cam.ViewportToWorldPoint( new Vector3( 0.5f, 0.5f, point.z ) );
+            Vector3 delta = clamped_focal_target - screen_center;
             Vector3 destination = transform.position + delta;
-            transform.position = Vector3.SmoothDamp( transform.position, destination, ref velocity, damp_time );
+
+            if ( delta.magnitude <= ( MAX_VELOCITY * Time.deltaTime * Time.timeScale ) ) // arrive without overshooting
+            {
+                accumulated_position = new Vector3( destination.x, destination.y, CAMERA_Z );
+                transform.position = new Vector3( (int) destination.x, (int) destination.y, CAMERA_Z );
+            }
+            else // just move.
+            {
+                accumulated_position += new Vector3( delta.normalized.x, delta.normalized.y, 0.0f ) * MAX_VELOCITY * Time.deltaTime * Time.timeScale;
+                transform.position = new Vector3( (int) ( accumulated_position.x ), (int) ( accumulated_position.y ) , CAMERA_Z );
+            }
         }
 
     }
@@ -84,6 +118,28 @@ public class CameraMovement : MonoBehaviour
     /// </summary>
     public void SnapToFocalPoint()
     {
-        transform.position = focal_target.position;
+        accumulated_position = new Vector3( (int) focal_target.position.x, (int) focal_target.position.y, CAMERA_Z );
+        transform.position = accumulated_position;
+    }
+
+    /// <summary>
+    /// Shakes the screen.
+    /// </summary>
+    /// <param name="magnitude">Half the number of pixels to shake the screen around by.</param>
+    /// <param name="duration"> The amount of time, in seconds, for the screen shake effect to continue.</param>
+    public void ShakeScreen( float magnitude, float duration )
+    {
+        ShakeScreen( new Vector2( magnitude, magnitude ), duration );
+    }
+
+    /// <summary>
+    /// Shakes the screen.
+    /// </summary>
+    /// <param name="magnitude">Half the number of pixels to shake the screen around by. Separate values control the x and y axes.</param>
+    /// <param name="duration">The amount of time, in seconds, for the screen shake effect to continue.</param>
+    public void ShakeScreen( Vector2 magnitude, float duration )
+    {
+        shake_magnitude = magnitude;
+        shake_timer = duration;
     }
 }

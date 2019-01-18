@@ -8,6 +8,7 @@ public class SuitLightPulse : MonoBehaviour
     #region vars
     public Light light_reference;
     private float timer;
+    private const float MAX_LIGHT_INTENSITY = 5.0f;
     #endregion
 
     // Use this for initialization
@@ -25,7 +26,7 @@ public class SuitLightPulse : MonoBehaviour
         Color color = this.GetComponent<SpriteRenderer> ().color;
         color.a = alpha;
 
-        light_reference.intensity = alpha * 5.0f;
+        light_reference.intensity = alpha * MAX_LIGHT_INTENSITY;
 
         this.GetComponent<SpriteRenderer>().color = color;
     }

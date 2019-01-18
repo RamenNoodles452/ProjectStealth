@@ -6,7 +6,7 @@ public class TakeCoverAction : MonoBehaviour
     /// This module allows a character to take cover behind low obstacles
     /// This will reduce the height of the player character and make them pressed right up against the obstacle
     /// This is used to avoid line of sight with enemies
-    /// If an obstacle has the variable "IsCover" in the CollisionType script, you can vault over it
+    /// If an obstacle has the variable "can_vault_over" in the CustomTileData / CollisionType script, you can vault over it
     /// 
     /// CharacterStats Vars:
     /// is_taking_cover

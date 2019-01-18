@@ -16,7 +16,7 @@ public class MotionSensing : MonoBehaviour
     // Update is called once per frame
     void Update ()
     {
-        if ( Referencer.instance.player.GetComponent<Animator>().GetCurrentAnimatorStateInfo( 0 ).IsName( "valerie_idle" ) )
+        if ( Referencer.instance.player.GetComponent<PlayerStats>().IsIdle )
         {
             if ( GetComponent<KillOnTouch>() != null ) { Destroy( GetComponent<KillOnTouch>() ); }
         }
