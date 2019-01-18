@@ -151,7 +151,7 @@ public class MagGripUpgrade : MonoBehaviour
         is_at_top = true;
 
         // When hanging, player is ALWAYS locked at the edge, don't need to move or do confirmation checks.
-        if ( input_manager.VerticalAxis > 0.0f && can_stand_up_from_hang )
+        if ( can_stand_up_from_hang && ( input_manager.VerticalAxis > 0.0f || ( input_manager.JumpInputInst && ! is_looking_away ) ) )
         {
             // Pull yourself up and stand on platform.
             float x = char_stats.STANDING_COLLIDER_SIZE.x; // right
@@ -167,7 +167,7 @@ public class MagGripUpgrade : MonoBehaviour
             StopClimbing();
             JumpDown();
         }
-        else if ( input_manager.JumpInputInst ) // TODO: consistency: take direction into account?
+        else if ( input_manager.JumpInputInst && is_looking_away )
         {
             // Jump away from the wall.
             StopClimbing();
@@ -635,8 +635,6 @@ public class MagGripUpgrade : MonoBehaviour
             is_at_bottom = true;
         }
 
-        // is_against_ledge basically = ! (can move up or down).
-
         // move?
         if ( can_move_up && input_manager.VerticalAxis > 0.0f )
         {
@@ -651,8 +649,6 @@ public class MagGripUpgrade : MonoBehaviour
                 else // Not enough room, arrive at the top of the climbable area.
                 {
                     transform.Translate( 0.0f, climbable_rect.y - player_top, 0.0f );
-
-                    // TODO: Check if you can climb up the edge?
                 }
             }
         }
@@ -679,13 +675,17 @@ public class MagGripUpgrade : MonoBehaviour
             }
         }
 
-        // Corner
-        if ( is_at_top && input_manager.VerticalAxis > 0.0f )
+        if ( is_at_top && input_manager.JumpInputInst )
         {
-            if ( ! PullYourselfUpFromLedge() )
-            {
-                GoFromWallToCeilingAbove();
-            }
+            PullYourselfUpFromLedge();
+        }
+        // Corner
+        else if ( is_at_top && input_manager.VerticalAxis > 0.0f )
+        {
+            //if ( ! PullYourselfUpFromLedge() )
+            //{
+            GoFromWallToCeilingAbove();
+            //}
         }
         else if ( is_at_bottom && input_manager.VerticalAxis < 0.0f )
         {
