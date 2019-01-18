@@ -40,7 +40,7 @@ Shader "Sprites/NormalSprite"
 		CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
-			#pragma multi_compile _ PIXELSNAP_ON
+			#pragma multi_compile_fwdbase
 			#include "UnityCG.cginc"
 			
 			fixed4 _Color;
