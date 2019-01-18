@@ -96,6 +96,8 @@ public class Referencer : MonoBehaviour
     public void RegisterTileGameObject( Vector3Int position, GameObject game_object )
     {
         if ( gameObject == null ) { return; } // would be pointless.
+        if ( position.x < 0.0f )  { return; }
+        if ( position.y < 0.0f )  { return; }
 
         // Duplicates aren't allowed.
         int key = HashTilePosition( position );
@@ -103,6 +105,7 @@ public class Referencer : MonoBehaviour
         {
             #if UNITY_EDITOR
             Debug.LogError( "Duplicate key in tilemap objects." );
+            Debug.Log( "key: " + key + " position: " + position + " game object: " + game_object + " grid size: " + geometry_tilemap.cellBounds.size );
             #endif
             return;
         }
