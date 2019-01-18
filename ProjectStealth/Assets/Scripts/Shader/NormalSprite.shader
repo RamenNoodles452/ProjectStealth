@@ -119,12 +119,16 @@ Shader "Sprites/NormalSprite"
 		CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
-			#pragma multi_compile _ PIXELSNAP_ON
 			#include "UnityCG.cginc"
+			#include "AutoLight.cginc"
+			#include "Lighting.cginc"
+			#pragma multi_compile_fwdadd
+
+			// fun fact: unity_WorldToLight doesn't get declared unless your multi compile is in the right mode. That took a while to figure out.
 
 			uniform sampler2D _MainTex;    // source diffuse
 			uniform sampler2D _NormalTex;  // normal map
-			uniform float4 _LightColor0;   // color of light source
+			//uniform float4 _LightColor0;   // color of light source
 			uniform float4 _SpecularColor;
 			uniform float _Shininess;
 			uniform float _Specularity; // scaling factor for specular lighting
@@ -183,16 +187,18 @@ Shader "Sprites/NormalSprite"
 				else
 				{
 					// distance to point or spot light
-					float3 vertexToLightSource = _WorldSpaceLightPos0.xyz - IN.worldPosition; // this only has vertex level fidelity.
-					float3 distance = length( vertexToLightSource );
-					attenuation = 1.0 / distance * 32.0; // linear attenuation
+					float3 vertexToLightSource = _WorldSpaceLightPos0.xyz - IN.worldPosition;
 					lightDirection = normalize( vertexToLightSource );
-					// BUG: Spotlight range and angle aren't respected
-					//#if defined (SPOT)
-					//	float4 positionLight = mul( unity_WorldToLight, IN.worldPosition );
-					//	float3 textureCoordinates = float3( float2( positionLight.x, positionLight.y ) + float2( 0.5 * positionLight.w ), positionLight.w );
-					//	attentuation = tex2Dproj( _LightTexture0, textureCoordinates ).a;
-					//#endif
+					float3 distance = length( vertexToLightSource );
+					float4 lightCoordinates = mul( unity_WorldToLight, IN.worldPosition ).xyzw;
+					float range = distance / length( lightCoordinates.xyz ); // world-space range of the light
+					attenuation = 1.0 - distance / range; // linear attenuation: 100% @ point blank, 50% @ 50% of range, 0% at 100% of range.
+
+					// Spotlights require special handling.
+					#if defined (SPOT)
+					//attenuation = tex2D( _LightTextureB0, dot( lightCoordinates, lightCoordinates ).xx ).UNITY_ATTEN_CHANNEL; // default unity spotlight attenuation.
+					attenuation *= tex2D( _LightTexture0, lightCoordinates.xy / lightCoordinates.w + 0.5 ).w; // use cookie to mask out cone.
+					#endif
 				}
 
 				// calculate diffuse lighting

@@ -8,7 +8,7 @@ public class SuitLightPulse : MonoBehaviour
     #region vars
     public Light light_reference;
     private float timer;
-    private const float MAX_LIGHT_INTENSITY = 1.0f;
+    private const float MAX_LIGHT_INTENSITY = 5.0f;
     #endregion
 
     // Use this for initialization
