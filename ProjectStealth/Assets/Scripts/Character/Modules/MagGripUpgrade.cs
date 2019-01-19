@@ -121,6 +121,7 @@ public class MagGripUpgrade : MonoBehaviour
 
             if ( input_manager.VerticalAxis < 0.0f )
             {
+                char_anims.DropFromWallTrigger();
                 StopClimbing();
                 JumpDown();
             }
@@ -135,9 +136,9 @@ public class MagGripUpgrade : MonoBehaviour
     {
         LookAway();
 
-        // TODO: jump logic
         if ( input_manager.JumpInputInst && input_manager.VerticalAxis < 0.0f ) // Could remove down requirement. Kept for consistency.
         {
+            // TODO: animations
             StopClimbingCeiling();
         }
     }
@@ -165,6 +166,7 @@ public class MagGripUpgrade : MonoBehaviour
         else if ( input_manager.VerticalAxis < 0.5f && input_manager.JumpInputInst ) // Could drop jump button requirement here. Kept for consistency.
         {
             // Drop.
+            //TODO: animations
             StopClimbing();
             JumpDown();
         }
@@ -365,7 +367,7 @@ public class MagGripUpgrade : MonoBehaviour
     /// </summary>
     private void GrabCeilingFromFloorAbove() // TODO:
     {
-        if ( !player_stats.acquired_ceiling_grip ) { return; }
+        if ( ! player_stats.acquired_ceiling_grip ) { return; }
 
         // if you are above a fallthrough platform, and press down, check for ceiling.
     }
@@ -700,6 +702,7 @@ public class MagGripUpgrade : MonoBehaviour
         if ( colliders.Length == 0 )
         {
             // No wall, fall?
+            char_anims.DropFromWallTrigger();
             StopClimbing();
             return;
         }
@@ -712,6 +715,7 @@ public class MagGripUpgrade : MonoBehaviour
 
         if ( climbable_rect.size.y == 0 ) // no climbable surface
         {
+            char_anims.DropFromWallTrigger();
             StopClimbing();
             return;
         }
