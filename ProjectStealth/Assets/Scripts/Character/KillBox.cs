@@ -3,17 +3,28 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // GabeV
-// Kills the player (character) if they step out of the level
+/// <summary>
+/// Kills the player (character) if they step out of the level
+/// </summary>
 public class KillBox : MonoBehaviour
 {
-    Player player;
-    public BoxCollider2D bound_box;
+    #region vars
+    private Player player;
+    private BoxCollider2D bounding_box;
+    #endregion
+
+    /// <summary>
+    /// Used for early initialization
+    /// </summary>
+    private void Awake()
+    {
+        bounding_box = this.gameObject.GetComponent<BoxCollider2D>();
+    }
 
     // Use this for initialization
     void Start()
     {
-        player = Referencer.instance.player; //GameObject.Find("PlayerCharacter").GetComponent<Player>(); //bad
-        bound_box = this.gameObject.GetComponent<BoxCollider2D>();
+        player = Referencer.instance.player;
     }
 
     // Update is called once per frame
@@ -28,12 +39,12 @@ public class KillBox : MonoBehaviour
         Vector2 playerCenter = player.CenterPoint();
 
         // bound box should be at (0,0), but use position just in case
-        float minx = bound_box.transform.position.x + bound_box.offset.x - bound_box.size.x / 2.0f;
-        float maxx = bound_box.transform.position.x + bound_box.offset.x + bound_box.size.x / 2.0f;
-        float miny = bound_box.transform.position.y + bound_box.offset.y - bound_box.size.y / 2.0f;
-        float maxy = bound_box.transform.position.y + bound_box.offset.y + bound_box.size.y / 2.0f;
+        float min_x = bounding_box.transform.position.x + bounding_box.offset.x - bounding_box.size.x / 2.0f;
+        float max_x = bounding_box.transform.position.x + bounding_box.offset.x + bounding_box.size.x / 2.0f;
+        float min_y = bounding_box.transform.position.y + bounding_box.offset.y - bounding_box.size.y / 2.0f;
+        float max_y = bounding_box.transform.position.y + bounding_box.offset.y + bounding_box.size.y / 2.0f;
 
-        if ( playerCenter.x >= minx && playerCenter.x <= maxx && playerCenter.y >= miny && playerCenter.y <= maxy )
+        if ( playerCenter.x >= min_x && playerCenter.x <= max_x && playerCenter.y >= min_y && playerCenter.y <= max_y )
         {
             //ok
         }
