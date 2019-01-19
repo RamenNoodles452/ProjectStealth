@@ -178,6 +178,25 @@ public class SimpleCharacterCore : MonoBehaviour
             }
             else
             {
+                // Stand up from crouching.
+                if ( char_stats.is_crouching )
+                {
+                    // If there's enough space.
+                    float x = transform.position.x - char_stats.STANDING_COLLIDER_SIZE.x / 2.0f + char_stats.STANDING_COLLIDER_OFFSET.x;
+                    float y = transform.position.y + char_stats.STANDING_COLLIDER_SIZE.y / 2.0f + char_stats.STANDING_COLLIDER_OFFSET.y;
+                    float width  = char_stats.STANDING_COLLIDER_SIZE.x;
+                    float height = char_stats.STANDING_COLLIDER_SIZE.y;
+                    if ( ! Utils.AreaContainsBlockingGeometry( x, y, width, height ) )
+                    {
+                        char_stats.is_crouching = false;
+                        char_stats.StandingHitBox();
+                    }
+                    else
+                    {
+                        return; // abort, no crouch hopping.
+                    }
+                }
+
                 char_stats.is_on_ground = false;
                 char_stats.is_jumping = true;
                 EndJumpGracePeriod();
