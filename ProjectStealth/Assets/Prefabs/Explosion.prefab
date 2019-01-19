@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 58701369476477784}
   - component: {fileID: 114794213428544904}
   m_Layer: 1
-  m_Name: Bullet Charged Impact
+  m_Name: Explosion
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -152,7 +152,7 @@ CircleCollider2D:
   m_UsedByComposite: 0
   m_Offset: {x: 0, y: 0}
   serializedVersion: 2
-  m_Radius: 16
+  m_Radius: 128
 --- !u!114 &114794213428544904
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -165,7 +165,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2de835f64cdc5d247a47dab634556632, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  radius: 16
+  radius: 128
   damage: 100
-  is_player_immune: 1
+  is_player_immune: 0
   is_enemy_immune: 0
