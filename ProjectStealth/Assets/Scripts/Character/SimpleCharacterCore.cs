@@ -778,7 +778,7 @@ public class SimpleCharacterCore : MonoBehaviour
     /// <summary>
     /// Checks if the character is crouched while touching and facing a sticky (not slippery) edge.
     /// </summary>
-    protected virtual bool IsCrouchedAbuttingFacingStickyLedge()
+    public virtual bool IsCrouchedAbuttingFacingStickyLedge()
     {
         return ( is_against_ledge && char_stats.is_crouching );
     }

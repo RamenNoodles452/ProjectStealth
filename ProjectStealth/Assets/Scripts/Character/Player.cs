@@ -122,7 +122,7 @@ public class Player : SimpleCharacterCore
     /// <summary>
     /// at the player level, we have to account for touching while crouched and facing the ledge from wall climbs as well
     /// </summary>
-    protected override bool IsCrouchedAbuttingFacingStickyLedge()
+    public override bool IsCrouchedAbuttingFacingStickyLedge()
     {
         return base.IsCrouchedAbuttingFacingStickyLedge();
     }

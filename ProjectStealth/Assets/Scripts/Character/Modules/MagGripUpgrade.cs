@@ -5,7 +5,6 @@ using System.Collections.Generic;
 
 // TODO: fallthrough platform top (stand/crouch) -> fallthrough platform bottom (ceiling climb)? :(
 // TODO: fallthrough platform bottom (ceiling climb) -> fallthrough platform top (stand/crouch)? :(
-// TODO: walk to sticky platform edge -> wall climb transition?
 // TODO: crouch up (ledge and wall)
 // TODO: wall climbing without jumping (from crouch?)
 // TODO: animation integration
@@ -32,6 +31,7 @@ public class MagGripUpgrade : MonoBehaviour
     public ClimbState current_climb_state = ClimbState.NotClimb;
     public bool is_looking_away = false;
 
+    private const float PHYSICS_STEP_SIZE   =   0.005f; // pixels
     private const float WALL_CLIMB_SPEED    =  70.0f; // pixels / second
     private const float WALL_SLIDE_SPEED    = 160.0f; // pixels / second
     private const float CEILING_CLIMB_SPEED =  64.0f; // pixels / second
@@ -101,7 +101,7 @@ public class MagGripUpgrade : MonoBehaviour
     /// <summary>
     /// Parses climb movement input.
     /// </summary>
-    void ClimbMovementInput()
+    private void ClimbMovementInput()
     {
         if ( char_stats.current_master_state != CharEnums.MasterState.ClimbState ) { return; }
 
@@ -124,6 +124,7 @@ public class MagGripUpgrade : MonoBehaviour
                 StopClimbing();
                 JumpDown();
             }
+            // TODO: consider scaling jump away based on horizontal and vertical inputs between away and down, and defaulting neutral jump to away.
         }
     }
 
@@ -135,7 +136,7 @@ public class MagGripUpgrade : MonoBehaviour
         LookAway();
 
         // TODO: jump logic
-        if ( input_manager.JumpInputInst )
+        if ( input_manager.JumpInputInst && input_manager.VerticalAxis < 0.0f ) // Could remove down requirement. Kept for consistency.
         {
             StopClimbingCeiling();
         }
@@ -151,7 +152,7 @@ public class MagGripUpgrade : MonoBehaviour
         is_at_top = true;
 
         // When hanging, player is ALWAYS locked at the edge, don't need to move or do confirmation checks.
-        if ( can_stand_up_from_hang && ( input_manager.VerticalAxis > 0.0f || ( input_manager.JumpInputInst && ! is_looking_away ) ) )
+        if ( can_stand_up_from_hang && ( ( char_stats.IsFacingLeft() && input_manager.HorizontalAxis < -0.5f ) || ( char_stats.IsFacingRight() && input_manager.HorizontalAxis > 0.5f ) ) )
         {
             // Pull yourself up and stand on platform.
             float x = char_stats.STANDING_COLLIDER_SIZE.x; // right
@@ -161,18 +162,19 @@ public class MagGripUpgrade : MonoBehaviour
             current_climb_state = ClimbState.NotClimb;
             char_stats.current_master_state = CharEnums.MasterState.DefaultState;
         }
-        else if ( input_manager.VerticalAxis < 0.0f )
+        else if ( input_manager.VerticalAxis < 0.5f && input_manager.JumpInputInst ) // Could drop jump button requirement here. Kept for consistency.
         {
             // Drop.
             StopClimbing();
             JumpDown();
         }
-        else if ( input_manager.JumpInputInst && is_looking_away )
+        else if ( input_manager.JumpInputInst && is_looking_away ) // Could drop looking away requirement here. Kept for consistency.
         {
             // Jump away from the wall.
             StopClimbing();
             JumpAway();
         }
+        // TODO: consider scaling jump away based on horizontal and vertical inputs between away and down, and defaulting neutral jump to away.
     }
 
     /// <summary>
@@ -255,7 +257,11 @@ public class MagGripUpgrade : MonoBehaviour
     /// </summary>
     private void MovePlayer()
     {
-        if ( char_stats.current_master_state != CharEnums.MasterState.ClimbState ) { return; }
+        if ( char_stats.current_master_state != CharEnums.MasterState.ClimbState )
+        {
+            CheckNonClimbMoves();
+            return;
+        }
 
         if ( current_climb_state == ClimbState.Hanging )
         {
@@ -269,6 +275,99 @@ public class MagGripUpgrade : MonoBehaviour
         {
             ClimbCeiling();
         }
+    }
+
+    /// <summary>
+    /// Parses input from non-climbing states, which may transition into a climbing state.
+    /// </summary>
+    private void CheckNonClimbMoves()
+    {
+        GrabWallFromFloorEdge();
+        GrabCeilingFromFloorAbove();
+    }
+
+    /// <summary>
+    /// Go from the standing at the edge of a platform to on the wall below that platform, if possible.
+    /// </summary>
+    private void GrabWallFromFloorEdge()
+    {
+        if ( !player_stats.acquired_mag_grip ) { return; }
+
+        // if you are at the edge of a sticky edge, and press down, check for walls.
+        if ( player_script.IsCrouchedAbuttingFacingStickyLedge() && input_manager.VerticalAxis < 0.0f )
+        {
+            // we know the player's edge is 0.5 pixels from the edge.
+            float left;
+            float top    = transform.position.y + char_stats.char_collider.size.y / 2.0f + char_stats.char_collider.offset.y;
+            //float bottom = transform.position.y - char_stats.char_collider.size.y / 2.0f + char_stats.char_collider.offset.y; // only approximate
+            float width  = 1.0f;
+            float height = char_stats.STANDING_COLLIDER_SIZE.y + char_stats.char_collider.size.y;
+            // where we will put the player, approximately
+            float new_left, new_right;
+            float new_top    = top - char_stats.char_collider.size.y - 1.0f;
+            float new_bottom = new_top - char_stats.STANDING_COLLIDER_SIZE.y;
+            CharEnums.FacingDirection new_facing = char_stats.facing_direction;
+
+            if ( char_stats.IsFacingLeft() )
+            {
+                left = transform.position.x - char_stats.char_collider.size.x / 2.0f + char_stats.char_collider.offset.x - 0.5f;
+                new_right = left - 0.5f - PHYSICS_STEP_SIZE;
+                new_left = new_right - char_stats.STANDING_COLLIDER_SIZE.x;
+                new_facing = CharEnums.FacingDirection.Right;
+            }
+            else //if ( char_stats.IsFacingRight() )
+            {
+                left = transform.position.x + char_stats.char_collider.size.x / 2.0f + char_stats.char_collider.offset.x + 0.5f - width;
+                new_left = left + 1.5f + PHYSICS_STEP_SIZE;
+                new_right = new_left + char_stats.STANDING_COLLIDER_SIZE.x;
+                new_facing = CharEnums.FacingDirection.Left;
+            }
+
+            // Check that there is enough climbable wall
+            Collider2D[] colliders = Physics2D.OverlapAreaAll( new Vector2( left, top ), new Vector2( left + width, top - height ), CollisionMasks.static_mask );
+            Rect rect = GetClimbableWallRect( colliders, new_left, new_right, new_top, new_bottom, new_facing );
+            if ( rect.height < char_stats.STANDING_COLLIDER_SIZE.y ) { return; }
+            // get the precise coordinate to use for the top.
+            Debug.Log( rect );
+            new_top = rect.y;
+            // don't need new_bottom anymore, so won't update
+
+            // Check that there is enough empty space to move: from where head is to where feet will end up, off the edge of the platform
+            // [ ][P]   [P][ ]
+            // [ ][P]   [P][ ]
+            // [ ][X]   [X][ ]
+            // [ ][X]   [X][ ]
+            float empty_x = new_left;
+            float empty_y = top;
+            float empty_width  = char_stats.STANDING_COLLIDER_SIZE.x;
+            float empty_height = char_stats.STANDING_COLLIDER_SIZE.y + char_stats.char_collider.size.y + 1.0f;
+            if ( AreaContainsBlockingGeometry( empty_x, empty_y, empty_width, empty_height ) ) { return; }
+
+            // Move
+            float old_left = transform.position.x - char_stats.char_collider.size.x / 2.0f + char_stats.char_collider.offset.x;
+            float old_top  = transform.position.y + char_stats.char_collider.size.y / 2.0f + char_stats.char_collider.offset.y;
+            // Align tops of different sized hitboxes by getting the difference between the player's position (center) and the top for each box.
+            float hitbox_height_offset = ( char_stats.char_collider.size.y / 2.0f + char_stats.char_collider.offset.y ) - ( char_stats.STANDING_COLLIDER_SIZE.y / 2.0f + char_stats.STANDING_COLLIDER_OFFSET.y );
+            float hitbox_width_offset  = ( char_stats.char_collider.size.x / 2.0f + char_stats.char_collider.offset.x ) - ( char_stats.STANDING_COLLIDER_SIZE.x / 2.0f + char_stats.STANDING_COLLIDER_OFFSET.x );
+            Vector2 delta = new Vector2( new_left - old_left + hitbox_width_offset, new_top - old_top + hitbox_height_offset );
+
+            char_stats.current_master_state = CharEnums.MasterState.ClimbState;
+            char_stats.is_crouching = false;
+            char_stats.velocity.x = 0.0f;
+            char_stats.velocity.y = 0.0f;
+            ChangeClimbingState( delta, ClimbState.WallClimb, new_facing );
+            player_stats.FreezePlayer( 0.5f );
+        }
+    }
+
+    /// <summary>
+    /// Go from standing on top of a fallthrough platform that is ceiling climbable to under it, if possible.
+    /// </summary>
+    private void GrabCeilingFromFloorAbove() // TODO:
+    {
+        if ( !player_stats.acquired_ceiling_grip ) { return; }
+
+        // if you are above a fallthrough platform, and press down, check for ceiling.
     }
 
     /// <summary>
@@ -611,7 +710,11 @@ public class MagGripUpgrade : MonoBehaviour
         bool can_move_up = false;
         bool can_move_down = false;
 
-        if ( climbable_rect.size.y == 0 ) { StopClimbing(); return; } // no climbable surface
+        if ( climbable_rect.size.y == 0 ) // no climbable surface
+        {
+            StopClimbing();
+            return;
+        }
 
         // use the relevant climbable subzone's restrictions to determine player mobility.
         if ( climbable_rect.y > char_stats.char_collider.bounds.max.y )
@@ -675,10 +778,12 @@ public class MagGripUpgrade : MonoBehaviour
             }
         }
 
-        if ( is_at_top && input_manager.JumpInputInst )
+        // Pull up: press towards wall
+        if ( is_at_top && ( ( char_stats.IsFacingLeft() && input_manager.HorizontalAxis < -0.5f ) || ( char_stats.IsFacingRight() && input_manager.HorizontalAxis > 0.5f ) ) )
         {
             PullYourselfUpFromLedge();
         }
+
         // Corner
         else if ( is_at_top && input_manager.VerticalAxis > 0.0f )
         {
@@ -825,6 +930,7 @@ public class MagGripUpgrade : MonoBehaviour
             }
         }
 
+        // TODO: if fallthrough && input_manager.VerticalAxis > 0.5f
         // Corner
         if ( is_at_left || is_at_right && Mathf.Abs( input_manager.HorizontalAxis ) > 0.0f )
         {
@@ -1794,7 +1900,7 @@ public class MagGripUpgrade : MonoBehaviour
         {
             char_stats.StandingHitBox();
         }
-        else if ( state ==ClimbState.CeilingClimb )
+        else if ( state == ClimbState.CeilingClimb )
         {
             char_stats.CeilingClimbHitBox();
         }
