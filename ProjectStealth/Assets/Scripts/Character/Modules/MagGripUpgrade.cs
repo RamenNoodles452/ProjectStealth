@@ -343,7 +343,7 @@ public class MagGripUpgrade : MonoBehaviour
             float empty_y = top;
             float empty_width  = char_stats.STANDING_COLLIDER_SIZE.x;
             float empty_height = char_stats.STANDING_COLLIDER_SIZE.y + char_stats.char_collider.size.y + 1.0f;
-            if ( AreaContainsBlockingGeometry( empty_x, empty_y, empty_width, empty_height ) ) { return; }
+            if ( Utils.AreaContainsBlockingGeometry( empty_x, empty_y, empty_width, empty_height ) ) { return; }
 
             // Move
             float old_left = transform.position.x - char_stats.char_collider.size.x / 2.0f + char_stats.char_collider.offset.x;
@@ -468,7 +468,7 @@ public class MagGripUpgrade : MonoBehaviour
         if ( x2 < x1 ) { float temp = x1; x1 = x2; x2 = temp; } // swap so x2 is always larger
 
         const float MINIMUM_CLEARANCE = 32.0f - 0.5f; // pixels. Reduced slightly to stop false positives for EXACTLY 1 tile gaps.
-        if ( AreaContainsBlockingGeometry( x1, platform_top + MINIMUM_CLEARANCE, x2 - x1, MINIMUM_CLEARANCE - 0.5f ) ) { return; }
+        if ( Utils.AreaContainsBlockingGeometry( x1, platform_top + MINIMUM_CLEARANCE, x2 - x1, MINIMUM_CLEARANCE - 0.5f ) ) { return; }
         if ( char_stats.CROUCHING_COLLIDER_SIZE.y <= MINIMUM_CLEARANCE ) { can_crouch_up_from_hang = true; }
         #endregion
 
@@ -493,7 +493,7 @@ public class MagGripUpgrade : MonoBehaviour
         if ( x2 < x1 ) { float temp = x1; x1 = x2; x2 = temp; } // swap so x2 is always larger.
 
         const float MINIMUM_STANDING_CLEARANCE = 64.0f - 0.5f; // pixels. Reduced slightly to stop false positive for EXACTLY 2 tile gaps.
-        if ( AreaContainsBlockingGeometry( x1, platform_top + MINIMUM_STANDING_CLEARANCE, x2 - x1, MINIMUM_STANDING_CLEARANCE - 0.5f ) ) { return; }
+        if ( Utils.AreaContainsBlockingGeometry( x1, platform_top + MINIMUM_STANDING_CLEARANCE, x2 - x1, MINIMUM_STANDING_CLEARANCE - 0.5f ) ) { return; }
         if ( MINIMUM_STANDING_CLEARANCE >= char_stats.STANDING_COLLIDER_SIZE.y ) { can_stand_up_from_hang = true; } // Can stand up.
         #endregion
 
@@ -641,7 +641,7 @@ public class MagGripUpgrade : MonoBehaviour
         float top    = transform.position.y + char_stats.CEILING_CLIMB_COLLIDER_OFFSET.y + char_stats.CEILING_CLIMB_COLLIDER_SIZE.y / 2.0f;
         float bottom = transform.position.y + char_stats.CEILING_CLIMB_COLLIDER_OFFSET.y + char_stats.CEILING_CLIMB_COLLIDER_SIZE.y / 2.0f;
 
-        if ( AreaContainsBlockingGeometry( left, top, right - left, top - bottom ) ) { return; } // If changing the player's hitbox will put a wall inside of them: ABORT!
+        if ( Utils.AreaContainsBlockingGeometry( left, top, right - left, top - bottom ) ) { return; } // If changing the player's hitbox will put a wall inside of them: ABORT!
 
         Collider2D[] colliders = Physics2D.OverlapAreaAll( new Vector2( left - 1.0f, top + 1.0f ), new Vector2( right + 1.0f, bottom - 1.0f ), CollisionMasks.static_mask );
         Rect ceiling_rect = GetClimbableCeilingRect( colliders );
@@ -831,7 +831,7 @@ public class MagGripUpgrade : MonoBehaviour
         }
 
         const float MINIMUM_STANDING_CLEARANCE = 64.0f - 0.5f; // pixels
-        if ( AreaContainsBlockingGeometry( x1, character_top + MINIMUM_STANDING_CLEARANCE, x2 - x1, MINIMUM_STANDING_CLEARANCE - 0.5f ) ) { return false; }
+        if ( Utils.AreaContainsBlockingGeometry( x1, character_top + MINIMUM_STANDING_CLEARANCE, x2 - x1, MINIMUM_STANDING_CLEARANCE - 0.5f ) ) { return false; }
         if ( MINIMUM_STANDING_CLEARANCE < char_stats.STANDING_COLLIDER_SIZE.y ) { return false; }
 
         // TODO: crouch fallback
@@ -956,7 +956,7 @@ public class MagGripUpgrade : MonoBehaviour
         right  = transform.position.x + char_stats.STANDING_COLLIDER_OFFSET.x + char_stats.STANDING_COLLIDER_SIZE.x / 2.0f; // left + size.x
         top    = transform.position.y + char_stats.STANDING_COLLIDER_OFFSET.y + char_stats.STANDING_COLLIDER_SIZE.y / 2.0f;
         bottom = transform.position.y + char_stats.STANDING_COLLIDER_OFFSET.y - char_stats.STANDING_COLLIDER_SIZE.y / 2.0f; // top - size.y
-        if ( AreaContainsBlockingGeometry( left, top, right - left, top - bottom ) ) // Can't stand. Check if can crouch.
+        if ( Utils.AreaContainsBlockingGeometry( left, top, right - left, top - bottom ) ) // Can't stand. Check if can crouch.
         {
             // Check if changing the player's hitbox to crouching (+ moving them up) would put them inside a wall.
             //   The ceiling climbing collider is short, and offset so the top of it lines up with the top of the "standard" collider for the player. 
@@ -976,7 +976,7 @@ public class MagGripUpgrade : MonoBehaviour
             right  = transform.position.x + char_stats.CROUCHING_COLLIDER_OFFSET.x + char_stats.CROUCHING_COLLIDER_SIZE.x / 2.0f; // left + size.x
             top    = transform.position.y + char_stats.CROUCHING_COLLIDER_OFFSET.y + char_stats.CROUCHING_COLLIDER_SIZE.y / 2.0f + offset;
             bottom = transform.position.y + char_stats.CROUCHING_COLLIDER_OFFSET.y - char_stats.CROUCHING_COLLIDER_SIZE.y / 2.0f + offset; // top - size.y
-            if ( AreaContainsBlockingGeometry( left, top, right - left, top - bottom ) ) // Can't crouch. Cancel the stop.
+            if ( Utils.AreaContainsBlockingGeometry( left, top, right - left, top - bottom ) ) // Can't crouch. Cancel the stop.
             {
                 return;
             }
@@ -1401,30 +1401,6 @@ public class MagGripUpgrade : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Determines if a specified rectangular area contains any blocking stuff.
-    /// </summary>
-    /// <param name="x">The x coordiate of the left edge of the rectangular area to check.</param>
-    /// <param name="y">The y coordinate of the top edge of the rectangular area to check.</param>
-    /// <param name="width">The width of the rectangular area to check.</param>
-    /// <param name="height">The height of the rectangular area to check.</param>
-    /// <returns>True if the specified area contains any level geometry or objects (excluding enemies) that are considered blocking.</returns>
-    /// TODO: consider migrating to Utils.
-    private bool AreaContainsBlockingGeometry( float x, float y, float width, float height )
-    {
-        Collider2D[] colliders_within_area = Physics2D.OverlapAreaAll( new Vector2( x, y ), new Vector2( x + width, y - height ), CollisionMasks.static_mask );
-        foreach ( Collider2D collider in colliders_within_area )
-        {
-            // Check if the collider inside the region is blocking.
-            CustomTileData tile_data = Utils.GetCustomTileData( collider );
-            if ( tile_data == null ) { return true; } // not an excepted tile, guess this is an ordinary blocking object.
-            // TODO: may want additional checks here ^
-
-            CollisionType collision_type = tile_data.collision_type;
-            if ( ! ( collision_type.CanFallthrough || ! collision_type.IsBlocking ) ) { return true; } // not an excepted tile type, this is a blocking tile.
-        }
-        return false;
-    }
     #endregion
 
     #region climbing corners
@@ -1501,7 +1477,7 @@ public class MagGripUpgrade : MonoBehaviour
         Rect climbable_area = GetClimbableWallRect( colliders, new_left, new_right, new_top, new_bottom, facing );
         if ( climbable_area.height < char_stats.STANDING_COLLIDER_SIZE.y ) { return false; }
         // Enough empty space?
-        if ( AreaContainsBlockingGeometry( x, y, width, height ) ) { return false; }
+        if ( Utils.AreaContainsBlockingGeometry( x, y, width, height ) ) { return false; }
 
         return true;
     }
@@ -1574,7 +1550,7 @@ public class MagGripUpgrade : MonoBehaviour
         Rect climbable_area = GetClimbableWallRect( colliders, new_left, new_right, new_top, new_bottom, facing );
         if ( climbable_area.height < char_stats.STANDING_COLLIDER_SIZE.y ) { return false; }
         // Enough empty space?
-        if ( AreaContainsBlockingGeometry( x, y, width, height ) ) { return false; }
+        if ( Utils.AreaContainsBlockingGeometry( x, y, width, height ) ) { return false; }
 
         return true;
     }
@@ -1618,7 +1594,7 @@ public class MagGripUpgrade : MonoBehaviour
         // Check that there is enough space below the ceiling to fit the new hitbox.
         y = top - 0.5f; // margin required
         height = char_stats.CEILING_CLIMB_COLLIDER_SIZE.y;
-        if ( AreaContainsBlockingGeometry( x, y, width, height ) ) { return false; }
+        if ( Utils.AreaContainsBlockingGeometry( x, y, width, height ) ) { return false; }
 
         return true;
     }
@@ -1663,7 +1639,7 @@ public class MagGripUpgrade : MonoBehaviour
         // Check that there is enough space below the ceiling to fit the new hitbox.
         y = top - 0.5f; // margin required
         height = char_stats.CEILING_CLIMB_COLLIDER_SIZE.y;
-        if ( AreaContainsBlockingGeometry( x, y, width, height ) ) { return false; }
+        if ( Utils.AreaContainsBlockingGeometry( x, y, width, height ) ) { return false; }
 
         return true;
     }
@@ -1707,7 +1683,7 @@ public class MagGripUpgrade : MonoBehaviour
         y = bottom - 0.5f;
         height = char_stats.CEILING_CLIMB_COLLIDER_SIZE.y;
         width  = char_stats.CEILING_CLIMB_COLLIDER_SIZE.x + char_stats.STANDING_COLLIDER_SIZE.x; // extra width so you can't phase through diagonally touching walls
-        if ( AreaContainsBlockingGeometry( x, y, width, height ) ) { return false; }
+        if ( Utils.AreaContainsBlockingGeometry( x, y, width, height ) ) { return false; }
 
         return true;
     }
@@ -1752,7 +1728,7 @@ public class MagGripUpgrade : MonoBehaviour
         y = bottom - 0.5f;
         height = char_stats.CEILING_CLIMB_COLLIDER_SIZE.y;
         width  = char_stats.CEILING_CLIMB_COLLIDER_SIZE.x + char_stats.STANDING_COLLIDER_SIZE.x + 1.0f; // extra width so you can't phase through diagonally touching walls
-        if ( AreaContainsBlockingGeometry( x, y, width, height ) ) { return false; }
+        if ( Utils.AreaContainsBlockingGeometry( x, y, width, height ) ) { return false; }
 
         return true;
     }

@@ -105,4 +105,28 @@ public class Utils
 
         return null;
     }
+
+    /// <summary>
+    /// Determines if a specified rectangular area contains any blocking stuff.
+    /// </summary>
+    /// <param name="x">The x coordiate of the left edge of the rectangular area to check.</param>
+    /// <param name="y">The y coordinate of the top edge of the rectangular area to check.</param>
+    /// <param name="width">The width of the rectangular area to check.</param>
+    /// <param name="height">The height of the rectangular area to check.</param>
+    /// <returns>True if the specified area contains any level geometry or objects (excluding enemies) that are considered blocking.</returns>
+    public static bool AreaContainsBlockingGeometry( float x, float y, float width, float height )
+    {
+        Collider2D[] colliders_within_area = Physics2D.OverlapAreaAll( new Vector2( x, y ), new Vector2( x + width, y - height ), CollisionMasks.static_mask );
+        foreach ( Collider2D collider in colliders_within_area )
+        {
+            // Check if the collider inside the region is blocking.
+            CustomTileData tile_data = Utils.GetCustomTileData( collider );
+            if ( tile_data == null ) { return true; } // not an excepted tile, guess this is an ordinary blocking object.
+            // TODO: may want additional checks here ^
+
+            CollisionType collision_type = tile_data.collision_type;
+            if ( !( collision_type.CanFallthrough || !collision_type.IsBlocking ) ) { return true; } // not an excepted tile type, this is a blocking tile.
+        }
+        return false;
+    }
 }
