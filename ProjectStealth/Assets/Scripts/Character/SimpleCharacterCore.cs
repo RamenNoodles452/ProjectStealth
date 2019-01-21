@@ -45,7 +45,6 @@ public class SimpleCharacterCore : MonoBehaviour
     protected bool fallthrough;
 
     private const float APPROXIMATE_EQUALITY_MARGIN = 0.001f; //Mathf.Epsilon;
-    private const float AERIAL_SIZE_INCREASE = 10.0f; // pixels added to collision box height while in midair, to avoid corner clipping
     private const float ONE_PIXEL_BUFFER = 1.0f;
 
     private Queue<Vector3> applied_moves;
@@ -524,16 +523,7 @@ public class SimpleCharacterCore : MonoBehaviour
     private void SetupHorizontalCollision( out Vector2 center, out Vector2 size, out Vector2 direction )
     {
         // Set collision box size
-        if ( char_stats.IsGrounded )
-        {
-            size = new Vector2( 1.0f, char_stats.char_collider.bounds.size.y ); // 1px x height box
-        }
-        else
-        {
-            // Extend the hitbox vertically while in the air to avoid corner clipping
-            size = new Vector2( 1.0f, char_stats.char_collider.bounds.size.y + AERIAL_SIZE_INCREASE ); // this expands 5 pixels in each direction from the middle.
-            // NOTE: This means levels should be designed such that the minimum height of a space is the player character's height + AERIAL_SIZE_INCREASE
-        }
+        size = new Vector2( 1.0f, char_stats.char_collider.bounds.size.y ); // 1px x height box
 
         // Set center + direction
         if ( char_stats.velocity.x > 0.0f )
@@ -545,20 +535,6 @@ public class SimpleCharacterCore : MonoBehaviour
         {
             center = new Vector2( char_stats.char_collider.bounds.min.x + size.x, char_stats.char_collider.bounds.center.y );
             direction = Vector2.left;
-        }
-
-        // Adjust the hitbox
-        // If moving upwards, we want the additional hitbox area to be above the player. If moving downwards, we want it below.
-        if ( char_stats.IsInMidair )
-        {
-            if ( char_stats.velocity.y > 0.0f )
-            {
-                center += new Vector2( 0.0f, AERIAL_SIZE_INCREASE / 2.0f );
-            }
-            else
-            {
-                center -= new Vector2( 0.0f, AERIAL_SIZE_INCREASE / 2.0f );
-            }
         }
     }
 
@@ -580,12 +556,14 @@ public class SimpleCharacterCore : MonoBehaviour
         if ( char_stats.velocity.y <= 0.0f ) { return; } // immobile or moving down, don't need to check
 
         Vector2 collision_box_size = new Vector2( char_stats.char_collider.bounds.size.x, 1.0f ); // width x 1 px box
-        Vector2 origin             = new Vector2( char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.max.y - collision_box_size.y );
+        // Need to offset origin by how far the player WILL MOVE after the horizontal checks pass, since player hasn't moved yet, otherwise we're casting from the wrong point and can phase through geometry.
+        Vector2 origin             = new Vector2( char_stats.char_collider.bounds.center.x + char_stats.velocity.x * Time.deltaTime * Time.timeScale, char_stats.char_collider.bounds.max.y - collision_box_size.y );
         Vector2 direction          = Vector2.up;
         float distance             = Mathf.Abs( char_stats.velocity.y ) * Time.deltaTime * Time.timeScale + ONE_PIXEL_BUFFER;
         RaycastHit2D hit           = Physics2D.BoxCast( origin, collision_box_size, 0.0f, direction, distance, CollisionMasks.upwards_collision_mask );
         if ( hit.collider == null ) { return; }
 
+        // Hit something
         float hit_distance = hit.distance - ONE_PIXEL_BUFFER;
         CustomTileData tile_data = Utils.GetCustomTileData( hit.collider );
         CollisionType collision_type = null;
@@ -597,6 +575,27 @@ public class SimpleCharacterCore : MonoBehaviour
             // Prevents bug: if you had blocking and non-blocking geometry [X][ ][X],
             // Boxcast collision only returns 1 hit. It could get only the non-blocking object, so you could pass through solid walls. 
             // Moving it to its own layer was simpler than using Boxcastall + aggregation.
+            if ( collision_type.IsCeilingClimbable )
+            {
+                // Don't stop upward movement if you hit a climbable ceiling, scrape across it until you anchor.
+                this.gameObject.transform.Translate( new Vector3( 0.0f, hit_distance, 0.0f ) );
+                // Don't want to trigger OnTouchCeiling, which will start falling.
+                bool did_grab_ceiling = false;
+                MagGripUpgrade mag_grip = this.gameObject.GetComponent<MagGripUpgrade>();
+                if ( mag_grip != null )
+                {
+                    did_grab_ceiling = mag_grip.InitiateCeilingGrab();
+                }
+
+                if ( ! did_grab_ceiling )
+                {
+                    // Reverse this frame's motion, so we don't have to unset velocity, which will stop the jump and cause the player to "bounce" off the wall.
+                    // Don't do this if you DO grab the ceiling, as it will break climbing detection and pull you off the ceiling.
+                    this.gameObject.transform.Translate( new Vector3( 0.0f, -char_stats.velocity.y * Time.deltaTime * Time.timeScale, 0.0f ) );
+                    // NOTE: do NOT put a floor too close to a climbable ceiling, or this pullback may put you through it. 2 Tiles is safe at reasonable framerates, though.
+                }
+                return;
+            }
         }
         // hit the ceiling, stop upward movement
         this.gameObject.transform.Translate( new Vector3( 0.0f, hit_distance, 0.0f ) );
@@ -614,7 +613,8 @@ public class SimpleCharacterCore : MonoBehaviour
         if ( char_stats.velocity.y >= 0.0f ) { return; } // immobile or moving up, don't need to check
 
         Vector2 collision_box_size = new Vector2( char_stats.char_collider.bounds.size.x, 1.0f ); // width x 1 px box
-        Vector2 origin             = new Vector2( char_stats.char_collider.bounds.center.x, char_stats.char_collider.bounds.min.y + collision_box_size.y );
+        // Need to offset origin by how far the player WILL MOVE after the horizontal checks pass, since player hasn't moved yet, otherwise we're casting from the wrong point and can phase through geometry.
+        Vector2 origin             = new Vector2( char_stats.char_collider.bounds.center.x + char_stats.velocity.x * Time.deltaTime * Time.timeScale, char_stats.char_collider.bounds.min.y + collision_box_size.y );
         Vector2 direction          = Vector2.down;
         float distance             = Mathf.Abs( char_stats.velocity.y ) * Time.deltaTime * Time.timeScale + ONE_PIXEL_BUFFER;
         RaycastHit2D hit           = Physics2D.BoxCast( origin, collision_box_size, 0.0f, direction, distance, CollisionMasks.standard_collision_mask );
