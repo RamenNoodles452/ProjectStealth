@@ -2297,6 +2297,11 @@ PrefabInstance:
       propertyPath: acquired_emp
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 114886462624007988, guid: 2058a5c2cfe3c8142a6215ac2206418a,
+        type: 3}
+      propertyPath: gadget
+      value: 2
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2058a5c2cfe3c8142a6215ac2206418a, type: 3}
 --- !u!1 &296620588
@@ -2412,7 +2417,6 @@ Transform:
   - {fileID: 296620590}
   - {fileID: 1075348782}
   - {fileID: 161225472}
-  - {fileID: 850563454}
   - {fileID: 951191902}
   m_Father: {fileID: 707834088}
   m_RootOrder: 4
@@ -2422,7 +2426,7 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
-    m_TransformParent: {fileID: 352420776}
+    m_TransformParent: {fileID: 829977685}
     m_Modifications:
     - target: {fileID: 1298157124715214, guid: 55a41f1409a14e74cb0ed3669bd572cb, type: 3}
       propertyPath: m_Name
@@ -2458,7 +2462,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4559494809494972, guid: 55a41f1409a14e74cb0ed3669bd572cb, type: 3}
       propertyPath: m_RootOrder
-      value: 7
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1325435446213678, guid: 55a41f1409a14e74cb0ed3669bd572cb, type: 3}
+      propertyPath: m_Name
+      value: Fuse
+      objectReference: {fileID: 0}
+    - target: {fileID: 1587851523812040, guid: 55a41f1409a14e74cb0ed3669bd572cb, type: 3}
+      propertyPath: m_Name
+      value: Baked Light
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 55a41f1409a14e74cb0ed3669bd572cb, type: 3}
@@ -3562,7 +3574,7 @@ Transform:
   - {fileID: 535175697}
   - {fileID: 76845278}
   - {fileID: 31771659}
-  - {fileID: 1959096638}
+  - {fileID: 850563454}
   m_Father: {fileID: 707834088}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -3742,7 +3754,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 352420776}
-  m_RootOrder: 8
+  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &951191903
 SpriteRenderer:
@@ -5547,6 +5559,66 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 750632928}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1949242461 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1298157124715214, guid: 55a41f1409a14e74cb0ed3669bd572cb,
+    type: 3}
+  m_PrefabInstance: {fileID: 403166037}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1949242463
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1949242461}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e5af25420d01ea4d9fe3401a83ac66f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  on_EMP:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1959096640}
+        m_MethodName: StartFlickering
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+--- !u!61 &1949242464
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1949242461}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 12, y: -3}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 1}
+    oldSize: {x: 24, y: 6}
+    newSize: {x: 24, y: 6}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 24, y: 6}
+  m_EdgeRadius: 0
 --- !u!1 &1959096637
 GameObject:
   m_ObjectHideFlags: 0
@@ -5557,6 +5629,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1959096638}
   - component: {fileID: 1959096639}
+  - component: {fileID: 1959096640}
   m_Layer: 0
   m_Name: Spot Light
   m_TagString: Untagged
@@ -5572,11 +5645,11 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1959096637}
   m_LocalRotation: {x: 0.5, y: 0.5, z: -0.5, w: 0.5}
-  m_LocalPosition: {x: 720, y: 288, z: -1}
+  m_LocalPosition: {x: 12, y: 0, z: -1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
-  m_Father: {fileID: 829977685}
-  m_RootOrder: 5
+  m_Father: {fileID: 850563454}
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 90, y: 90, z: 0}
 --- !u!108 &1959096639
 Light:
@@ -5590,7 +5663,7 @@ Light:
   m_Type: 0
   m_Color: {r: 0.5019608, g: 1, b: 0, a: 1}
   m_Intensity: 6
-  m_Range: 256
+  m_Range: 160
   m_SpotAngle: 45
   m_CookieSize: 10
   m_Shadows:
@@ -5616,6 +5689,20 @@ Light:
   m_UseColorTemperature: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+--- !u!114 &1959096640
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1959096637}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2431708d051ae2446b74cfcf5eb95b36, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  is_flickering: 0
+  flicker_duration: 5
 --- !u!1 &1964689804 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1923790813193964, guid: 68504798cbaaed246a05a7f926b12b71,

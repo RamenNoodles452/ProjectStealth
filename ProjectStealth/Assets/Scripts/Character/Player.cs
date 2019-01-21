@@ -6,7 +6,6 @@ public class Player : SimpleCharacterCore
 {
     #region vars
     // Player Modules
-    private PlayerStats player_stats;
     private MagGripUpgrade mag_grip;
     #endregion
 

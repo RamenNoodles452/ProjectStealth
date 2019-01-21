@@ -12,6 +12,7 @@ public class SimpleCharacterCore : MonoBehaviour
 
     private SpriteRenderer sprite_renderer;
     public IInputManager input_manager;
+    protected PlayerStats player_stats;
 
     //gravity vars
     private const float MAX_VERTICAL_SPEED          =   600.0f; // (pixels / second)
@@ -55,6 +56,7 @@ public class SimpleCharacterCore : MonoBehaviour
     public virtual void Start()
     {
         char_stats      = GetComponent<CharacterStats>();
+        player_stats    = GetComponent<PlayerStats>();
         input_manager   = GetComponent<IInputManager>();
         char_anims      = GetComponent<CharacterAnimationLogic>();
         sprite_renderer = transform.Find( "Sprites" ).GetComponent<SpriteRenderer>();
@@ -809,6 +811,8 @@ public class SimpleCharacterCore : MonoBehaviour
     private void OnTouchGround( Collider2D ground_collider )
     {
         char_stats.is_on_ground = true;
+        player_stats.can_air_hang = true;
+        player_stats.air_dash_count = 0;
         char_stats.jump_turned = false;
         char_stats.on_ground_collider = ground_collider;
     }
@@ -933,16 +937,61 @@ public class SimpleCharacterCore : MonoBehaviour
 
     /// <summary>
     /// Moves the player, respecting collision. For external sources of motion.
+    /// Each axis moves independently.
     /// </summary>
     /// <param name="change">The change to apply this frame to the player's position.</param>
     private void ApplyMoveWithCollision( Vector3 change )
     {
-        // Validation
-        if ( change.sqrMagnitude == 0.0f )
+        // Validation.
+        if ( change.sqrMagnitude == 0.0f ) { return; }
+        BoxCollider2D collider = GetComponent<BoxCollider2D>();
+        if ( collider == null ) { return; }
+
+        // Collision checks
+        // x axis
+        Vector2 size = new Vector2( collider.size.x, collider.size.y );
+        Vector3 origin = collider.bounds.center;
+        RaycastHit2D hit = Physics2D.BoxCast( origin, size, 0.0f, new Vector2( change.x, 0.0f ), Mathf.Abs( change.x ), CollisionMasks.standard_collision_mask );
+        if ( hit.collider != null ) // Collided with something.
         {
-            //Debug.Log( "Don't be a troll." );
-            return;
+            if ( hit.distance >= ONE_PIXEL_BUFFER ) // prevent jitter by not moving if you are point-blank with a collider.
+            {
+                // Move very close to the collider.
+                this.gameObject.transform.Translate( Mathf.Sign( change.x ) * ( hit.distance - ONE_PIXEL_BUFFER ), 0.0f, 0.0f );
+            }
         }
+        else // Collided with nothing, move it.
+        {
+            this.gameObject.transform.Translate( change.x, 0.0f, 0.0f );
+        }
+
+        // y axis
+        int collision_mask = CollisionMasks.standard_collision_mask;
+        if ( change.y > 0.0f ) { collision_mask = CollisionMasks.upwards_collision_mask; }
+        hit = Physics2D.BoxCast( origin, size, 0.0f, new Vector2( 0.0f, change.y ), Mathf.Abs( change.y ), collision_mask );
+        if ( hit.collider != null ) // Collided with something.
+        {
+            if ( hit.distance >= ONE_PIXEL_BUFFER ) // prevent jitter by not moving if you are point-blank with a collider.
+            {
+                // Move very close to the collider.
+                this.gameObject.transform.Translate( 0.0f, Mathf.Sign( change.y ) * ( hit.distance - ONE_PIXEL_BUFFER ) , 0.0f );
+            }
+        }
+        else // Collided with nothing, move it.
+        {
+            this.gameObject.transform.Translate( 0.0f, change.y, 0.0f );
+        }
+    }
+
+    /// <summary>
+    /// Moves the player, respecting collision. For external sources of motion.
+    /// Disfavored, since if one axis stops motion, both axes do.
+    /// </summary>
+    /// <param name="change">The change to apply this frame to the player's position.</param>
+    private void ApplyMoveWithCollision2( Vector3 change )
+    {
+        // Validation
+        if ( change.sqrMagnitude == 0.0f ) { return; }
 
         BoxCollider2D collider = GetComponent<BoxCollider2D>();
         if ( collider == null )
@@ -953,7 +1002,11 @@ public class SimpleCharacterCore : MonoBehaviour
 
         // Collision check.
         Vector2 size = new Vector2( collider.size.x, collider.size.y );
-        RaycastHit2D hit = Physics2D.BoxCast( this.gameObject.transform.position, size, 0.0f, change, change.magnitude, CollisionMasks.standard_collision_mask );
+        Vector3 origin = collider.bounds.center;
+        int collision_mask = CollisionMasks.standard_collision_mask;
+        if ( change.y > 0.0f ) { collision_mask = CollisionMasks.upwards_collision_mask; }
+
+        RaycastHit2D hit = Physics2D.BoxCast( origin, size, 0.0f, change, change.magnitude, collision_mask );
 
         if ( hit.collider != null ) // Collided with something.
         {

@@ -111,6 +111,20 @@ public class PlayerStats : MonoBehaviour
     private float adrenal_fade_timer = 0.0f;
     #endregion
 
+    #region air dash
+    public  bool  can_air_hang = true;
+    private float air_hang_timer;
+    private const float AIR_HANG_DURATION = 1.0f;   // seconds
+    public uint air_dash_count;
+    private float air_dash_angle;
+    private float air_dash_timer;
+    private const float AIR_DASH_DURATION = 0.3f;   // seconds
+    private const float AIR_DASH_SPEED    = 320.0f; // pixels per second
+    private const float AIR_DASH_COST     = 25.0f;
+    private bool is_air_dash_enqueued;
+    private Vector2 queued_air_dash_direction;
+    #endregion
+
     #region progression
     // progress values
     public bool acquired_mag_grip;
@@ -121,6 +135,7 @@ public class PlayerStats : MonoBehaviour
     public bool acquired_explosive;
     public bool acquired_charge_shot;
     public bool acquired_emp;
+    public bool acquired_jetboost;
     #endregion
 
     public GadgetEnum gadget;
@@ -290,9 +305,11 @@ public class PlayerStats : MonoBehaviour
     private void ResetState()
     {
         evade_enqueued = false;
+        is_evading = false;
         invincible = false;
         is_cloaked = false;
         was_hit_this_frame = false;
+        can_air_hang = true;
         CleanupAdrenalineChanges();
 
         health = health_max;
@@ -328,6 +345,7 @@ public class PlayerStats : MonoBehaviour
         // reset movement
         char_stats = this.gameObject.GetComponent<CharacterStats>();
         char_stats.velocity = new Vector2( 0.0f, 0.0f );
+        char_stats.current_master_state = CharEnums.MasterState.DefaultState;
 
         // reset overlay
         if ( overlay != null )
@@ -524,6 +542,64 @@ public class PlayerStats : MonoBehaviour
                 Referencer.instance.hud_ui.InsufficientAdrenaline();
             }
         }
+    }
+
+    /// <summary>
+    /// Freezes in the air momentarily. Can only be used once per jump / airdash.
+    /// </summary>
+    public void AirHang()
+    {
+        if ( ! can_air_hang ) { return; }
+
+        air_hang_timer = AIR_HANG_DURATION;
+        char_stats.velocity.x = 0.0f; //?
+        char_stats.velocity.y = 0.0f;
+        char_stats.current_master_state = CharEnums.MasterState.AirHang;
+        can_air_hang = false;
+    }
+
+    /// <summary>
+    /// Dashes through the air
+    /// </summary>
+    /// <returns>True if the air dash was executed, false otherwise.</returns>
+    public bool AirDash( Vector2 input_direction )
+    {
+        is_air_dash_enqueued = false;
+
+        // Need jetboost to do sequential dashes.
+        if ( air_dash_count > 0 && ! acquired_jetboost ) { return false; }
+
+        // Energy Cost
+        if ( ! is_adrenal_rushing && air_dash_count > 0 )
+        {
+            if ( GetEnergy() < AIR_DASH_COST )
+            {
+                Referencer.instance.hud_ui.InsuffienctStamina();
+                return false;
+            }
+            else
+            {
+                energy -= AIR_DASH_COST;
+            }
+        }
+
+        // Map input to an 8-directional input.
+        float directions = 8.0f;
+        input_direction.Normalize();
+        float angle = Mathf.Atan2( input_direction.y, input_direction.x ) * Mathf.Rad2Deg;
+        angle += 360.0f / ( directions * 2.0f ); // 22.5
+        angle = angle % 360.0f;
+        while ( angle < 0.0f ) { angle += 360.0f; }
+        angle = Mathf.Floor( angle / ( 360.0f / directions ) ) * ( 360.0f / directions ); // closest 45 degrees.
+
+        air_dash_angle = angle;
+        if ( acquired_jetboost ) { can_air_hang = true; } // reset air hang, to allow it to be used again.
+        air_dash_count++;
+        air_dash_timer = AIR_DASH_DURATION;
+        char_stats.velocity = new Vector2( 0.0f, 0.0f );
+        char_stats.current_master_state = CharEnums.MasterState.AirDash;
+        // TODO: animate.
+        return true;
     }
 
     /// <summary>
@@ -832,6 +908,39 @@ public class PlayerStats : MonoBehaviour
     }
 
     /// <summary>
+    /// Parses aerial inputs for air hanging and air dashes.
+    /// </summary>
+    private void AerialInput()
+    {
+        if ( char_stats.IsGrounded ) { return; }
+
+        if ( input_manager.JumpInputInst && char_stats.current_master_state == CharEnums.MasterState.DefaultState )
+        {
+            AirHang();
+        }
+
+        if ( char_stats.current_master_state == CharEnums.MasterState.AirHang )
+        {
+            if ( Mathf.Abs( input_manager.HorizontalAxis ) > 0.1f || Mathf.Abs( input_manager.VerticalAxis ) > 0.1f )
+            {
+                AirDash( new Vector2( input_manager.HorizontalAxis, input_manager.VerticalAxis ) );
+            }
+        }
+
+        if ( char_stats.current_master_state == CharEnums.MasterState.AirDash )
+        {
+            if ( ! is_air_dash_enqueued )
+            {
+                if ( ( Mathf.Abs( input_manager.HorizontalAxis ) > 0.1f || Mathf.Abs( input_manager.VerticalAxis ) > 0.1f ) && input_manager.JumpInputInst )
+                {
+                    queued_air_dash_direction = new Vector2( input_manager.HorizontalAxis, input_manager.VerticalAxis );
+                    is_air_dash_enqueued = true;
+                }
+            }
+        }
+    }
+
+    /// <summary>
     /// Locks the player in a state where they cannot respond to input.
     /// </summary>
     /// <param name="duration">The duration the frozen state should last, in seconds.</param>
@@ -994,7 +1103,9 @@ public class PlayerStats : MonoBehaviour
         #region Energy
         is_energy_regenerating = true;
 
-        if ( is_cloaked || is_evading ) { is_energy_regenerating = false; }
+        bool is_air_hanging = char_stats.current_master_state == CharEnums.MasterState.AirHang;
+        bool is_air_dashing = char_stats.current_master_state == CharEnums.MasterState.AirDash;
+        if ( is_cloaked || is_evading || is_air_hanging || is_air_dashing ) { is_energy_regenerating = false; }
         //if ( IsShooting || IsAttacking || IsAssassinating ) { IsEnergyRegenerating = false; }
 
         if ( is_energy_regenerating )
@@ -1073,6 +1184,48 @@ public class PlayerStats : MonoBehaviour
         }
         #endregion
 
+        #region AirHang
+        if ( char_stats.current_master_state == CharEnums.MasterState.AirHang )
+        {
+            air_hang_timer -= Time.deltaTime * Time.timeScale;
+            // Can't split a frame, so timer imprecision here is OK.
+            if ( air_hang_timer <= 0.0f )
+            {
+                char_stats.current_master_state = CharEnums.MasterState.DefaultState;
+                char_anims.FallTrigger();
+            }
+        }
+        #endregion
+
+        #region AirDash
+        if ( char_stats.current_master_state == CharEnums.MasterState.AirDash )
+        {
+            air_dash_timer -= Time.deltaTime * Time.timeScale;
+            float scalar = AIR_DASH_SPEED * Time.deltaTime * Time.timeScale;
+            // End-frame overshoot correction (amount of motion from going over intended time is removed).
+            if ( air_dash_timer < 0.0f )
+            {
+                scalar += AIR_DASH_SPEED * air_dash_timer;
+            }
+            GetComponent<SimpleCharacterCore>().MoveWithCollision( new Vector3( scalar * Mathf.Cos( air_dash_angle * Mathf.Deg2Rad ), scalar * Mathf.Sin( air_dash_angle * Mathf.Deg2Rad ), 0.0f ) );
+            if ( air_dash_timer <= 0.0f )
+            {
+                bool performed_another_dash = false;
+                if ( is_air_dash_enqueued )
+                {
+                    performed_another_dash = AirDash( queued_air_dash_direction );
+                }
+
+                if ( ! performed_another_dash )
+                {
+                    char_stats.current_master_state = CharEnums.MasterState.DefaultState;
+                    char_anims.FallTrigger();
+                }
+            }
+
+        }
+        #endregion
+
         #region Freeze
         if ( freeze_timer > 0.0f )
         {
@@ -1134,6 +1287,8 @@ public class PlayerStats : MonoBehaviour
         #endregion
 
         AutoTarget();
+
+        AerialInput();
 
         // Idle check
         was_idle = is_idle;
