@@ -9,3 +9,6 @@
     // used by CharacterStats and SimpleCharacterCore
     public enum FacingDirection { Left, Right };
 }
+
+
+public enum GadgetEnum { Bomb, RangedBomb, ElectroMagneticPulse, Hacker, RangedHacker };

@@ -51,8 +51,7 @@ public class ExplosiveCharge : MonoBehaviour
     {
         if ( ! player_stats.acquired_explosive ) { return; }
 
-        //if ( input_manager. )
-        if ( Input.GetKeyDown( KeyCode.B ) ) // TODO:
+        if ( input_manager.GadgetInputInst && player_stats.gadget == GadgetEnum.Bomb )
         {
             DoBombAction();
         }

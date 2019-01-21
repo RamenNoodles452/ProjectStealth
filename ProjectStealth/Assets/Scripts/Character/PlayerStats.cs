@@ -122,6 +122,8 @@ public class PlayerStats : MonoBehaviour
     public bool acquired_charge_shot;
     #endregion
 
+    public GadgetEnum gadget;
+
     // checkpointing
     public Vector2 checkpoint;
 

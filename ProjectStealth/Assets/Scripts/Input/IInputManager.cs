@@ -158,5 +158,13 @@ public abstract class IInputManager : MonoBehaviour
     /// If the "up button" went from unpressed to pressed this frame. I know uncrouch isn't a word, but it's brief and clear.
     /// </summary>
     public bool UnCrouchInputInst { get; set; }
+    /// <summary>
+    /// If the use gadget button is being held down.
+    /// </summary>
+    public bool GadgetInput { get; set; }
+    /// <summary>
+    /// If the use gadget button went from unpressed to pressed this frame.
+    /// </summary>
+    public bool GadgetInputInst { get; set; }
     #endregion
 }

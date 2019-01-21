@@ -59,6 +59,8 @@ public class UserInputManager : IInputManager
         AdrenalineInputInst = Input.GetKeyDown( KeyCode.Semicolon );
         InteractInput = Input.GetButton( "Interact" );
         InteractInputInst = Input.GetButtonDown( "Interact" );
+        GadgetInput = Input.GetButton( "Gadget" );
+        GadgetInputInst = Input.GetButtonDown( "Gadget" );
     }
 
     /// <summary>
@@ -99,6 +101,8 @@ public class UserInputManager : IInputManager
         AdrenalineInputInst = false;
         InteractInput = false;
         InteractInputInst = false;
+        GadgetInput = false;
+        GadgetInputInst = false;
     }
 
     /// <summary>
