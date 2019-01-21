@@ -5237,6 +5237,8 @@ GameObject:
   - component: {fileID: 114197477181029348}
   - component: {fileID: 114159090071546922}
   - component: {fileID: 2039211194}
+  - component: {fileID: 773944586}
+  - component: {fileID: 773944585}
   m_Layer: 10
   m_Name: PlayerCharacter
   m_TagString: Untagged
@@ -5395,6 +5397,8 @@ MonoBehaviour:
   acquired_hack: 1
   acquired_explosive: 1
   acquired_charge_shot: 1
+  acquired_emp: 0
+  gadget: 0
   checkpoint: {x: 0, y: 0}
   noise_prefab: {fileID: 1358546463198310, guid: 6031690b728867643bfa6e34edb58fc3,
     type: 3}
@@ -5520,6 +5524,32 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   bomb_prefab: {fileID: 8510696321149252759, guid: 29d476cb507f0f840889fd7434222588,
     type: 3}
+--- !u!114 &773944586
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1555196157489052}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8807a7b58dbc2d74a8015a83d12628eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  EMP_prefab: {fileID: 6535624299477532239, guid: 0afa8420659b9c94480ecccdbaf8f903,
+    type: 3}
+--- !u!114 &773944585
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1555196157489052}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6be6df83a74de9d4f88827d1d7baba72, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1632007899658474
 GameObject:
   m_ObjectHideFlags: 0

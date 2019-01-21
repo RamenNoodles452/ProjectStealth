@@ -3243,6 +3243,38 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 68504798cbaaed246a05a7f926b12b71, type: 3}
+--- !u!1 &773944584 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1555196157489052, guid: 2058a5c2cfe3c8142a6215ac2206418a,
+    type: 3}
+  m_PrefabInstance: {fileID: 275991785}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &773944585
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 773944584}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6be6df83a74de9d4f88827d1d7baba72, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &773944586
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 773944584}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8807a7b58dbc2d74a8015a83d12628eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  EMP_prefab: {fileID: 6535624299477532239, guid: 0afa8420659b9c94480ecccdbaf8f903,
+    type: 3}
 --- !u!1 &774616529
 GameObject:
   m_ObjectHideFlags: 0
@@ -3952,6 +3984,9 @@ GameObject:
   m_Component:
   - component: {fileID: 1137041782}
   - component: {fileID: 1137041781}
+  - component: {fileID: 1137041784}
+  - component: {fileID: 1137041783}
+  - component: {fileID: 1137041785}
   m_Layer: 0
   m_Name: New Sprite
   m_TagString: Untagged
@@ -4021,6 +4056,88 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1137041783
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1137041780}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e5af25420d01ea4d9fe3401a83ac66f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  on_EMP:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1137041783}
+        m_MethodName: Test
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+--- !u!61 &1137041784
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1137041780}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 150, y: 150}
+    newSize: {x: 150, y: 150}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 32, y: 32}
+  m_EdgeRadius: 0
+--- !u!114 &1137041785
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1137041780}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93636a64ab5e47447826f179208e5556, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  on_hack:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1137041785}
+        m_MethodName: Test
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
 --- !u!1 &1150610441
 GameObject:
   m_ObjectHideFlags: 0

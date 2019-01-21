@@ -120,6 +120,7 @@ public class PlayerStats : MonoBehaviour
     public bool acquired_hack;
     public bool acquired_explosive;
     public bool acquired_charge_shot;
+    public bool acquired_emp;
     #endregion
 
     public GadgetEnum gadget;
