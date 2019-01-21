@@ -63,7 +63,7 @@ public class Bomb : MonoBehaviour
         {
             explosion.damage = 100.0f;
             explosion.radius = 128.0f; // pixels
-            explosion.is_enemy_immune = false;
+            explosion.is_enemy_immune  = false;
             explosion.is_player_immune = false; // You CAN blow yourself up with this, so be careful.
         }
 
@@ -72,7 +72,7 @@ public class Bomb : MonoBehaviour
         if ( noise != null )
         {
             noise.position = noise_object.transform.position;
-            noise.radius = 256.0f; // pixels
+            noise.radius   = 256.0f; // pixels
             noise.lifetime = 1.0f;
         }
 
