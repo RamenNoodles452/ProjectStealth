@@ -10,5 +10,5 @@
     public enum FacingDirection { Left, Right };
 }
 
-
+// used by PlayerStats to determine what gadget is currently equipped.
 public enum GadgetEnum { Bomb, RangedBomb, ElectroMagneticPulse, Hacker, RangedHacker };
