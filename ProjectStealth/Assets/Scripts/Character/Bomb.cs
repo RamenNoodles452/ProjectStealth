@@ -61,8 +61,8 @@ public class Bomb : MonoBehaviour
         Explosion explosion = explosion_object.GetComponent<Explosion>();
         if ( explosion != null )
         {
-            explosion.damage = 100.0f;
-            explosion.radius = 128.0f; // pixels
+            explosion.damage = ExplosionDamage();
+            explosion.radius = ExplosionRadius(); // pixels
             explosion.is_enemy_immune  = false;
             explosion.is_player_immune = false; // You CAN blow yourself up with this, so be careful.
         }
@@ -77,5 +77,19 @@ public class Bomb : MonoBehaviour
         }
 
         Destroy( this.gameObject );
+    }
+
+    /// <returns>The explosion radius, in pixels.</returns>
+    private float ExplosionRadius()
+    {
+        // Provided as a function in case we want to check upgrades.
+        return 64.0f;
+    }
+
+    /// <returns>The amount of damage the explosion deals.</returns>
+    private float ExplosionDamage()
+    {
+        // Provided as a function in case we want to check upgrades.
+        return 100.0f;
     }
 }
