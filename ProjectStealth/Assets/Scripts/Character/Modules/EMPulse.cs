@@ -66,7 +66,12 @@ public class EMPulse : MonoBehaviour
             // Energy cost
             if ( ! player_stats.IsAdrenalRushing )
             {
-                if ( player_stats.GetEnergy() < ENERGY_COST ) { return; }
+                if ( player_stats.GetEnergy() < ENERGY_COST )
+                {
+                    Referencer.instance.hud_ui.InsuffienctStamina();
+                    // TODO: play sound?
+                    return;
+                }
                 player_stats.SpendEnergy( ENERGY_COST );
             }
 
