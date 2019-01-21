@@ -167,6 +167,13 @@ public class PlayerStats : MonoBehaviour
         return energy_max;
     }
 
+    /// <summary>Takes away energy</summary>
+    /// <params name="energy_to_spend">The amount to take away</params>
+    public void SpendEnergy( float energy_to_spend )
+    {
+        energy = Mathf.Max( 0.0f, energy - energy_to_spend );
+    }
+
     /// <returns>How full the adrenaline charge is</returns>
     public float PercentAdrenalineCharge
     {

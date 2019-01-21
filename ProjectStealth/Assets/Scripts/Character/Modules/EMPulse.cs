@@ -12,6 +12,8 @@ public class EMPulse : MonoBehaviour
     private GameObject EMP_prefab;
     private PlayerStats player_stats;
     private IInputManager input_manager;
+
+    private const float ENERGY_COST = 75.0f;
     #endregion
 
     /// <summary>
@@ -23,12 +25,6 @@ public class EMPulse : MonoBehaviour
         player_stats  = this.gameObject.GetComponent<PlayerStats>();
     }
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
     // Update is called once per frame
     void Update()
     {
@@ -36,7 +32,19 @@ public class EMPulse : MonoBehaviour
 
         if ( input_manager.GadgetInputInst && player_stats.gadget == GadgetEnum.ElectroMagneticPulse )
         {
+            // Energy cost
+            if ( ! player_stats.IsAdrenalRushing )
+            {
+                if ( player_stats.GetEnergy() < ENERGY_COST ) { return; }
+                player_stats.SpendEnergy( ENERGY_COST );
+            }
 
+            // Instantiate EMP prefab.
+            GameObject EMP_object = GameObject.Instantiate( EMP_prefab, transform.position, Quaternion.identity );
+            EMP EMP_script = EMP_object.GetComponent<EMP>();
+            EMP_script.radius = 96.0f;
+
+            // TODO: animation
         }
     }
 }
