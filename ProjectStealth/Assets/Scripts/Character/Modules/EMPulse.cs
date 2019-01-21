@@ -12,8 +12,10 @@ public class EMPulse : MonoBehaviour
     private GameObject EMP_prefab;
     private PlayerStats player_stats;
     private IInputManager input_manager;
+    private float timer;
+    private bool is_active;
 
-    private const float ENERGY_COST = 75.0f;
+    private const float ENERGY_COST = 50.0f;
     #endregion
 
     /// <summary>
@@ -30,6 +32,35 @@ public class EMPulse : MonoBehaviour
     {
         if ( ! player_stats.acquired_emp ) { return; }
 
+        UpdateTimers(); // Put first so the timer is accurate.
+        ParseInput();
+    }
+
+    /// <summary>
+    /// Counts down the wind-up animation.
+    /// </summary>
+    private void UpdateTimers()
+    {
+        timer = Mathf.Max( 0.0f, timer - Time.deltaTime * Time.timeScale );
+        if ( timer <= 0.0f && is_active )
+        {
+            // Instantiate EMP prefab.
+            GameObject EMP_object = GameObject.Instantiate( EMP_prefab, transform.position, Quaternion.identity );
+            EMP EMP_script = EMP_object.GetComponent<EMP>();
+            EMP_script.radius = PulseRadius();
+            is_active = false;
+        }
+
+        // TODO: interrupts (deactivate) + energy refund? (req. adrenaline/not at activation tracking)
+    }
+
+    /// <summary>
+    /// Parse user input.
+    /// </summary>
+    private void ParseInput()
+    {
+        if ( is_active ) { return; } // already active.
+
         if ( input_manager.GadgetInputInst && player_stats.gadget == GadgetEnum.ElectroMagneticPulse )
         {
             // Energy cost
@@ -39,12 +70,24 @@ public class EMPulse : MonoBehaviour
                 player_stats.SpendEnergy( ENERGY_COST );
             }
 
-            // Instantiate EMP prefab.
-            GameObject EMP_object = GameObject.Instantiate( EMP_prefab, transform.position, Quaternion.identity );
-            EMP EMP_script = EMP_object.GetComponent<EMP>();
-            EMP_script.radius = 96.0f;
+            is_active = true;
+            timer = WindUpDelay();
 
             // TODO: animation
         }
+    }
+
+    /// <returns>The radius of the EMP, in pixels.</returns>
+    private float PulseRadius()
+    {
+        // Provided as a function in case we want to check upgrades.
+        return 128.0f;
+    }
+
+    /// <returns>The duration of the wind-up, in seconds.</returns>
+    private float WindUpDelay()
+    {
+        // Provided as a function in case we want to check upgrades.
+        return 0.5f;
     }
 }
