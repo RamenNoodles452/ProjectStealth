@@ -618,7 +618,8 @@ public class MagGripUpgrade : MonoBehaviour
     /// <summary>
     /// if the player jumps into a ceiling, grab onto it (if they meet requirements)
     /// </summary>
-    public void InitiateCeilingGrab()
+    /// <returns>True if the ceiling was grabbed, false otherwise.</returns>
+    public bool InitiateCeilingGrab()
     {
         // top/bottom edge has no meaning here. Block behaviour that depends on it.
         is_at_top = false;
@@ -628,11 +629,11 @@ public class MagGripUpgrade : MonoBehaviour
         is_at_right = false;
 
         // Validation
-        if ( ! player_stats.acquired_ceiling_grip )         { return; } // need the upgrade to do this
+        if ( ! player_stats.acquired_ceiling_grip )         { return false; } // need the upgrade to do this
 
-        if ( current_climb_state != ClimbState.NotClimb )   { return; } // don't start climbing if you already are
-        if ( ! char_stats.IsInMidair )                      { return; } // need to be in midair
-        if ( wall_grab_delay_timer < WALL_GRAB_DELAY )      { return; } // wait for it
+        if ( current_climb_state != ClimbState.NotClimb )   { return false; } // don't start climbing if you already are
+        if ( ! char_stats.IsInMidair )                      { return false; } // need to be in midair
+        if ( wall_grab_delay_timer < WALL_GRAB_DELAY )      { return false; } // wait for it
 
         // TODO: enforce change of collider on exit / interrupt. (interrupt: only possible if enough space)
         // Use the ceiling climb collider for this check (without actually changing to it). Box centered on player position.
@@ -641,17 +642,18 @@ public class MagGripUpgrade : MonoBehaviour
         float top    = transform.position.y + char_stats.CEILING_CLIMB_COLLIDER_OFFSET.y + char_stats.CEILING_CLIMB_COLLIDER_SIZE.y / 2.0f;
         float bottom = transform.position.y + char_stats.CEILING_CLIMB_COLLIDER_OFFSET.y + char_stats.CEILING_CLIMB_COLLIDER_SIZE.y / 2.0f;
 
-        if ( Utils.AreaContainsBlockingGeometry( left, top, right - left, top - bottom ) ) { return; } // If changing the player's hitbox will put a wall inside of them: ABORT!
+        if ( Utils.AreaContainsBlockingGeometry( left, top, right - left, top - bottom ) ) { return false; } // If changing the player's hitbox will put a wall inside of them: ABORT!
 
         Collider2D[] colliders = Physics2D.OverlapAreaAll( new Vector2( left - 1.0f, top + 1.0f ), new Vector2( right + 1.0f, bottom - 1.0f ), CollisionMasks.static_mask );
         Rect ceiling_rect = GetClimbableCeilingRect( colliders );
-        if ( ceiling_rect.size.x == 0.0f )                  { return; } // There is no climbable ceiling to grab.
-        if ( ceiling_rect.size.x < right - left )           { return; } // The ceiling is not wide enough.
+        if ( ceiling_rect.size.x == 0.0f )                  { return false; } // There is no climbable ceiling to grab.
+        if ( ceiling_rect.size.x < right - left )           { return false; } // The ceiling is not wide enough.
         // Only grab the ceiling if the player fits within it.
-        if ( ceiling_rect.x > left )                        { return; } // ceiling left edge is right of player's left edge.
-        if ( ceiling_rect.x + ceiling_rect.size.x < right ) { return; } // ceiling right edge is left of player's right edge.
+        if ( ceiling_rect.x > left )                        { return false; } // ceiling left edge is right of player's left edge.
+        if ( ceiling_rect.x + ceiling_rect.size.x < right ) { return false; } // ceiling right edge is left of player's right edge.
 
         GrabCeiling();
+        return true;
     }
 
     /// <summary>
