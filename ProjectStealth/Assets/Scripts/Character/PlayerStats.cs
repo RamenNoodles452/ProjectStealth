@@ -107,16 +107,18 @@ public class PlayerStats : MonoBehaviour
 
     #region air dash
     public  bool  can_air_hang = true;
+    private bool  is_air_hang_enqueued;
     private float air_hang_timer;
     private const float AIR_HANG_DURATION = 1.0f;   // seconds
+
+    private bool is_air_dash_enqueued;
+    private Vector2 queued_air_dash_direction;
     public uint air_dash_count;
     private float air_dash_angle;
     private float air_dash_timer;
     private const float AIR_DASH_DURATION = 0.3f;   // seconds
     private const float AIR_DASH_SPEED    = 320.0f; // pixels per second
     private const float AIR_DASH_COST     = 25.0f;
-    private bool is_air_dash_enqueued;
-    private Vector2 queued_air_dash_direction;
     private const float AIR_DASH_INVINCIBILITY_TIME = 0.3f; // seconds
     #endregion
 
@@ -579,6 +581,7 @@ public class PlayerStats : MonoBehaviour
         char_stats.velocity.y = 0.0f;
         char_stats.current_master_state = CharEnums.MasterState.AirHang;
         can_air_hang = false;
+        is_air_hang_enqueued = false;
     }
 
     /// <summary>
@@ -941,11 +944,13 @@ public class PlayerStats : MonoBehaviour
     {
         if ( char_stats.IsGrounded ) { return; }
 
+        // Air hang
         if ( input_manager.JumpInputInst && char_stats.current_master_state == CharEnums.MasterState.DefaultState )
         {
             AirHang();
         }
 
+        // Air dash
         if ( char_stats.current_master_state == CharEnums.MasterState.AirHang )
         {
             if ( Mathf.Abs( input_manager.HorizontalAxis ) > 0.1f || Mathf.Abs( input_manager.VerticalAxis ) > 0.1f )
@@ -953,8 +958,8 @@ public class PlayerStats : MonoBehaviour
                 AirDash( new Vector2( input_manager.HorizontalAxis, input_manager.VerticalAxis ) );
             }
         }
-
-        if ( char_stats.current_master_state == CharEnums.MasterState.AirDash )
+        // Allow queueing AirHangs and AirDashes from AirDashes
+        else if ( char_stats.current_master_state == CharEnums.MasterState.AirDash )
         {
             if ( ! is_air_dash_enqueued )
             {
@@ -964,7 +969,13 @@ public class PlayerStats : MonoBehaviour
                     is_air_dash_enqueued = true;
                 }
             }
+
+            if ( input_manager.JumpInputInst && Mathf.Abs( input_manager.HorizontalAxis ) < 0.1f )
+            {
+                is_air_hang_enqueued = true;
+            }
         }
+
     }
 
     /// <summary>
@@ -1263,7 +1274,15 @@ public class PlayerStats : MonoBehaviour
                 if ( ! performed_another_dash )
                 {
                     char_stats.current_master_state = CharEnums.MasterState.DefaultState;
-                    char_anims.FallTrigger();
+                    
+                    if ( is_air_hang_enqueued )
+                    {
+                        AirHang();
+                    }
+                    else
+                    {
+                        char_anims.FallTrigger();
+                    }
                 }
             }
 
