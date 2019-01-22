@@ -44,7 +44,7 @@ public class UserInputManager : IInputManager
         JumpInputInst = Input.GetButtonDown( "Jump" );
         RunInput = ( RunAxis > 0 );
         RunInputDownInst = Input.GetButtonDown( "Run" );
-        RunInputUpInst = Input.GetButtonUp( "Run" );
+        //RunInputUpInst = Input.GetButtonUp( "Run" ); // unused
         AttackInput = Input.GetButton( "Attack" );
         AttackInputInst = Input.GetButtonDown( "Attack" );
         AssassinateInput = Input.GetButton( "Assassinate" );
@@ -137,12 +137,13 @@ public class UserInputManager : IInputManager
             }
             else if ( AimMode == ManualAimMode.position )
             {
-                // TODO: how to toggle aim on/off?
+                // Aim axis in: L3
+                AimToggleInputInst = Input.GetButtonDown( "AimToggle" );
             }
         }
         else
         {
-            AimToggleInputInst = Input.GetKeyDown( KeyCode.B );
+            AimToggleInputInst = Input.GetButtonDown( "AimToggle" );
             if ( AimToggleInputInst ) { IsManualAimOn = ! IsManualAimOn; }
         }
         #endregion
