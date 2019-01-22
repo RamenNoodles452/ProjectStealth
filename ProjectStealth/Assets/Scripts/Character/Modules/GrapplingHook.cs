@@ -17,8 +17,9 @@ public class GrapplingHook : MonoBehaviour
     private bool  did_fail             = false;
     private float angle;
     private Vector2 target;
+    private IInputManager input_manager;
     //private Player player_script;
-    //private PlayerStats player_stats;
+    private PlayerStats player_stats;
     private CharacterStats char_stats;
     private GameObject hook_instance;
     private GameObject chain_instance;
@@ -37,8 +38,9 @@ public class GrapplingHook : MonoBehaviour
     void Start ()
     {
         //player_script = GetComponent<Player>();
-        //player_stats  = GetComponent<PlayerStats>();
+        player_stats  = GetComponent<PlayerStats>();
         char_stats    = GetComponent<CharacterStats>();
+        input_manager = GetComponent<IInputManager>();
     }
     
     // Update is called once per frame
@@ -53,7 +55,7 @@ public class GrapplingHook : MonoBehaviour
     /// </summary>
     void ParseInput()
     {
-        if ( Input.GetKeyDown( KeyCode.Y ) && char_stats.current_master_state == CharEnums.MasterState.DefaultState )
+        if ( input_manager.GadgetInputInst && player_stats.gadget == GadgetEnum.Hookshot && char_stats.current_master_state == CharEnums.MasterState.DefaultState )
         {
             Vector3 aim_position_3D = Camera.main.ScreenToWorldPoint( Input.mousePosition );
             Vector2 aim_position = new Vector2( aim_position_3D.x, aim_position_3D.y );
