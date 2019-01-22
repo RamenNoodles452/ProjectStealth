@@ -121,7 +121,15 @@ public class SimpleCharacterCore : MonoBehaviour
                 // Won't be stationary?
                 if ( Mathf.Abs( input_manager.HorizontalAxis ) >= 0.1f )
                 {
-                    StartRunning();
+                    if ( ! player_stats.IsAdrenalRushing && player_stats.GetEnergy() < player_stats.GetSprintStartupCost )
+                    {
+                        Referencer.instance.hud_ui.InsuffienctStamina();
+                    }
+                    else
+                    {
+                        if ( ! player_stats.IsAdrenalRushing ) { player_stats.SpendEnergy( player_stats.GetSprintStartupCost ); }
+                        StartRunning();
+                    }
                 }
             }
         }
@@ -154,13 +162,6 @@ public class SimpleCharacterCore : MonoBehaviour
     /// </summary>
     public void StartRunning()
     {
-        if ( ! player_stats.IsAdrenalRushing && player_stats.GetEnergy() < player_stats.GetSprintStartupCost )
-        {
-            Referencer.instance.hud_ui.InsuffienctStamina();
-            return;
-        }
-        if ( ! player_stats.IsAdrenalRushing ) { player_stats.SpendEnergy( player_stats.GetSprintStartupCost ); }
-
         char_stats.current_move_state = CharEnums.MoveState.IsRunning;
 
         // if the character comes to a full stop, let them start the run again
@@ -373,6 +374,21 @@ public class SimpleCharacterCore : MonoBehaviour
         if ( IsAlmostZero( char_stats.velocity.x ) )
         {
             char_stats.velocity.x = 0.0f;
+        }
+    }
+
+    /// <summary>
+    /// Maxes out the player's speed.
+    /// </summary>
+    public void FullSpeed()
+    {
+        if ( char_stats.current_move_state == CharEnums.MoveState.IsSneaking )
+        {
+            char_stats.velocity.x = Mathf.Sign( char_stats.velocity.x ) * SNEAK_SPEED;
+        }
+        else if ( char_stats.current_move_state == CharEnums.MoveState.IsRunning )
+        {
+            char_stats.velocity.x = Mathf.Sign( char_stats.velocity.x ) * RUN_SPEED;
         }
     }
 

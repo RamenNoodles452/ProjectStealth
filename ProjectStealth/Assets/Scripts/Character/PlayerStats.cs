@@ -38,7 +38,7 @@ public class PlayerStats : MonoBehaviour
     private float EVADE_WINDUP_TIME = 0.10f;
     private float evade_windup_counter = 0.0f;
 
-    private bool invincible = false;
+    private bool is_invincible = false;
     private float INVINCIBILITY_TIME = 0.3f;
     private float invincibility_counter = 0.0f;
 
@@ -117,6 +117,7 @@ public class PlayerStats : MonoBehaviour
     private const float AIR_DASH_COST     = 25.0f;
     private bool is_air_dash_enqueued;
     private Vector2 queued_air_dash_direction;
+    private const float AIR_DASH_INVINCIBILITY_TIME = 0.3f; // seconds
     #endregion
 
     #region sprint
@@ -262,7 +263,7 @@ public class PlayerStats : MonoBehaviour
     /// <param name="damage">the amount of damage</param>
     public void Hit( float damage )
     {
-        if ( invincible )
+        if ( is_invincible )
         {
             return;
         }
@@ -328,7 +329,7 @@ public class PlayerStats : MonoBehaviour
     {
         evade_enqueued = false;
         is_evading = false;
-        invincible = false;
+        is_invincible = false;
         is_cloaked = false;
         was_hit_this_frame = false;
         can_air_hang = true;
@@ -620,8 +621,26 @@ public class PlayerStats : MonoBehaviour
         air_dash_timer = AIR_DASH_DURATION;
         char_stats.velocity = new Vector2( 0.0f, 0.0f );
         char_stats.current_master_state = CharEnums.MasterState.AirDash;
+        StartIFrames();
+
         // TODO: animate.
         return true;
+    }
+
+    /// <summary>
+    /// Determines whether or not the player is performing an air hang
+    /// </summary>
+    public bool IsAirHanging
+    {
+        get { return char_stats.current_master_state == CharEnums.MasterState.AirHang; }
+    }
+
+    /// <summary>
+    /// Determines whether or not the player is performing an air dash
+    /// </summary>
+    public bool IsAirDashing
+    {
+        get { return char_stats.current_master_state == CharEnums.MasterState.AirDash; }
     }
 
     /// <summary>
@@ -636,7 +655,7 @@ public class PlayerStats : MonoBehaviour
             {
                 evade_enqueued = true;
             }
-            else if ( invincible )
+            else if ( is_invincible )
             {
                 if ( INVINCIBILITY_TIME - invincibility_counter <= 0.1f ) { evade_enqueued = true; }
             }
@@ -659,7 +678,7 @@ public class PlayerStats : MonoBehaviour
             is_evading = true;
             is_evade_winding_up = true;
             evade_windup_counter = 0.0f;
-            invincible = false;
+            is_invincible = false;
             invincibility_counter = 0.0f;
             is_evade_recovering = false;
             evade_recovery_counter = 0.0f;
@@ -756,7 +775,7 @@ public class PlayerStats : MonoBehaviour
     /// </summary>
     private void StartIFrames()
     {
-        invincible = true;
+        is_invincible = true;
         invincibility_counter = 0.0f;
     }
 
@@ -1058,21 +1077,34 @@ public class PlayerStats : MonoBehaviour
         }
 
         // I frames
-        if ( invincible )
+        if ( is_invincible )
         {
             //Debug.Log("Evade");
             invincibility_counter += Time.deltaTime * Time.timeScale;
-            if ( invincibility_counter >= INVINCIBILITY_TIME )
+            if ( is_evading && invincibility_counter >= INVINCIBILITY_TIME )
             {
-                invincible = false;
+                is_invincible = false;
                 is_evade_recovering = true;
                 char_stats.current_master_state = CharEnums.MasterState.DefaultState;
 
                 // Start sprint out of dash? (cuts off recovery)
                 if ( Mathf.Abs( input_manager.HorizontalAxis ) >= 0.1f && Mathf.Sign( input_manager.HorizontalAxis ) == char_stats.GetFacingXComponent() && ! evade_enqueued )
                 {
-                    GetComponent<SimpleCharacterCore>().StartRunning();
+                    SimpleCharacterCore char_core = GetComponent<SimpleCharacterCore>();
+                    if ( char_core != null )
+                    {
+                        char_core.StartRunning();
+                        char_core.FullSpeed();
+                    }
                 }
+            }
+            else if ( IsAirDashing && invincibility_counter >= INVINCIBILITY_TIME )
+            {
+                is_invincible = false;
+            }
+            else
+            {
+                is_invincible = false;
             }
         }
 
@@ -1117,9 +1149,7 @@ public class PlayerStats : MonoBehaviour
         #region Energy
         is_energy_regenerating = true;
 
-        bool is_air_hanging = char_stats.current_master_state == CharEnums.MasterState.AirHang;
-        bool is_air_dashing = char_stats.current_master_state == CharEnums.MasterState.AirDash;
-        if ( is_cloaked || is_evading || is_air_hanging || is_air_dashing || IsSprinting ) { is_energy_regenerating = false; }
+        if ( is_cloaked || is_evading || IsAirHanging || IsAirDashing || IsSprinting ) { is_energy_regenerating = false; }
         //if ( IsShooting || IsAttacking || IsAssassinating ) { IsEnergyRegenerating = false; }
 
         if ( is_energy_regenerating )
