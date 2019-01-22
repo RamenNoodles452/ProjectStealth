@@ -330,6 +330,8 @@ public class PlayerStats : MonoBehaviour
     private void ResetState()
     {
         evade_enqueued = false;
+        is_air_hang_enqueued = false;
+        is_air_dash_enqueued = false;
         is_evading = false;
         is_invincible = false;
         is_cloaked = false;
