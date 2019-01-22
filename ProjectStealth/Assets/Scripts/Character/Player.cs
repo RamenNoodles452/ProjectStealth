@@ -7,6 +7,7 @@ public class Player : SimpleCharacterCore
     #region vars
     // Player Modules
     private MagGripUpgrade mag_grip;
+    public GadgetEnum[] gadgets = new GadgetEnum[4];
     #endregion
 
     void Awake()
@@ -25,6 +26,11 @@ public class Player : SimpleCharacterCore
         {
             DontDestroyOnLoad( this.gameObject ); // Persist across scene changes
         }
+
+        gadgets[ 0 ] = GadgetEnum.Bomb;
+        gadgets[ 1 ] = GadgetEnum.ElectroMagneticPulse;
+        gadgets[ 2 ] = GadgetEnum.MagnetLink;
+        gadgets[ 3 ] = GadgetEnum.Cloak;
     }
 
     public override void Start()
@@ -91,16 +97,18 @@ public class Player : SimpleCharacterCore
             }
 
             // Cloak
-            if ( input_manager.CloakInputInst )
+            /*if ( input_manager.CloakInputInst )
             {
                 player_stats.Cloak();
-            }
+            }*/
 
             // Adrenal Rush
             if ( input_manager.AdrenalineInputInst )
             {
                 player_stats.AdrenalRush();
             }
+
+            GadgetInput();
         }
     }
 
@@ -175,6 +183,41 @@ public class Player : SimpleCharacterCore
     public bool BecameIdleThisFrame
     {
         get { return player_stats.BecameIdleThisFrame; }
+    }
+
+    /// <summary>
+    /// Parses gadget input, and uses gadgets.
+    /// </summary>
+    private void GadgetInput()
+    {
+        int index = -1;
+        if ( input_manager.GadgetInputInst[ 0 ] ) { index = 0; }
+        if ( input_manager.GadgetInputInst[ 1 ] ) { index = 1; }
+        if ( input_manager.GadgetInputInst[ 2 ] ) { index = 2; }
+        if ( input_manager.GadgetInputInst[ 3 ] ) { index = 3; }
+
+        if ( index == -1 ) { return; }
+        GadgetEnum gadget = gadgets[ index ];
+
+        if ( gadget == GadgetEnum.Bomb )
+        {
+            ExplosiveCharge bomb = GetComponent<ExplosiveCharge>();
+            bomb.Trigger();
+        }
+        else if ( gadget == GadgetEnum.ElectroMagneticPulse )
+        {
+            EMPulse emp = GetComponent<EMPulse>();
+            emp.Trigger();
+        }
+        else if ( gadget == GadgetEnum.MagnetLink )
+        {
+            GrapplingHook mag_link = GetComponent<GrapplingHook>();
+            mag_link.Trigger();
+        }
+        else if ( gadget == GadgetEnum.Cloak )
+        {
+            player_stats.Cloak();
+        }
     }
 
     /// <summary>

@@ -139,8 +139,6 @@ public class PlayerStats : MonoBehaviour
     public bool acquired_jetboost;
     #endregion
 
-    public GadgetEnum gadget;
-
     // checkpointing
     public Vector2 checkpoint;
 
@@ -977,7 +975,6 @@ public class PlayerStats : MonoBehaviour
                 is_air_hang_enqueued = true;
             }
         }
-
     }
 
     /// <summary>
@@ -1092,7 +1089,7 @@ public class PlayerStats : MonoBehaviour
         // I frames
         if ( is_invincible )
         {
-            //Debug.Log("Evade");
+            //Debug.Log("Evade" + invincibility_counter );
             invincibility_counter += Time.deltaTime * Time.timeScale;
             if ( is_evading && invincibility_counter >= INVINCIBILITY_TIME )
             {
@@ -1111,9 +1108,13 @@ public class PlayerStats : MonoBehaviour
                     }
                 }
             }
-            else if ( IsAirDashing && invincibility_counter >= INVINCIBILITY_TIME )
+            else if ( IsAirDashing && invincibility_counter >= AIR_DASH_INVINCIBILITY_TIME )
             {
                 is_invincible = false;
+            }
+            else if ( ( is_evading && invincibility_counter < INVINCIBILITY_TIME ) || ( IsAirDashing && invincibility_counter < AIR_DASH_INVINCIBILITY_TIME ) )
+            {
+                // allowed to remain invincible.
             }
             else
             {

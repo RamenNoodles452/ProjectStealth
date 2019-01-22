@@ -46,16 +46,17 @@ public class GrapplingHook : MonoBehaviour
     // Update is called once per frame
     void Update ()
     {
-        ParseInput();
         if ( is_on ) { Function(); }
     }
 
     /// <summary>
-    /// Parses fire key and aiming.
+    /// Called remotely to activate this gadget.
     /// </summary>
-    void ParseInput()
+    public void Trigger()
     {
-        if ( input_manager.GadgetInputInst && player_stats.gadget == GadgetEnum.MagnetLink && char_stats.current_master_state == CharEnums.MasterState.DefaultState )
+        if ( ! player_stats.acquired_hookshot ) { return; }
+
+        if ( char_stats.current_master_state == CharEnums.MasterState.DefaultState )
         {
             Vector3 aim_position_3D = Camera.main.ScreenToWorldPoint( Input.mousePosition );
             Vector2 aim_position = new Vector2( aim_position_3D.x, aim_position_3D.y );

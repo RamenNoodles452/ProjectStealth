@@ -10,6 +10,7 @@ public class UserInputManager : IInputManager
     void Start()
     {
         IgnoreInput = false;
+        GadgetInputInst = new bool[ 4 ];
     }
 
     // Update is called once per frame
@@ -52,15 +53,17 @@ public class UserInputManager : IInputManager
         ShootInput = Input.GetButton( "Shoot" );
         ShootInputInst = Input.GetButtonDown( "Shoot" );
         ShootInputReleaseInst = Input.GetButtonUp( "Shoot" );
-        CloakInput = Input.GetButton( "Cloak" );
-        CloakInputInst = Input.GetButtonDown( "Cloak" );
+        //CloakInput = Input.GetButton( "Cloak" );
+        //CloakInputInst = Input.GetButtonDown( "Cloak" );
         EvadeInput = Input.GetButton( "Evade" );
         EvadeInputInst = Input.GetButtonDown( "Evade" );
         AdrenalineInputInst = Input.GetKeyDown( KeyCode.Semicolon );
         InteractInput = Input.GetButton( "Interact" );
         InteractInputInst = Input.GetButtonDown( "Interact" );
-        GadgetInput = Input.GetButton( "Gadget" );
-        GadgetInputInst = Input.GetButtonDown( "Gadget" );
+        GadgetInputInst[ 0 ] = Input.GetButtonDown( "Gadget0" );
+        GadgetInputInst[ 1 ] = Input.GetButtonDown( "Gadget1" );
+        GadgetInputInst[ 2 ] = Input.GetButtonDown( "Gadget2" );
+        GadgetInputInst[ 3 ] = Input.GetButtonDown( "Gadget3" );
     }
 
     /// <summary>
@@ -92,8 +95,8 @@ public class UserInputManager : IInputManager
         ShootInput = false;
         ShootInputInst = false;
         ShootInputReleaseInst = false;
-        CloakInput = false;
-        CloakInputInst = false;
+        //CloakInput = false;
+        //CloakInputInst = false;
         EvadeInput = false;
         EvadeInputInst = false;
         CrouchInputInst = false;
@@ -101,8 +104,10 @@ public class UserInputManager : IInputManager
         AdrenalineInputInst = false;
         InteractInput = false;
         InteractInputInst = false;
-        GadgetInput = false;
-        GadgetInputInst = false;
+        GadgetInputInst[ 0 ] = false;
+        GadgetInputInst[ 1 ] = false;
+        GadgetInputInst[ 2 ] = false;
+        GadgetInputInst[ 3 ] = false;
     }
 
     /// <summary>

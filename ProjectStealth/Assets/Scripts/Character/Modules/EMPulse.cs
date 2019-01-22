@@ -33,7 +33,6 @@ public class EMPulse : MonoBehaviour
         if ( ! player_stats.acquired_emp ) { return; }
 
         UpdateTimers(); // Put first so the timer is accurate.
-        ParseInput();
     }
 
     /// <summary>
@@ -55,31 +54,29 @@ public class EMPulse : MonoBehaviour
     }
 
     /// <summary>
-    /// Parse user input.
+    /// Called remotely to activate this gadget.
     /// </summary>
-    private void ParseInput()
+    public void Trigger()
     {
+        if ( ! player_stats.acquired_emp ) { return; }
         if ( is_active ) { return; } // already active.
 
-        if ( input_manager.GadgetInputInst && player_stats.gadget == GadgetEnum.ElectroMagneticPulse )
+        // Energy cost
+        if ( ! player_stats.IsAdrenalRushing )
         {
-            // Energy cost
-            if ( ! player_stats.IsAdrenalRushing )
+            if ( player_stats.GetEnergy() < ENERGY_COST )
             {
-                if ( player_stats.GetEnergy() < ENERGY_COST )
-                {
-                    Referencer.instance.hud_ui.InsuffienctStamina();
-                    // TODO: play sound?
-                    return;
-                }
-                player_stats.SpendEnergy( ENERGY_COST );
+                Referencer.instance.hud_ui.InsuffienctStamina();
+                // TODO: play sound?
+                return;
             }
-
-            is_active = true;
-            timer = WindUpDelay();
-
-            // TODO: animation
+            player_stats.SpendEnergy( ENERGY_COST );
         }
+
+        is_active = true;
+        timer = WindUpDelay();
+
+        // TODO: animation
     }
 
     /// <returns>The radius of the EMP, in pixels.</returns>

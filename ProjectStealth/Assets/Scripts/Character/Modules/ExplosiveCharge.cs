@@ -50,11 +50,16 @@ public class ExplosiveCharge : MonoBehaviour
     void Update()
     {
         if ( ! player_stats.acquired_explosive ) { return; }
+    }
 
-        if ( input_manager.GadgetInputInst && player_stats.gadget == GadgetEnum.Bomb )
-        {
-            DoBombAction();
-        }
+    /// <summary>
+    /// Called remotely to activate this gadget.
+    /// </summary>
+    public void Trigger()
+    {
+        if ( ! player_stats.acquired_explosive ) { return; }
+
+        DoBombAction();
     }
 
     // Handles placing or detonating bombs.
