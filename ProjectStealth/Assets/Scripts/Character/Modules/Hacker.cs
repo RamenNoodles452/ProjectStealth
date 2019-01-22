@@ -32,9 +32,30 @@ public class Hacker : MonoBehaviour
     {
         if ( ! player_stats.acquired_hack ) { return; }
 
-        if ( input_manager.GadgetInputInst && player_stats.gadget == GadgetEnum.Hacker )
+        //if ( input_manager.GadgetInputInst && player_stats.gadget == GadgetEnum.Hacker )
+        if ( input_manager.InteractInputInst && player_stats.acquired_hack )
         {
-
+            Hack();
         }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    private void Hack()
+    {
+        if ( true ) // TODO: detect if you're close to a hackable object.
+        {
+            // check, call OnHack();
+        }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    private void RemoteHack()
+    {
+        // TODO: if in aim mode, check if reticle is close to a hackable object.
+        // check, call OnHack();
     }
 }
