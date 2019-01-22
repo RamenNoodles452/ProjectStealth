@@ -45,12 +45,6 @@ public class PlayerStats : MonoBehaviour
     private bool is_evade_recovering = false;
     private float EVADE_RECOVERY_TIME = 0.10f;
     private float evade_recovery_counter = 0.15f;
-
-    //TODO: evade speed in direction, backstep from neutral (2 states here) chord with direction
-    // [ ] aerial 4 directional dodge movement (no iframes)
-    // [X] sliders for total time, windup time, i frames (not for aerial), recovery time / skip for enqueued windup, speed in pixels per second.
-    // [X] disable normal movement when dodging
-    // [ ] don't collide with enemies while dodging
     #endregion
 
     #region Cloak
@@ -125,6 +119,10 @@ public class PlayerStats : MonoBehaviour
     private Vector2 queued_air_dash_direction;
     #endregion
 
+    #region sprint
+    private float sprint_cost = 6.67f; // energy per second
+    #endregion
+
     #region progression
     // progress values
     public bool acquired_mag_grip;
@@ -187,6 +185,30 @@ public class PlayerStats : MonoBehaviour
     public void SpendEnergy( float energy_to_spend )
     {
         energy = Mathf.Max( 0.0f, energy - energy_to_spend );
+    }
+
+    /// <summary>
+    /// Gets the energy cost to start sprinting.
+    /// </summary>
+    public float GetSprintStartupCost
+    {
+        get { return 5.0f; }
+    }
+
+    /// <summary>
+    /// Gets the energy cost per second to sprint.
+    /// </summary>
+    public float GetSprintCost
+    {
+        get { return sprint_cost; }
+    }
+
+    /// <summary>
+    /// Determines whether the player is currently sprinting or not.
+    /// </summary>
+    public bool IsSprinting
+    {
+        get { return char_stats.current_move_state == CharEnums.MoveState.IsRunning && char_stats.current_master_state == CharEnums.MasterState.DefaultState; }
     }
 
     /// <returns>How full the adrenaline charge is</returns>
@@ -630,18 +652,18 @@ public class PlayerStats : MonoBehaviour
 
         // check if stuck in a non-cancellable animation
 
-        is_evading = true;
-        is_evade_winding_up = true;
-        evade_windup_counter = 0.0f;
-        invincible = false;
-        invincibility_counter = 0.0f;
-        is_evade_recovering = false;
-        evade_recovery_counter = 0.0f;
-
         // direction
         Vector2 input_direction = new Vector2( input_manager.HorizontalAxis, input_manager.VerticalAxis );
         if ( char_stats.IsGrounded )
         {
+            is_evading = true;
+            is_evade_winding_up = true;
+            evade_windup_counter = 0.0f;
+            invincible = false;
+            invincibility_counter = 0.0f;
+            is_evade_recovering = false;
+            evade_recovery_counter = 0.0f;
+
             if ( input_direction.x == 0.0f ) // backstep
             {
                 evade_direction = new Vector2( -1.0f * char_stats.GetFacingXComponent(), 0.0f );
@@ -654,38 +676,24 @@ public class PlayerStats : MonoBehaviour
             {
                 evade_direction = Vector2.left;
             }
+
+            if ( ! is_adrenal_rushing ) { energy -= EVADE_COST; }
         }
         else if ( char_stats.IsInMidair )
         {
-            if ( input_direction == Vector2.zero )
+            AirHang();
+            if ( input_direction.x == 0.0f && input_direction.y == 0.0f )
             {
-                evade_direction = new Vector2( char_stats.GetFacingXComponent(), 0.0f );
+                input_direction = new Vector2( -1.0f * char_stats.GetFacingXComponent(), 0.0f );
             }
-            else if ( Mathf.Abs( input_direction.y ) >= Mathf.Abs( input_direction.x ) )
-            {
-                if ( input_direction.y > 0.0f ) { evade_direction = Vector2.up; }
-                else { evade_direction = Vector2.down; }
-            }
-            else
-            {
-                if ( input_direction.x > 0.0f ) { evade_direction = Vector2.right; }
-                else { evade_direction = Vector2.left; }
-            }
+            AirDash( input_direction );
         }
-
-        if ( ! is_adrenal_rushing ) { energy -= EVADE_COST; }
 
         // animate
         if ( char_stats.IsGrounded )
         {
             char_anims.DodgeRollTrigger();
         }
-        else
-        {
-            char_anims.DodgeRollAerialTrigger();
-        }
-
-        //return true/false? based on abort / already evading / stuck in recovery / resource insuffiency / success
     }
 
     /// <returns>Whether the player is evading or not</returns>
@@ -1059,6 +1067,12 @@ public class PlayerStats : MonoBehaviour
                 invincible = false;
                 is_evade_recovering = true;
                 char_stats.current_master_state = CharEnums.MasterState.DefaultState;
+
+                // Start sprint out of dash? (cuts off recovery)
+                if ( Mathf.Abs( input_manager.HorizontalAxis ) >= 0.1f && Mathf.Sign( input_manager.HorizontalAxis ) == char_stats.GetFacingXComponent() && ! evade_enqueued )
+                {
+                    GetComponent<SimpleCharacterCore>().StartRunning();
+                }
             }
         }
 
@@ -1105,7 +1119,7 @@ public class PlayerStats : MonoBehaviour
 
         bool is_air_hanging = char_stats.current_master_state == CharEnums.MasterState.AirHang;
         bool is_air_dashing = char_stats.current_master_state == CharEnums.MasterState.AirDash;
-        if ( is_cloaked || is_evading || is_air_hanging || is_air_dashing ) { is_energy_regenerating = false; }
+        if ( is_cloaked || is_evading || is_air_hanging || is_air_dashing || IsSprinting ) { is_energy_regenerating = false; }
         //if ( IsShooting || IsAttacking || IsAssassinating ) { IsEnergyRegenerating = false; }
 
         if ( is_energy_regenerating )

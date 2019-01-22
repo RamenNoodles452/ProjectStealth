@@ -2302,6 +2302,11 @@ PrefabInstance:
       propertyPath: gadget
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 114886462624007988, guid: 2058a5c2cfe3c8142a6215ac2206418a,
+        type: 3}
+      propertyPath: acquired_jetboost
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2058a5c2cfe3c8142a6215ac2206418a, type: 3}
 --- !u!1 &296620588

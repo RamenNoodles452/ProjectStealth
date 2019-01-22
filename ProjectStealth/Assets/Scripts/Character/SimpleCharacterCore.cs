@@ -113,43 +113,79 @@ public class SimpleCharacterCore : MonoBehaviour
     /// </summary>
     private void RunWalkInput()
     {
-        if ( input_manager.RunInput )
+        // Start Running?
+        if ( input_manager.RunInputDownInst )
         {
-            char_stats.current_move_state = CharEnums.MoveState.IsRunning;
-            StartRunning();
+            if ( ! player_stats.IsSprinting ) // already sprinting.
+            {
+                // Won't be stationary?
+                if ( Mathf.Abs( input_manager.HorizontalAxis ) >= 0.1f )
+                {
+                    StartRunning();
+                }
+            }
         }
-        else
-        {
-            char_stats.current_move_state = CharEnums.MoveState.IsSneaking;
+
+        if ( player_stats.IsSprinting )
+        { 
+            // Keep running?
+            // Significantly slowed or let go of stick. If they are holding down run, keep running, as that expresses intent and they may be turning around.
+            if ( ( Mathf.Abs( input_manager.HorizontalAxis ) < 0.5f && ! input_manager.RunInput ) ) { StopRunning(); }
+            // Stopped, with no intention of moving.
+            else if ( char_stats.velocity.x == 0.0f && Mathf.Abs( input_manager.HorizontalAxis ) < 0.1f ) { StopRunning(); }
+            // Not enough energy to continue.
+            else if ( ! player_stats.IsAdrenalRushing && player_stats.GetEnergy() < player_stats.GetSprintCost * Time.deltaTime * Time.timeScale ) { StopRunning(); }
+            else
+            {
+                // Still sprinting.
+                if ( ! player_stats.IsAdrenalRushing )
+                {
+                    player_stats.SpendEnergy( player_stats.GetSprintCost * Time.deltaTime * Time.timeScale );
+                }
+            }
         }
+
         SetHorizontalAcceleration();
         abuts_facing_sticky_ledge = IsCrouchedAbuttingFacingStickyLedge();
     }
 
     /// <summary>
-    /// Snaps to minimum running speed when the player presses run.
+    /// Sets state and snaps to minimum running speed when the player presses run, and has enough energy.
     /// </summary>
-    private void StartRunning()
+    public void StartRunning()
     {
+        if ( ! player_stats.IsAdrenalRushing && player_stats.GetEnergy() < player_stats.GetSprintStartupCost )
+        {
+            Referencer.instance.hud_ui.InsuffienctStamina();
+            return;
+        }
+        if ( ! player_stats.IsAdrenalRushing ) { player_stats.SpendEnergy( player_stats.GetSprintStartupCost ); }
+
+        char_stats.current_move_state = CharEnums.MoveState.IsRunning;
+
         // if the character comes to a full stop, let them start the run again
         // This also works when turning around
         if ( char_stats.velocity.x == 0.0f )
         {
             start_run = true;
-            PlayerStats playerStats = GetComponent<PlayerStats>();
-            playerStats.StartWalking();
+            player_stats.StartWalking();
         }
         if ( start_run == false ) { return; }
 
         // running automatically starts at the sneaking speed and accelerates from there
-        float sign = 1.0f;
-        if ( input_manager.HorizontalAxis < 0.0f ) { sign = -1.0f; }
-
         if ( Mathf.Abs( char_stats.velocity.x ) < SNEAK_SPEED )
         {
-            char_stats.velocity.x = SNEAK_SPEED * sign;
+            char_stats.velocity.x = SNEAK_SPEED * Mathf.Sign( input_manager.HorizontalAxis );
             start_run = false;
         }
+    }
+
+    /// <summary>
+    /// Stops running.
+    /// </summary>
+    private void StopRunning()
+    {
+        char_stats.current_move_state = CharEnums.MoveState.IsSneaking;
     }
 
     /// <summary>
@@ -157,10 +193,7 @@ public class SimpleCharacterCore : MonoBehaviour
     /// </summary>
     private void SetHorizontalAcceleration()
     {
-        // x accel
-        float multiplier = 0.0f;
-        if      ( input_manager.HorizontalAxis > 0.0f ) { multiplier =  1.0f; }
-        else if ( input_manager.HorizontalAxis < 0.0f ) { multiplier = -1.0f; }
+        float multiplier = input_manager.HorizontalAxis;
         char_stats.acceleration.x = ACCELERATION * multiplier;
     }
 
