@@ -11,4 +11,4 @@
 }
 
 // used by PlayerStats to determine what gadget is currently equipped.
-public enum GadgetEnum { Bomb, RangedBomb, Hacker, RangedHacker, ElectroMagneticPulse, Hookshot };
+public enum GadgetEnum { Bomb, RangedBomb, Hacker, RangedHacker, ElectroMagneticPulse, MagnetLink };
