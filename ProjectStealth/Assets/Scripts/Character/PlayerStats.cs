@@ -139,6 +139,8 @@ public class PlayerStats : MonoBehaviour
     public bool acquired_jetboost;
     #endregion
 
+    private GadgetEnum gadget;
+
     // checkpointing
     public Vector2 checkpoint;
 
@@ -245,6 +247,14 @@ public class PlayerStats : MonoBehaviour
     public bool BecameIdleThisFrame
     {
         get { return is_idle && !was_idle; }
+    }
+
+    /// <summary>
+    /// Returns the currently equipped gadget.
+    /// </summary>
+    public GadgetEnum CurrentlyEquippedGadget
+    {
+        get { return gadget; }
     }
 
     /// <summary>
@@ -942,7 +952,8 @@ public class PlayerStats : MonoBehaviour
     /// </summary>
     private void AerialInput()
     {
-        if ( char_stats.IsGrounded ) { return; }
+        if ( Time.timeScale == 0.0f ) { return; } // don't parse input
+        if ( char_stats.IsGrounded )  { return; }
 
         // Air hang
         if ( input_manager.JumpInputInst && char_stats.current_master_state == CharEnums.MasterState.DefaultState )
@@ -1222,7 +1233,7 @@ public class PlayerStats : MonoBehaviour
         if ( char_stats.IsGrounded &&
             ( char_stats.current_move_state == CharEnums.MoveState.IsWalking || char_stats.current_move_state == CharEnums.MoveState.IsRunning ) )
         {
-            walk_animation_timer += Time.deltaTime; // t_scale SHOULD be respected? But also need to update animation to play slower.
+            walk_animation_timer += Time.deltaTime;
             if ( walk_animation_timer >= 0.35f )
             {
                 walk_animation_timer -= 0.35f;

@@ -10,7 +10,6 @@ public class UserInputManager : IInputManager
     void Start()
     {
         IgnoreInput = false;
-        GadgetInputInst = new bool[ 4 ];
     }
 
     // Update is called once per frame
@@ -60,10 +59,9 @@ public class UserInputManager : IInputManager
         AdrenalineInputInst = Input.GetKeyDown( KeyCode.Semicolon );
         InteractInput = Input.GetButton( "Interact" );
         InteractInputInst = Input.GetButtonDown( "Interact" );
-        GadgetInputInst[ 0 ] = Input.GetButtonDown( "Gadget0" );
-        GadgetInputInst[ 1 ] = Input.GetButtonDown( "Gadget1" );
-        GadgetInputInst[ 2 ] = Input.GetButtonDown( "Gadget2" );
-        GadgetInputInst[ 3 ] = Input.GetButtonDown( "Gadget3" );
+        GadgetInputInst = Input.GetButtonDown( "Gadget" );
+        GadgetInput = Input.GetButton( "Gadget" );
+        GadgetInputReleaseInst = Input.GetButtonUp( "Gadget" );
     }
 
     /// <summary>
@@ -104,10 +102,9 @@ public class UserInputManager : IInputManager
         AdrenalineInputInst = false;
         InteractInput = false;
         InteractInputInst = false;
-        GadgetInputInst[ 0 ] = false;
-        GadgetInputInst[ 1 ] = false;
-        GadgetInputInst[ 2 ] = false;
-        GadgetInputInst[ 3 ] = false;
+        GadgetInputInst = false;
+        GadgetInput = false;
+        GadgetInputReleaseInst = false;
     }
 
     /// <summary>

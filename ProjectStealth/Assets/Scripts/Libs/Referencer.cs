@@ -12,6 +12,7 @@ public class Referencer : MonoBehaviour
 
     public Player player;
     public UIScript hud_ui;
+    public GadgetSelectUI gadget_select_ui;
     public Grid geometry_tilemap_grid;
     public Tilemap geometry_tilemap;
 
@@ -34,7 +35,7 @@ public class Referencer : MonoBehaviour
             instance = this;
             RegisterPlayer();
             RegisterScene();
-            RegisterHUDUI();
+            RegisterUI();
         }
         else if ( instance != this )
         {
@@ -52,9 +53,20 @@ public class Referencer : MonoBehaviour
         player = GameObject.Find( "PlayerCharacter" ).GetComponent<Player>();
     }
 
+    public void RegisterUI()
+    {
+        RegisterHUDUI();
+        RegisterGadgetSelectUI();
+    }
+
     public void RegisterHUDUI()
     {
         hud_ui = GameObject.Find( "UI Canvas" ).GetComponent<UIScript>();
+    }
+
+    public void RegisterGadgetSelectUI()
+    {
+        gadget_select_ui = GameObject.Find( "UI Gadget Select Canvas" ).GetComponent<GadgetSelectUI>();
     }
 
     /// <summary>

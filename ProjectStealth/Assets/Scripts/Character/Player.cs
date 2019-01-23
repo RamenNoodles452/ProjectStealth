@@ -8,6 +8,9 @@ public class Player : SimpleCharacterCore
     // Player Modules
     private MagGripUpgrade mag_grip;
     public GadgetEnum[] gadgets = new GadgetEnum[4];
+
+    private float gadget_hold_timer;
+    private const float OPEN_GADGET_UI_DELAY = 0.75f; // seconds
     #endregion
 
     void Awake()
@@ -27,10 +30,10 @@ public class Player : SimpleCharacterCore
             DontDestroyOnLoad( this.gameObject ); // Persist across scene changes
         }
 
-        gadgets[ 0 ] = GadgetEnum.Bomb;
-        gadgets[ 1 ] = GadgetEnum.ElectroMagneticPulse;
-        gadgets[ 2 ] = GadgetEnum.MagnetLink;
-        gadgets[ 3 ] = GadgetEnum.Cloak;
+        gadgets[ 0 ] = GadgetEnum.ElectroMagneticPulse;
+        gadgets[ 1 ] = GadgetEnum.Bomb;
+        gadgets[ 2 ] = GadgetEnum.Cloak;
+        gadgets[ 3 ] = GadgetEnum.MagnetLink;
     }
 
     public override void Start()
@@ -63,6 +66,8 @@ public class Player : SimpleCharacterCore
 
     public override void Update()
     {
+        if ( Time.timeScale == 0.0f ) { return; }
+
         base.Update();
 
         if ( char_stats.current_master_state == CharEnums.MasterState.DefaultState )
@@ -190,14 +195,11 @@ public class Player : SimpleCharacterCore
     /// </summary>
     private void GadgetInput()
     {
-        int index = -1;
-        if ( input_manager.GadgetInputInst[ 0 ] ) { index = 0; }
-        if ( input_manager.GadgetInputInst[ 1 ] ) { index = 1; }
-        if ( input_manager.GadgetInputInst[ 2 ] ) { index = 2; }
-        if ( input_manager.GadgetInputInst[ 3 ] ) { index = 3; }
+        // Use gadgets
+        if ( ! input_manager.GadgetInputReleaseInst ) { return; }
+        //if ( held_time >= OPEN_GADGET_UI_DELAY ) { return; }      // The select UI was opened, this should select, not fire.
 
-        if ( index == -1 ) { return; }
-        GadgetEnum gadget = gadgets[ index ];
+        GadgetEnum gadget = player_stats.CurrentlyEquippedGadget;
 
         if ( gadget == GadgetEnum.Bomb )
         {

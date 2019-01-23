@@ -162,6 +162,14 @@ public abstract class IInputManager : MonoBehaviour
     /// <summary>
     /// If the use gadget button went from unpressed to pressed this frame.
     /// </summary>
-    public bool[] GadgetInputInst;
+    public bool GadgetInputInst { get; set; }
+    /// <summary>
+    /// If the gadget button is being held down.
+    /// </summary>
+    public bool GadgetInput { get; set; }
+    /// <summary>
+    /// If the gadger button went from pressed to unpressed this frame.
+    /// </summary>
+    public bool GadgetInputReleaseInst { get; set; }
     #endregion
 }
