@@ -131,12 +131,14 @@ public class PlayerStats : MonoBehaviour
     public bool acquired_mag_grip;
     public bool acquired_ceiling_grip;
     public bool acquired_adrenal_rush;
-    public bool acquired_hookshot;
-    public bool acquired_hack;
-    public bool acquired_explosive;
     public bool acquired_charge_shot;
-    public bool acquired_emp;
     public bool acquired_jetboost;
+    public bool acquired_hack;
+
+    public bool acquired_explosive;
+    public bool acquired_emp;
+    public bool acquired_hookshot;
+    public bool acquired_cloak;
     #endregion
 
     private GadgetEnum gadget;
@@ -255,6 +257,7 @@ public class PlayerStats : MonoBehaviour
     public GadgetEnum CurrentlyEquippedGadget
     {
         get { return gadget; }
+        set { gadget = value; }
     }
 
     /// <summary>
