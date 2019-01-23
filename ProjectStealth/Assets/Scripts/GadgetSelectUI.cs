@@ -98,6 +98,7 @@ public class GadgetSelectUI : MonoBehaviour
     public void Open()
     {
         if ( is_open ) { return; }
+        if ( NoGadgets() ) { return; } // COULD lock out if 1- gadgets.
 
         is_open = true;
         prev_time_scale = Time.timeScale;
@@ -115,5 +116,20 @@ public class GadgetSelectUI : MonoBehaviour
         is_open = false;
         Time.timeScale = prev_time_scale;
         this.gameObject.SetActive( false );
+    }
+
+    /// <summary>
+    /// Checks if the player only has no gadgets
+    /// </summary>
+    /// <returns>True if the player has no gadgets, False if they have more.</returns>
+    private bool NoGadgets()
+    {
+        int count = 0;
+        if ( player_stats.acquired_explosive ) { count++; }
+        if ( player_stats.acquired_emp ) { count++; }
+        if ( player_stats.acquired_hookshot ) { count++; }
+        //if ( player_stats.acquired_cloak ) { count++; }
+
+        return count > 0;
     }
 }
