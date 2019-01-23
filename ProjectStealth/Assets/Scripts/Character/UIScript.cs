@@ -64,6 +64,11 @@ public class UIScript : MonoBehaviour
     [SerializeField]
     private Image adrenaline_outline;
 
+    [SerializeField]
+    private GameObject gadget_object;
+    [SerializeField]
+    private Image gadget_image;
+
     // Probable Debug UI (TODO: remove?)
     [SerializeField]
     private Text gadget_name;
@@ -124,6 +129,8 @@ public class UIScript : MonoBehaviour
         AnimateOverlays();
         BlinkOutlines();
         DropLosses();
+
+        ShowGadget();
     }
 
     /// <summary>
@@ -500,6 +507,33 @@ public class UIScript : MonoBehaviour
         shield_falling_value -= drop_speed * Time.deltaTime * Time.timeScale;
         energy_prev_frame = player.GetEnergy();
         shield_prev_frame = player.GetShields();
+    }
+
+    /// <summary>
+    /// Displays the gadget icon.
+    /// </summary>
+    private void ShowGadget()
+    {
+        GadgetSelectUI gadget_ui = Referencer.instance.gadget_select_ui;
+        if ( gadget_ui != null )
+        {
+            Sprite sprite = gadget_ui.GetGadgetSprite( player_stats.CurrentlyEquippedGadget );
+            if ( sprite != null ) // show the gadget UI and icon.
+            {
+                if ( ! gadget_object.activeInHierarchy )
+                {
+                    gadget_object.SetActive( true );
+                }
+                gadget_image.sprite = sprite;
+            }
+            else // no gadget icon, hide entire gadget portion of the UI.
+            {
+                if ( gadget_object.activeInHierarchy )
+                {
+                    gadget_object.SetActive( false );
+                }
+            }
+        }
     }
 
     #region Utility

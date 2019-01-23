@@ -112,7 +112,7 @@ public class GadgetSelectUI : MonoBehaviour
     {
         if ( ! is_locked[ gadget_to_index_map[ GadgetEnum.Bomb ] ] )
         {
-            bomb_image.sprite = bomb_sprite;
+            bomb_image.sprite = GetGadgetSprite( GadgetEnum.Bomb );
         }
         else
         {
@@ -121,7 +121,7 @@ public class GadgetSelectUI : MonoBehaviour
 
         if ( ! is_locked[ gadget_to_index_map[ GadgetEnum.MagnetLink ] ] )
         {
-            mag_link_image.sprite = mag_link_sprite;
+            mag_link_image.sprite = GetGadgetSprite( GadgetEnum.MagnetLink );
         }
         else
         {
@@ -130,7 +130,7 @@ public class GadgetSelectUI : MonoBehaviour
 
         if ( ! is_locked[ gadget_to_index_map[ GadgetEnum.ElectroMagneticPulse ] ] )
         {
-            emp_image.sprite = emp_sprite;
+            emp_image.sprite = GetGadgetSprite( GadgetEnum.ElectroMagneticPulse );
         }
         else
         {
@@ -139,12 +139,26 @@ public class GadgetSelectUI : MonoBehaviour
 
         if ( ! is_locked[ gadget_to_index_map[ GadgetEnum.Cloak ] ] )
         {
-            cloak_image.sprite = cloak_sprite;
+            cloak_image.sprite = GetGadgetSprite( GadgetEnum.Cloak );
         }
         else
         {
             cloak_image.sprite = locked_sprite;
         }
+    }
+
+    /// <summary>
+    /// Gets the sprite icon for a gadget.
+    /// </summary>
+    /// <param name="gadget">The gadget to get the corresponding sprite for.</param>
+    /// <returns>The sprite.</returns>
+    public Sprite GetGadgetSprite( GadgetEnum gadget )
+    {
+        if ( gadget == GadgetEnum.Bomb ) { return bomb_sprite; }
+        if ( gadget == GadgetEnum.ElectroMagneticPulse ) { return emp_sprite; }
+        if ( gadget == GadgetEnum.MagnetLink ) { return mag_link_sprite; }
+        if ( gadget == GadgetEnum.Cloak ) { return cloak_sprite; }
+        return null;
     }
 
     /// <summary>

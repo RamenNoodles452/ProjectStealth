@@ -141,6 +141,7 @@ public class PlayerStats : MonoBehaviour
     public bool acquired_cloak;
     #endregion
 
+    [SerializeField]
     private GadgetEnum gadget;
 
     // checkpointing
