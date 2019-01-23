@@ -839,6 +839,9 @@ public class MagGripUpgrade : MonoBehaviour
         // TODO: crouch fallback
 
         // TODO: animation
+        char_anims.WallToGroundTrigger();
+        player_stats.FreezePlayer( 0.55f ); // animation duration.
+
         transform.Translate( direction * player_size.x, char_stats.STANDING_COLLIDER_SIZE.y + 1.0f, 0.0f );
         return true;
     }
