@@ -30,6 +30,7 @@ public class Hacker : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if ( Time.timeScale == 0.0f ) { return; }
         if ( ! player_stats.acquired_hack ) { return; }
 
         //if ( input_manager.GadgetInputInst && player_stats.gadget == GadgetEnum.Hacker )

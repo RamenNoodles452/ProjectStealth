@@ -21,6 +21,7 @@ public class CrouchAction : MonoBehaviour
 
     void Update()
     {
+        if ( Time.timeScale == 0.0f ) { return; }
         if ( char_stats.current_master_state != CharEnums.MasterState.DefaultState ) { return; }
 
         if ( char_stats.IsGrounded && char_stats.current_move_state == CharEnums.MoveState.IsSneaking && input_manager.CrouchInputInst )

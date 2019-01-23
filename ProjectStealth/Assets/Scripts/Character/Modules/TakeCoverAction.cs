@@ -29,6 +29,8 @@ public class TakeCoverAction : MonoBehaviour
 
     void Update()
     {
+        if ( Time.timeScale == 0.0f ) { return; }
+
         if ( char_stats.touched_vault_obstacle != null && char_stats.IsSneaking &&
             ( ( char_stats.IsFacingLeft() && input_manager.HorizontalAxis < 0.0f ) ||
                 ( char_stats.IsFacingRight() && input_manager.HorizontalAxis > 0.0f ) ) )

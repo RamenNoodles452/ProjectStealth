@@ -29,6 +29,8 @@ public class VaultAction : MonoBehaviour
     // Update is called every frame.
     void Update()
     {
+        if ( Time.timeScale == 0.0f ) { return; }
+
         if ( char_stats.touched_vault_obstacle != null && (char_stats.is_taking_cover && input_manager.InteractInputInst || char_stats.IsRunning) )
         {
             if ( char_stats.current_move_state == CharEnums.MoveState.IsRunning )
