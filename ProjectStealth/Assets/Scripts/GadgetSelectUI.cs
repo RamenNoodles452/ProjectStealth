@@ -17,9 +17,6 @@ public class GadgetSelectUI : MonoBehaviour
     private GadgetEnum[] gadgets;
     private bool[] is_locked;
     private int selection_index = 0;
-
-    private float gadget_hold_timer;
-    private const float OPEN_GADGET_UI_DELAY = 0.75f;
     #endregion
 
     /// <summary>
@@ -72,23 +69,6 @@ public class GadgetSelectUI : MonoBehaviour
     /// </summary>
     private void ProcessInput()
     {
-        // Timer
-        float held_time = gadget_hold_timer;
-        if ( input_manager.GadgetInput )
-        {
-            gadget_hold_timer += Time.deltaTime;
-        }
-        else
-        {
-            gadget_hold_timer = 0.0f;
-        }
-
-        // Hold: open selection UI
-        if ( gadget_hold_timer >= OPEN_GADGET_UI_DELAY )
-        {
-            Referencer.instance.gadget_select_ui.Open();
-        }
-
         // Menu controls.
         if ( ! is_open ) { return; }
 

@@ -195,9 +195,28 @@ public class Player : SimpleCharacterCore
     /// </summary>
     private void GadgetInput()
     {
+        // Open the select menu. 
+        // ( This needs to be in a script OTHER than the menu script, because when closed, the menu object is disabled, so no scripts on it will run)
+        // Timer
+        float held_time = gadget_hold_timer;
+        if ( input_manager.GadgetInput )
+        {
+            gadget_hold_timer += Time.deltaTime;
+        }
+        else
+        {
+            gadget_hold_timer = 0.0f;
+        }
+
+        // Hold: open selection UI
+        if ( gadget_hold_timer >= OPEN_GADGET_UI_DELAY )
+        {
+            Referencer.instance.gadget_select_ui.Open();
+        }
+
         // Use gadgets
         if ( ! input_manager.GadgetInputReleaseInst ) { return; }
-        //if ( held_time >= OPEN_GADGET_UI_DELAY ) { return; }      // The select UI was opened, this should select, not fire.
+        if ( held_time >= OPEN_GADGET_UI_DELAY ) { return; }      // The select UI was opened, this should select, not fire.
 
         GadgetEnum gadget = player_stats.CurrentlyEquippedGadget;
 
