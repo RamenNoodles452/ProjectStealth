@@ -46,6 +46,8 @@ public class GadgetSelectUI : MonoBehaviour
     private Text gadget_name;
     [SerializeField]
     private Text gadget_description;
+    [SerializeField]
+    private Text ellipses_text;
 
     private bool is_open = false;
     private float prev_time_scale = 1.0f;
@@ -57,6 +59,8 @@ public class GadgetSelectUI : MonoBehaviour
     private bool[] is_locked;
     private int selection_index = 0;
     private int previous_selection_index = 0;
+
+    private float ellipses_timer = 0.0f;
     #endregion
 
     /// <summary>
@@ -91,6 +95,16 @@ public class GadgetSelectUI : MonoBehaviour
     void Update()
     {
         ProcessInput();
+
+        ellipses_timer += Time.unscaledDeltaTime;
+        if ( ellipses_timer > 2.0f ) { ellipses_timer -= 2.0f; }
+        int dots = (int) Mathf.Floor( ellipses_timer / ( 2.0f / 4.0f ) );
+        ellipses_text.text = "Selecting";
+        for ( int i = 0; i < dots; i++ )
+        {
+            ellipses_text.text += ".";
+        }
+
         previous_selection_index = selection_index;
     }
 

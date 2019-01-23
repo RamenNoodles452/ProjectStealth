@@ -6189,7 +6189,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   shadow_map_slot: -1
   range: 512
---- !u!1001 &7777232865139331942
+--- !u!1001 &7644516983205914557
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
